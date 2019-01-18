@@ -32,3 +32,4 @@
 *.app
 
 SkanCoin/build
+SkanCoin/NodeWallet/private_key

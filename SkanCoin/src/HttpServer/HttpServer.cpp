@@ -1,9 +1,10 @@
 #include "crow.h"
+#include "../Blockchain/Blockchain.cpp"
+const int httpPort= 3001;
 
-int main()
+void initHttpServer()
 {
     crow::SimpleApp app;
-
     CROW_ROUTE(app, "/")
     ([]() {
         return "Hello world!";
@@ -14,5 +15,6 @@ int main()
         return "<h1>THIS HTTP SERVER WORKS! ;)</h1>";
     });
 
-    app.port(18080).run();
+    app.port(3001).run();
+    std::cout << "Http Server started..." << std::endl;
 }
