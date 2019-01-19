@@ -24,6 +24,8 @@ class Block {
     }
 };
 
+
+//TODO: verificare validità del primo blocco dopo aver definto l'algoritmo di firma
 std::vector<TxIn> txInsVector = {TxIn("","",0)};
 
 std::vector<TxOut> txOutsVector = {TxOut("04bfcab8722991ae774db48f934ca79cfb7dd991229153b9f732ba5334aafcd8e7266e47076996b55a14bf9913ee3145ce0cfc1372ada8ada74bd287450313534a", 50)};
