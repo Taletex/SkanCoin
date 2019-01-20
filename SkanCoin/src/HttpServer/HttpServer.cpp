@@ -1,5 +1,6 @@
 #include "crow.h"
-#include "../Blockchain/Blockchain.cpp"
+#include "../Blockchain/Blockchain.hpp"
+
 const int httpPort= 3001;
 
 void initHttpServer()

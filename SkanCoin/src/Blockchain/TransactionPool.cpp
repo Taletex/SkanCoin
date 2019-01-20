@@ -1,16 +1,18 @@
 #include "TransactionPool.hpp"
 
-using namespace std;
+TransactionPool::TransactionPool(){
+  unconfirmedTransactions = {};
+}
 
 /* Returns the list of unconfirmed transaction of the transaction pool */
-list<Transaction> TransactionPool::getTransactionPool() {
-  return this->unconfirmedTransactions;
+vector<Transaction> TransactionPool::getTransactionPool() {
+  return { begin(this->unconfirmedTransactions), end(this->unconfirmedTransactions) };
 }
 
 /* Adds a transaction to the transaction pool (if this transaction is valid ). */
 bool TransactionPool::addToTransactionPool(Transaction tx, vector<UnspentTxOut> unspentTxOuts) {
   if(!validateTransaction(tx, unspentTxOuts) || !isValidTxForPool(tx)) {
-    throw "Error: Trying to add invalid transaction to transaction pool!";
+    throw "EXCEPTION: Trying to add invalid transaction to transaction pool!";
   }
   cout << "Adding to transaction pool: " << tx.toString() << endl;
   unconfirmedTransactions.push_back(tx);
