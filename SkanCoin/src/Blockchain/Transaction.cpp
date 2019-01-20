@@ -57,6 +57,10 @@ class TxIn {
         this->txOutIndex = txOutIndex;
     }
 
+    bool isEqual(TxIn other){
+      return (this->txOutId == other.txOutId && this->txOutIndex == other.txOutIndex);
+    }
+
     string toString(){
       return "{'txOutId': " + this->txOutId + ", 'signature': " + this->signature + ", 'txOutIndex': " + to_string(this->txOutIndex) + "}";
     }
@@ -265,7 +269,7 @@ bool validateTxIn(TxIn txIn, Transaction transaction, vector<UnspentTxOut> aUnsp
     string address = referencedUTxOut.address;
     /*
     TODO: VERIFICA DELLA FIRMA, TROVARE UNA LIBRERIA ADATTA
-    if (ecdsa_verify(addr, hash, sign) == 0) {
+    if (ecc_make_key((uint8_t*)address.c_str(), (uint8_t*)transaction.id.c_str()) == 0) {
         cout << "invalid txIn signature: " + txIn.signature + ", txId: " + transaction.id + ", address: " + referencedUTxOut.address;
         return false;
     }
@@ -480,7 +484,7 @@ vector<UnspentTxOut> updateUnspentTxOuts(vector<Transaction> aTransactions, vect
       if (isPresentUnspentTxOut(*it4, consumedTxOuts)) {
         it4 = aUnspentTxOuts.erase(it4);
       } else {
-        ++it;
+        ++it4;
       }
     }
 
