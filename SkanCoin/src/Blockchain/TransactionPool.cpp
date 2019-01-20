@@ -9,14 +9,9 @@ list<Transaction> TransactionPool::getTransactionPool() {
 
 /* Adds a transaction to the transaction pool (if this transaction is valid ). */
 bool TransactionPool::addToTransactionPool(Transaction tx, vector<UnspentTxOut> unspentTxOuts) {
-  if(!validateTransaction(tx, unspentTxOuts)) {
-    return false;     // Error: Trying to add invalid transaction to transaction pool!
+  if(!validateTransaction(tx, unspentTxOuts) || !isValidTxForPool(tx)) {
+    throw "Error: Trying to add invalid transaction to transaction pool!";
   }
-
-  if (!isValidTxForPool(tx)) {
-    return false;     // Error: Trying to add invalid transaction to transaction pool!
-  }
-
   cout << "Adding to transaction pool: " << tx.toString() << endl;
   unconfirmedTransactions.push_back(tx);
 
@@ -28,15 +23,16 @@ void TransactionPool::updateTransactionPool(vector<UnspentTxOut> unspentTxOuts) 
   list<Transaction>::iterator it1;
   vector<TxIn>::iterator it2;
 
-  for(it1 = unconfirmedTransactions.begin(); it1 != unconfirmedTransactions.end(); ++it1)
+  for(it1 = unconfirmedTransactions.begin(); it1 != unconfirmedTransactions.end(); ++it1) {
     for(it2 = it1->txIns.begin(); it2 != it1->txIns.end(); ++it2) {
       if(!hasTxIn(*it2, unspentTxOuts)) {
+        cout << "Removing the following transaction from transaction pool: " << it1->toString();
         unconfirmedTransactions.erase(it1);
-        cout << "Removing the following transaction from transaction pool: " << it2->toString();
         break;
       }
     }
   }
+}
 
 /* verifica se il TxIn passato come primo parametro è presente nell'array passato come secondo */
 bool TransactionPool::hasTxIn(TxIn txIn, vector<UnspentTxOut> unspentTxOuts) {
@@ -58,6 +54,8 @@ vector<TxIn> TransactionPool::getTxPoolIns() {
     txIns.reserve(txIns.size() + it->txIns.size());
     copy(it->txIns.begin(), it->txIns.end(), txIns.end());
   }
+
+  return txIns;
 }
 
 /* Returns true if the transaction passed as param is not present in the unconfirmedTransactions of transaction pool, else false */

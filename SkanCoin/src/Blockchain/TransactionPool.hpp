@@ -1,4 +1,3 @@
-#include <typeinfo>
 #include "Transaction.cpp"
 
 #ifndef __TRANSACTIONPOOL_DEFINITION__
