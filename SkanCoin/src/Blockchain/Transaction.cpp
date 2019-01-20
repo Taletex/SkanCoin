@@ -13,7 +13,6 @@ using namespace std;
 const int COINBASE_AMOUNT = 10;
 
 class UnspentTxOut {
-  //NOTE: vedi come rendere non modificabili questi campi
   public:
     string txOutId;
     string address;
@@ -32,6 +31,10 @@ class UnspentTxOut {
       this->txOutIndex = txOutIndex;
       this->address = address;
       this->amount = amount;
+    }
+
+    string toString(){
+      return "{'txOutId': " + this->txOutId + ", 'address': " + this->address + ", 'txOutIndex': " + to_string(this->txOutIndex) + ", 'amount': " + to_string(this->amount) + "}\n";
     }
 
     bool isEqual(UnspentTxOut other){
