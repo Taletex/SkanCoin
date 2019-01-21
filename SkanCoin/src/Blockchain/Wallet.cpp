@@ -1,5 +1,7 @@
 #include "Wallet.hpp"
 
+using namespace std;
+
 //TODO: DEFINIZIONE CURVA ELLITTICA, trovare libreria adatta per le funzioni ECDSA
 
 //Legge la chiave privata (wallet) del nodo dal file
@@ -109,10 +111,7 @@ vector<UnspentTxOut> findTxOutsForAmount(float amount, vector<UnspentTxOut> myUn
           return includedUnspentTxOuts;
       }
   }
-  includedUnspentTxOuts.clear();
-//comeback
-  cout << "Cannot create transaction from the available unspent transaction outputs." << endl << "Required amount:" << amount << ". Available amount:" << getTotalFromOutputVector(myUnspentTxOuts) << endl;
-  return includedUnspentTxOuts;
+  throw "Cannot create transaction from the available unspent transaction outputs. Required amount:" + to_string(amount) + ". Available amount:" + to_string(getTotalFromOutputVector(myUnspentTxOuts));
 }
 
 //Generazione degli output di transazione dati l'amount e la differenza che deve tornare al mittente
@@ -186,7 +185,13 @@ Transaction createTransaction(string receiverAddress, float amount, string priva
   vector<UnspentTxOut> myUnspentTxOuts = filterTxPoolTxs(myUnspentTxOutsA, txPool);
   float leftOverAmount;
   //Cerco tra gli output non spesi quelli necessari per il nuovo input (devo "raccogliere" un ammontare pari ad amount), gli output che sto usando saranno nel nuovo vettore includedUnspentTxOuts
-  vector<UnspentTxOut> includedUnspentTxOuts = findTxOutsForAmount(amount, myUnspentTxOuts, &leftOverAmount);
+  vector<UnspentTxOut> includedUnspentTxOuts;
+  try{
+    includedUnspentTxOuts= findTxOutsForAmount(amount, myUnspentTxOuts, &leftOverAmount);
+  }catch(const char* msg){
+    cout << msg << endl;
+    throw "EXCEPTION: Transaction creation failed, sender does not own enough coins!";
+  }
   //raccolti gli outpud da usare di creano i rispettivi input per la nuova transazione (che faranno riferimento ad essi), ANCORA NON SONO FIRMATI!
   vector<TxIn> unsignedTxIns;
   vector<UnspentTxOut>::iterator it2;

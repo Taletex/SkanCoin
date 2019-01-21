@@ -1,5 +1,7 @@
 #include "Blockchain.hpp"
 
+using namespace std;
+
 //BLOCK FUNCTIONS//
 Block::Block (int index, string hash, string previousHash, int timestamp, vector<Transaction> data, int difficulty, int nonce) {
   this->index = index;
@@ -12,12 +14,12 @@ Block::Block (int index, string hash, string previousHash, int timestamp, vector
 }
 
 string Block::toString(){
-  string ret = "{'index': " + to_string(index) + ",\n 'previousHash': " + previousHash  + ",\n 'timestamp': " + to_string(timestamp) + ",\n 'hash': " + hash + ",\n 'difficulty': " + to_string(difficulty)  + ",\n 'nonce': " + to_string(nonce)   + ",\n";
+  string ret = "{'index': " + to_string(index) + ", 'previousHash': " + previousHash  + ", 'timestamp': " + to_string(timestamp) + ", 'hash': " + hash + ", 'difficulty': " + to_string(difficulty)  + ", 'nonce': " + to_string(nonce)   + ", ";
   vector<Transaction>::iterator it;
   for(it = data.begin(); it != data.end(); ++it){
     ret = ret + it->toString();
   }
-  ret = ret + "}\n";
+  ret = ret + "}";
   return ret;
 }
 
@@ -26,10 +28,9 @@ bool Block::isEqual(Block other){
 }
 
 //BLOCKCHAIN FUNCTIONS//
-BlockChain::BlockChain(){
+BlockChain::BlockChain(): transactionPool(TransactionPool::getInstance()){
   Block genesisBlock = getGenesisBlock();
   blockchain = {genesisBlock};
-  transactionPool = TransactionPool();
   try{
     unspentTxOuts = processTransactions(blockchain.front().data, {}, 0);
   }catch(const char* msg){

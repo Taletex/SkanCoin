@@ -4,8 +4,6 @@ cmake_minimum_required( VERSION 3.0 )
 # project name
 project( SkanCoin )
 
-
-find_package(Tcmalloc)
 find_package(Threads)
 find_package(OpenSSL)
 

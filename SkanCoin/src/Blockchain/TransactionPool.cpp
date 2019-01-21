@@ -1,5 +1,7 @@
 #include "TransactionPool.hpp"
 
+using namespace std;
+
 TransactionPool::TransactionPool(){
   unconfirmedTransactions = {};
 }

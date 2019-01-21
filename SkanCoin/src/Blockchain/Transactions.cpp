@@ -1,5 +1,7 @@
 #include "Transactions.hpp"
 
+using namespace std;
+
 UnspentTxOut::UnspentTxOut() {
   this->txOutId = "";
   this->txOutIndex = -1;
@@ -56,11 +58,7 @@ string TxOut::toString(){
   return "{'address': " + address + ", 'amount': " + to_string(amount) + "}";
 }
 
-Transaction::Transaction(){
-  this->id = -1;
-  this->txIns = {};
-  this->txOuts = {};
-}
+Transaction::Transaction(){}
 Transaction::Transaction(string id, vector<TxIn> txIns, vector<TxOut> txOuts){
   this->id = id;
   this->txIns.swap(txIns);
@@ -248,7 +246,7 @@ float getTxInAmount(TxIn txIn, vector<UnspentTxOut> aUnspentTxOuts){
       return it->amount;
     }
   }
-  throw "EXCEPTION: Referenced UnspentTxOut not found for TxIn: " + txIn.ToString();
+  throw "EXCEPTION: Referenced UnspentTxOut not found for TxIn: " + txIn.toString();
 }
 
 //Validazione della transazione (tipi di dati e procedure di sicurezza)
@@ -275,11 +273,11 @@ bool validateTransaction(Transaction transaction, vector<UnspentTxOut> aUnspentT
     for(it = transaction.txIns.begin(); it != transaction.txIns.end(); ++it){
       try{
         float singleAmount = getTxInAmount(*it, aUnspentTxOuts);
+        totalTxInValues = totalTxInValues + singleAmount;
       }catch(const char* msg){
         cout << msg << endl;
         return false;
       }
-      totalTxInValues = totalTxInValues + singleAmount;
     }
     //calcolo totale outputs
     vector<TxOut>::iterator it2;
@@ -368,7 +366,7 @@ UnspentTxOut findUnspentTxOut(string outId, int index, vector<UnspentTxOut> aUns
     }
   }
   if(!found){
-    throw "EXCEPTION: UnspentTxOut not found!"
+    throw "EXCEPTION: UnspentTxOut not found!";
   }
     return ret;
 }
@@ -391,13 +389,14 @@ Transaction getCoinbaseTransaction(string address,int blockIndex){
 string signTxIn(Transaction transaction, int txInIndex, string privateKey, vector<UnspentTxOut> aUnspentTxOuts){
     TxIn txIn = transaction.txIns[txInIndex];
     string dataToSign = transaction.id;
+    string referencedAddress;
     try{
       UnspentTxOut referencedUnspentTxOut = findUnspentTxOut(txIn.txOutId, txIn.txOutIndex, aUnspentTxOuts);
+      referencedAddress = referencedUnspentTxOut.address;
     }catch(const char* msg){
       cout << msg << endl;
       throw "EXCEPTION: TxIn Sign failed, not found referenced UnspentTxOut";
     }
-    string referencedAddress = referencedUnspentTxOut.address;
 
     if (getPublicKey(privateKey) != referencedAddress) {
         cout << "trying to sign an input with private key that does not match the address that is referenced in txIn";
