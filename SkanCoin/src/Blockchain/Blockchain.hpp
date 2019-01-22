@@ -1,5 +1,6 @@
 #include <list>
 #include <math.h>
+#include <ctime>
 #include "Transactions.hpp"
 #include "Wallet.hpp"
 #include "picosha2.h"
@@ -13,14 +14,14 @@ class Block {
     int index;
     std::string hash;
     std::string previousHash;
-    int timestamp;
+    long timestamp;
     std::vector<Transaction> data;
     int difficulty;
     int nonce;
 
     Block(){}
 
-    Block (int index, std::string hash, std::string previousHash, int timestamp, std::vector<Transaction> data, int difficulty, int nonce);
+    Block (int index, std::string hash, std::string previousHash, long timestamp, std::vector<Transaction> data, int difficulty, int nonce);
 
     std::string toString();
 
@@ -40,6 +41,8 @@ class BlockChain {
     std::list<Block> blockchain;
     std::vector<UnspentTxOut> unspentTxOuts;
     TransactionPool& transactionPool;
+
+    std::string toString();
 
     //Tabella di conversione dei caratteri esadecimali in byte
     std::string hexToBinaryLookup(char c);
@@ -80,9 +83,9 @@ class BlockChain {
     Block generatenextBlockWithTransaction(std::string receiverAddress, float amount);
 
     //calcolo dell'hash del blocco
-    std::string calculateHash(int index, std::string previousHash, int timestamp, std::vector<Transaction> data, int difficulty, int nonce);
+    std::string calculateHash(int index, std::string previousHash, time_t timestamp, std::vector<Transaction> data, int difficulty, int nonce);
 
-    Block findBlock(int index, std::string previousHash, int timestamp, std::vector<Transaction> data, int difficulty);
+    Block findBlock(int index, std::string previousHash, time_t timestamp, std::vector<Transaction> data, int difficulty);
 
     //ritorna il totale degli output non spesi nel wallet del nodo
     float getAccountBalance();

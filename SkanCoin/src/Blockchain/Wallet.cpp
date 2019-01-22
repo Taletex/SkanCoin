@@ -62,7 +62,7 @@ vector<UnspentTxOut> findUnspentTxOutsOfAddress(string ownerAddress, vector<Unsp
   vector<UnspentTxOut> res;
   //per fare una copia del vettore faccio solo una allocazione per avere migliori prestazioni
   res.reserve(res.size() + unspentTxOuts.size());
-  copy(unspentTxOuts.begin(), unspentTxOuts.end(), res.end());
+  res.insert(res.end(), unspentTxOuts.begin(), unspentTxOuts.end());
 
   vector<UnspentTxOut>::iterator it;
   for (it = res.begin(); it != res.end(); ) {
@@ -111,6 +111,7 @@ vector<UnspentTxOut> findTxOutsForAmount(float amount, vector<UnspentTxOut> myUn
           return includedUnspentTxOuts;
       }
   }
+  cout << endl;
   throw "Cannot create transaction from the available unspent transaction outputs. Required amount:" + to_string(amount) + ". Available amount:" + to_string(getTotalFromOutputVector(myUnspentTxOuts));
 }
 
@@ -150,7 +151,7 @@ vector<UnspentTxOut> filterTxPoolTxs(vector<UnspentTxOut> unspentTxOuts, vector<
   vector<UnspentTxOut> res;
   //copia del vettore per evitare side effects, faccio solo una allocazione per avere migliori prestazioni
   res.reserve(res.size() + unspentTxOuts.size());
-  copy(unspentTxOuts.begin(), unspentTxOuts.end(), res.end());
+  res.insert(res.end(), unspentTxOuts.begin(), unspentTxOuts.end());
 
   //per ogni output non speso cerco nel vettore di txIn quella che fa riferimento ad esso, se la trovo rimuovo dal vettore l'output non speso
   vector<UnspentTxOut>::iterator it3;
@@ -190,6 +191,7 @@ Transaction createTransaction(string receiverAddress, float amount, string priva
     includedUnspentTxOuts= findTxOutsForAmount(amount, myUnspentTxOuts, &leftOverAmount);
   }catch(const char* msg){
     cout << msg << endl;
+    cout << endl;
     throw "EXCEPTION: Transaction creation failed, sender does not own enough coins!";
   }
   //raccolti gli outpud da usare di creano i rispettivi input per la nuova transazione (che faranno riferimento ad essi), ANCORA NON SONO FIRMATI!
@@ -213,6 +215,7 @@ Transaction createTransaction(string receiverAddress, float amount, string priva
     }
   }catch(const char* msg){
     cout << msg << endl;
+    cout << endl;
     throw "EXCEPTION: Transaction creation failed, could not sign some of the TxIns";
   }
   return tx;

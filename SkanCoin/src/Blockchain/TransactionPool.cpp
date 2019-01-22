@@ -14,6 +14,7 @@ vector<Transaction> TransactionPool::getTransactionPool() {
 /* Adds a transaction to the transaction pool (if this transaction is valid ). */
 bool TransactionPool::addToTransactionPool(Transaction tx, vector<UnspentTxOut> unspentTxOuts) {
   if(!validateTransaction(tx, unspentTxOuts) || !isValidTxForPool(tx)) {
+    cout << endl;
     throw "EXCEPTION: Trying to add invalid transaction to transaction pool!";
   }
   cout << "Adding to transaction pool: " << tx.toString() << endl;
@@ -56,7 +57,7 @@ vector<TxIn> TransactionPool::getTxPoolIns() {
 
   for(it = unconfirmedTransactions.begin(); it != unconfirmedTransactions.end(); ++it){
     txIns.reserve(txIns.size() + it->txIns.size());
-    copy(it->txIns.begin(), it->txIns.end(), txIns.end());
+    txIns.insert(txIns.end(), it->txIns.begin(), it->txIns.end());
   }
 
   return txIns;

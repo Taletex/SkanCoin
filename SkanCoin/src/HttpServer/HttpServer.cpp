@@ -5,10 +5,10 @@ using namespace std;
 
 const int httpPort= 3001;
 
-string printBlockChain(list<Block> blockchain){
+string printUnspentTxOuts(vector<UnspentTxOut> unspentTxOuts){
   string ret = "[";
-  list<Block>::iterator it;
-  for(it = blockchain.begin(); it != blockchain.end(); ++it){
+  vector<UnspentTxOut>::iterator it;
+  for(it = unspentTxOuts.begin(); it != unspentTxOuts.end(); ++it){
     ret = ret + it->toString() + ", ";
   }
   ret = ret + "]";
@@ -22,6 +22,7 @@ Block getBlockFromHash(list<Block> blockchain, string hash){
       return *it;
     }
   }
+  cout << endl;
   throw "EXCEPTION: Block not found!";
 }
 
@@ -35,6 +36,7 @@ Transaction getTransactionFromId(list<Block> blockchain, string id){
       }
     }
   }
+  cout << endl;
   throw "EXCEPTION: Transaction not found in the blockchain";
 }
 
@@ -42,15 +44,14 @@ void initHttpServer()
 {
   crow::SimpleApp app;
   CROW_ROUTE(app, "/blocks")([]() {
-      return "{'success' :true, 'BlockChain': " + printBlockChain(BlockChain::getInstance().getBlockchain()) + "}";
+      return "{'success' :true, 'blockchain': " + BlockChain::getInstance().toString() + "}";
   });
 
   CROW_ROUTE(app,"/block/<string>")([](string hash){
-    cout << hash << endl;
     try{
-      return "{'success' :true, Block: " + getBlockFromHash(BlockChain::getInstance().getBlockchain(), hash).toString() + "}";
+      return "{'success' :true, block: " + getBlockFromHash(BlockChain::getInstance().getBlockchain(), hash).toString() + "}";
     }catch(const char* msg){
-      cout << msg << endl;
+      CROW_LOG_INFO << msg << "\n";
       string ret = "{'success': false, 'message': \"Block not found\" }";
       return ret;
     }
@@ -59,9 +60,9 @@ void initHttpServer()
   CROW_ROUTE(app,"/transaction/<string>")([](string id){
     list<Block> blockchain = BlockChain::getInstance().getBlockchain();
     try{
-      return "{'success': true, 'Transaction': " + getTransactionFromId(blockchain, id).toString() + "}";
+      return "{'success': true, 'transaction': " + getTransactionFromId(blockchain, id).toString() + "}";
     }catch(const char* msg){
-      cout << msg << endl;
+      CROW_LOG_INFO << msg << "\n";
       string ret = "{'success': false, 'message': \"Transaction not found in the blockchain!\" }";
       return ret;
     }
@@ -77,7 +78,7 @@ void initHttpServer()
           ++it;
         }
       }
-      string ret = "{'success': true, 'UnspentTxOuts': [";
+      string ret = "{'success': true, 'unspentTxOuts': [";
       for(it = unspentTxOuts.begin(); it != unspentTxOuts.end(); ++it){
         if(it != unspentTxOuts.begin()){
           ret = ret + ", ";
@@ -88,6 +89,36 @@ void initHttpServer()
       return ret;
   });
 
-  std::cout << "Starting Http Server..." << std::endl;
+  CROW_ROUTE(app, "/unspentTransactionOutputs")([]() {
+      return "{'success' :true, 'unspentTxOuts': " + printUnspentTxOuts(BlockChain::getInstance().getUnspentTxOuts()) + "}";
+  });
+
+  CROW_ROUTE(app, "/myUnspentTransactionOutputs")([]() {
+      return "{'success' :true, 'myUnspentTxOuts': " + printUnspentTxOuts(BlockChain::getInstance().getMyUnspentTransactionOutputs()) + "}";
+  });
+
+  CROW_ROUTE(app, "/mineRawBlock").methods("POST"_method)([](const crow::request& req){
+      CROW_LOG_INFO << "msg from client: " << req.body;
+    //  broadcast(req.body);
+      return "";
+  });
+
+  /*
+  app.post('/mineRawBlock', (req, res) => {
+      if (req.body.data == null) {
+          res.send('data parameter is missing');
+          return;
+      }
+      const newBlock: Block = generateRawNextBlock(req.body.data);
+      if (newBlock === null) {
+          res.status(400).send('could not generate block');
+      } else {
+          res.send(newBlock);
+      }
+  });
+  */
+
+
+  CROW_LOG_INFO << "Starting Http Server...\n";
   app.port(3001).run();
 }

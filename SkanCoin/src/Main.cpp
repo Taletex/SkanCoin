@@ -15,8 +15,8 @@ using namespace std;
 
 
 int main(){
-  //BlockChain::getInstance().getBlockchain();
-  thread httpServer (initHttpServer);
+  cout <<  BlockChain::getInstance().toString();
+//  thread httpServer (initHttpServer);
   //thread p2pServer (initP2PServer);
   //initWallet();
   // BlockChain blockchain;
@@ -27,7 +27,7 @@ int main(){
   //   cout << "ID della transazione: " << getTransactionId(it->data[0]) <<endl;
   // }
 
-  httpServer.join();
+  //httpServer.join();
   //p2pServer.join();
 
   return 0;

@@ -17,7 +17,7 @@ UnspentTxOut::UnspentTxOut(string txOutId, int txOutIndex, string address, float
 }
 
 string UnspentTxOut::toString(){
-  return "{'txOutId': " + this->txOutId + ", 'address': " + this->address + ", 'txOutIndex': " + to_string(this->txOutIndex) + ", 'amount': " + to_string(this->amount) + "}";
+  return "{'txOutId': \"" + this->txOutId + "\", 'address': \"" + this->address + "\", 'txOutIndex': " + to_string(this->txOutIndex) + ", 'amount': " + to_string(this->amount) + "}";
 }
 
 bool UnspentTxOut::isEqual(UnspentTxOut other){
@@ -41,7 +41,7 @@ bool TxIn::isEqual(TxIn other){
 }
 
 string TxIn::toString(){
-  return "{'txOutId': " + txOutId + ", 'signature': " + signature + ", 'txOutIndex': " + to_string(txOutIndex) + "}";
+  return "{'txOutId': \"" + txOutId + "\", 'signature': \"" + signature + "\", 'txOutIndex': " + to_string(txOutIndex) + "}";
 }
 
 TxOut::TxOut(){
@@ -55,7 +55,7 @@ TxOut::TxOut(string address, float amount) {
 }
 
 string TxOut::toString(){
-  return "{'address': " + address + ", 'amount': " + to_string(amount) + "}";
+  return "{'address': \"" + address + "\", 'amount': " + to_string(amount) + "}";
 }
 
 Transaction::Transaction(){}
@@ -66,7 +66,7 @@ Transaction::Transaction(string id, vector<TxIn> txIns, vector<TxOut> txOuts){
 }
 
 string Transaction::toString(){
-  string ret = "{'Id': " + this->id + ",'txIns': [";
+  string ret = "{'Id': \"" + this->id + "\",'txIns': [";
   vector<TxIn>::iterator it;
   for(it = txIns.begin(); it != txIns.end(); ++it){
     ret = ret + it->toString() + ",";
@@ -246,6 +246,7 @@ float getTxInAmount(TxIn txIn, vector<UnspentTxOut> aUnspentTxOuts){
       return it->amount;
     }
   }
+  cout << endl;
   throw "EXCEPTION: Referenced UnspentTxOut not found for TxIn: " + txIn.toString();
 }
 
@@ -332,13 +333,15 @@ bool validateBlockTransactions(vector<Transaction> aTransactions, vector<Unspent
     }
 
     // check for duplicate txIns. Each txIn can be included only once
-    vector<TxIn> txIns;
+    vector<TxIn> txIns = {};
     vector<Transaction>::iterator it;
+
     for(it = aTransactions.begin(); it != aTransactions.end(); ++it){
       //concatenzazion più efficiente di un semplice insert iterato perchè si fa l'allocazione una volta sola
       txIns.reserve(txIns.size() + it->txIns.size());
-      copy(it->txIns.begin(), it->txIns.end(), txIns.end());
+      txIns.insert(txIns.end(), it->txIns.begin(), it->txIns.end());
     }
+
     //Non possono esserci input usati due volte
     if (hasDuplicates(txIns)) {
         return false;
@@ -366,6 +369,7 @@ UnspentTxOut findUnspentTxOut(string outId, int index, vector<UnspentTxOut> aUns
     }
   }
   if(!found){
+    cout << endl;
     throw "EXCEPTION: UnspentTxOut not found!";
   }
     return ret;
@@ -395,6 +399,7 @@ string signTxIn(Transaction transaction, int txInIndex, string privateKey, vecto
       referencedAddress = referencedUnspentTxOut.address;
     }catch(const char* msg){
       cout << msg << endl;
+      cout << endl;
       throw "EXCEPTION: TxIn Sign failed, not found referenced UnspentTxOut";
     }
 
@@ -448,13 +453,15 @@ vector<UnspentTxOut> updateUnspentTxOuts(vector<Transaction> aTransactions, vect
     //Aggiungo gli output non spesi creati dalla nuova transazione alla lista aUnspentTxOuts
     //uso un modo di concatenzazion più efficiente di un semplice insert iterato perchè si fa l'allocazione una volta sola
     aUnspentTxOuts.reserve(aUnspentTxOuts.size() + newUnspentTxOuts.size());
-    copy(newUnspentTxOuts.begin(), newUnspentTxOuts.end(), aUnspentTxOuts.end());
+    aUnspentTxOuts.insert(aUnspentTxOuts.end(), newUnspentTxOuts.begin(), newUnspentTxOuts.end());
     return aUnspentTxOuts;
 }
 
 //validazione del blocco di transazioni e aggiornamento della lista di output non spesi
 vector <UnspentTxOut> processTransactions(vector<Transaction> aTransactions, vector<UnspentTxOut> aUnspentTxOuts, int blockIndex){
     if (!validateBlockTransactions(aTransactions, aUnspentTxOuts, blockIndex)) {
+      cout << "validateblocktransaction ha fallito" << endl;
+        cout << endl;
         throw "EXCEPTION: invalid transactions in the block";
     }
     return updateUnspentTxOuts({aTransactions}, aUnspentTxOuts);
