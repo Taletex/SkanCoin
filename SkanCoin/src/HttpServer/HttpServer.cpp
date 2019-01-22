@@ -67,6 +67,27 @@ void initHttpServer()
     }
   });
 
+  CROW_ROUTE(app,"/address/<string>")([](string address){
+      vector<UnspentTxOut> unspentTxOuts = BlockChain::getInstance().getUnspentTxOuts();
+      vector<UnspentTxOut>::iterator it;
+      for (it = unspentTxOuts.begin(); it != unspentTxOuts.end(); ) {
+        if (it->address != address) {
+          it = unspentTxOuts.erase(it);
+        } else {
+          ++it;
+        }
+      }
+      string ret = "{'success': true, 'UnspentTxOuts': [";
+      for(it = unspentTxOuts.begin(); it != unspentTxOuts.end(); ++it){
+        if(it != unspentTxOuts.begin()){
+          ret = ret + ", ";
+        }
+        ret = ret + it->toString();
+      }
+      ret = ret +  + "]}";
+      return ret;
+  });
+
   std::cout << "Starting Http Server..." << std::endl;
   app.port(3001).run();
 }
