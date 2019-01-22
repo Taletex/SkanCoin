@@ -14,12 +14,15 @@ Block::Block (int index, string hash, string previousHash, long timestamp, vecto
 }
 
 string Block::toString(){
-  string ret = "{'index': " + to_string(index) + ", 'previousHash': \"" + previousHash  + "\", 'timestamp': " + to_string(timestamp) + ", 'hash': \"" + hash + "\", 'difficulty': " + to_string(difficulty)  + ", 'nonce': " + to_string(nonce)   + ", ";
+  string ret = "{\"index\": " + to_string(index) + ", \"previousHash\": \"" + previousHash  + "\", \"timestamp\": " + to_string(timestamp) + ", \"hash\": \"" + hash + "\", \"difficulty\": " + to_string(difficulty)  + ", \"nonce\": " + to_string(nonce)   + ", \"data\": [";
   vector<Transaction>::iterator it;
   for(it = data.begin(); it != data.end(); ++it){
+    if(it != data.begin()){
+      ret = ret + ", ";
+    }
     ret = ret + it->toString();
   }
-  ret = ret + "}";
+  ret = ret + "]}";
   return ret;
 }
 
@@ -44,7 +47,8 @@ BlockChain::BlockChain(): transactionPool(TransactionPool::getInstance()){
 //generazione blocco di genesi
 Block BlockChain::getGenesisBlock(){
   vector<TxIn> txInsVector = {TxIn("","",0)};
-  vector<TxOut> txOutsVector = {TxOut("04bfcab8722991ae774db48f934ca79cfb7dd991229153b9f732ba5334aafcd8e7266e47076996b55a14bf9913ee3145ce0cfc1372ada8ada74bd287450313534a", COINBASE_AMOUNT)};
+  //TODO:sostituire con indirizzo
+  vector<TxOut> txOutsVector = {TxOut(getPublicFromWallet(), COINBASE_AMOUNT)};
   Transaction genesisTransaction("", txInsVector, txOutsVector);
   genesisTransaction.id = getTransactionId(genesisTransaction);
   vector<Transaction> transactionsVector = {genesisTransaction};
@@ -57,7 +61,10 @@ string BlockChain::toString(){
   string ret = "[";
   list<Block>::iterator it;
   for(it = blockchain.begin(); it != blockchain.end(); ++it){
-    ret = ret + it->toString() + ", ";
+    if(it != blockchain.begin()){
+      ret = ret + ", ";
+    }
+    ret = ret + it->toString();
   }
   ret = ret + "]";
   return ret;

@@ -15,7 +15,7 @@ string getPrivateFromWallet(){
 string getPublicFromWallet(){
     string privateKey = getPrivateFromWallet();
     //TODO usare funzione per ottenere la chiave pubblica da quella privata appena ottenuta, ritornare la chiave pubblica
-    return "pubblica";
+    return "04bfcab8722991ae774db48f934ca79cfb7dd991229153b9f732ba5334aafcd8e7266e47076996b55a14bf9913ee3145ce0cfc1372ada8ada74bd287450313534a";
 }
 
 //Generazione di una nuova chiave privata

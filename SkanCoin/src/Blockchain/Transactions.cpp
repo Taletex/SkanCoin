@@ -17,7 +17,7 @@ UnspentTxOut::UnspentTxOut(string txOutId, int txOutIndex, string address, float
 }
 
 string UnspentTxOut::toString(){
-  return "{'txOutId': \"" + this->txOutId + "\", 'address': \"" + this->address + "\", 'txOutIndex': " + to_string(this->txOutIndex) + ", 'amount': " + to_string(this->amount) + "}";
+  return "{\"txOutId\": \"" + this->txOutId + "\", \"address\": \"" + this->address + "\", \"txOutIndex\": " + to_string(this->txOutIndex) + ", \"amount\": " + to_string(this->amount) + "}";
 }
 
 bool UnspentTxOut::isEqual(UnspentTxOut other){
@@ -41,7 +41,7 @@ bool TxIn::isEqual(TxIn other){
 }
 
 string TxIn::toString(){
-  return "{'txOutId': \"" + txOutId + "\", 'signature': \"" + signature + "\", 'txOutIndex': " + to_string(txOutIndex) + "}";
+  return "{\"txOutId\": \"" + txOutId + "\", \"signature\": \"" + signature + "\", \"txOutIndex\": " + to_string(txOutIndex) + "}";
 }
 
 TxOut::TxOut(){
@@ -55,7 +55,7 @@ TxOut::TxOut(string address, float amount) {
 }
 
 string TxOut::toString(){
-  return "{'address': \"" + address + "\", 'amount': " + to_string(amount) + "}";
+  return "{\"address\": \"" + address + "\", \"amount\": " + to_string(amount) + "}";
 }
 
 Transaction::Transaction(){}
@@ -66,13 +66,16 @@ Transaction::Transaction(string id, vector<TxIn> txIns, vector<TxOut> txOuts){
 }
 
 string Transaction::toString(){
-  string ret = "{'Id': \"" + this->id + "\",'txIns': [";
+  string ret = "{\"Id\": \"" + this->id + "\",\"txIns\": [";
   vector<TxIn>::iterator it;
   for(it = txIns.begin(); it != txIns.end(); ++it){
-    ret = ret + it->toString() + ",";
+    if(it != txIns.begin()){
+      ret = ret + ", ";
+    }
+    ret = ret + it->toString();
   }
 
-  ret = ret + "],'txOuts': [";
+  ret = ret + "],\"txOuts\": [";
   vector<TxOut>::iterator it2;
   for(it2 = txOuts.begin(); it2 != txOuts.end(); ++it2){
     ret = ret + it2->toString();
