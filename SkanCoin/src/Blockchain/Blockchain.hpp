@@ -40,7 +40,6 @@ class BlockChain {
     }
     std::list<Block> blockchain;
     std::vector<UnspentTxOut> unspentTxOuts;
-    TransactionPool& transactionPool;
 
     std::string toString();
 

@@ -31,7 +31,7 @@ bool Block::isEqual(Block other){
 }
 
 //BLOCKCHAIN FUNCTIONS//
-BlockChain::BlockChain(): transactionPool(TransactionPool::getInstance()){
+BlockChain::BlockChain(){
   Block genesisBlock = getGenesisBlock();
   blockchain = {genesisBlock};
   vector<UnspentTxOut> unspentTxOuts = {};
@@ -47,7 +47,6 @@ BlockChain::BlockChain(): transactionPool(TransactionPool::getInstance()){
 //generazione blocco di genesi
 Block BlockChain::getGenesisBlock(){
   vector<TxIn> txInsVector = {TxIn("","",0)};
-  //TODO:sostituire con indirizzo
   vector<TxOut> txOutsVector = {TxOut(getPublicFromWallet(), COINBASE_AMOUNT)};
   Transaction genesisTransaction("", txInsVector, txOutsVector);
   genesisTransaction.id = getTransactionId(genesisTransaction);
@@ -187,7 +186,6 @@ Block BlockChain::generateRawNextBlock(vector<Transaction> blockData){
   try{
     newBlock = findBlock(nextIndex, previousBlock.hash, nextTimestamp, blockData, difficulty);
   }catch(const char* msg){
-    cout << msg << endl;
     cout << endl;
     throw "EXCEPTION: error occurred during new block mining";
   }
@@ -209,7 +207,7 @@ vector<UnspentTxOut> BlockChain::getMyUnspentTransactionOutputs(){
 //Colleziona le transazioni dal transaction pool, inizializza la coinbase transaction ed avvia la procedura di mining ed inserimento del blocco
 Block BlockChain::generateNextBlock(){
     Transaction coinbaseTx = getCoinbaseTransaction(getPublicFromWallet(), getLatestBlock().index + 1);
-    vector<Transaction> blockData = transactionPool.getTransactionPool();
+    vector<Transaction> blockData = TransactionPool::getInstance().getTransactionPool();
     blockData.insert (blockData.begin() , coinbaseTx);
     try{
       return generateRawNextBlock(blockData);
@@ -233,7 +231,8 @@ Block BlockChain::generatenextBlockWithTransaction(string receiverAddress, float
     Transaction coinbaseTx = getCoinbaseTransaction(getPublicFromWallet(), getLatestBlock().index + 1);
     Transaction tx;
     try{
-      tx = createTransaction(receiverAddress, amount, getPrivateFromWallet(), getUnspentTxOuts(), transactionPool.getTransactionPool());
+      tx = createTransaction(receiverAddress, amount, getPrivateFromWallet(), getUnspentTxOuts(), TransactionPool::getInstance().getTransactionPool());
+        cout << coinbaseTx.toString();
     }catch(const char* msg){
       cout << msg << endl;
       cout << endl;
@@ -272,14 +271,14 @@ float BlockChain::getAccountBalance(){
 Transaction BlockChain::sendTransaction(string address, float amount){
   Transaction tx;
   try{
-    tx = createTransaction(address, amount, getPrivateFromWallet(), getUnspentTxOuts(), transactionPool.getTransactionPool());
+    tx = createTransaction(address, amount, getPrivateFromWallet(), getUnspentTxOuts(), TransactionPool::getInstance().getTransactionPool());
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;
     throw "EXCEPTION: Creation of the transaction to be sent failed";
   }
   try{
-    transactionPool.addToTransactionPool(tx, getUnspentTxOuts());
+    TransactionPool::getInstance().addToTransactionPool(tx, getUnspentTxOuts());
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;
@@ -427,7 +426,7 @@ bool BlockChain::addBlockToChain(Block newBlock) {
     }
     BlockChain::blockchain.push_back(newBlock);
     setUnspentTxOuts(ret);
-    BlockChain::transactionPool.updateTransactionPool(getUnspentTxOuts());
+    TransactionPool::getInstance().updateTransactionPool(getUnspentTxOuts());
     return true;
   }else{
     return false;
@@ -448,7 +447,7 @@ void BlockChain::replaceChain(list<Block> newBlocks) {
     cout << "Received blockchain is valid: replacing current blockchain with the received one!" << endl;
     BlockChain::blockchain = newBlocks;
     setUnspentTxOuts(aUnspentTxOuts);
-    transactionPool.updateTransactionPool(getUnspentTxOuts());
+    TransactionPool::getInstance().updateTransactionPool(getUnspentTxOuts());
     // p2pServer.broadcastLatest();
   }
 }
@@ -456,7 +455,7 @@ void BlockChain::replaceChain(list<Block> newBlocks) {
 /* Handles the received transaction adding it to the transaction pool */
 void BlockChain::handleReceivedTransaction(Transaction transaction) {
   try{
-    transactionPool.addToTransactionPool(transaction, getUnspentTxOuts());
+    TransactionPool::getInstance().addToTransactionPool(transaction, getUnspentTxOuts());
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;

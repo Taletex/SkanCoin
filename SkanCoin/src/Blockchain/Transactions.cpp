@@ -2,12 +2,9 @@
 
 using namespace std;
 
-UnspentTxOut::UnspentTxOut() {
-  this->txOutId = "";
-  this->txOutIndex = -1;
-  this->address = "";
-  this->amount = -1;
-}
+const int COINBASE_AMOUNT = 10;
+
+UnspentTxOut::UnspentTxOut() {}
 
 UnspentTxOut::UnspentTxOut(string txOutId, int txOutIndex, string address, float amount) {
   this->txOutId = txOutId;
@@ -24,11 +21,7 @@ bool UnspentTxOut::isEqual(UnspentTxOut other){
   return (this->txOutId == other.txOutId && this->txOutIndex == other.txOutIndex);
 }
 
-TxIn::TxIn() {
-    this->txOutId = "";
-    this->signature = "";
-    this->txOutIndex = -1;
-}
+TxIn::TxIn() {}
 
 TxIn::TxIn(string txOutId, string signature, int txOutIndex) {
     this->txOutId = txOutId;
@@ -44,10 +37,7 @@ string TxIn::toString(){
   return "{\"txOutId\": \"" + txOutId + "\", \"signature\": \"" + signature + "\", \"txOutIndex\": " + to_string(txOutIndex) + "}";
 }
 
-TxOut::TxOut(){
-  this->address = "";
-  this->amount = -1;
-}
+TxOut::TxOut(){}
 
 TxOut::TxOut(string address, float amount) {
     this->address = address;
@@ -142,7 +132,7 @@ string getPublicKey(string privateKey){
 // valid address is a valid ecdsa public key in the 04 + X-coordinate + Y-coordinate format
 bool isValidAddress(string address){
   if(!regex_match (address, regex("^[0][4][a-fA-F0-9]{128}$") )){
-    cout << "public key must contain only 130 hex characters and must begin with '04': " << address << endl;
+    cout << "ERROR: public key must contain only 130 hex characters and must begin with '04': " << address << endl;
     return false;
   }
   return true;
@@ -463,7 +453,6 @@ vector<UnspentTxOut> updateUnspentTxOuts(vector<Transaction> aTransactions, vect
 //validazione del blocco di transazioni e aggiornamento della lista di output non spesi
 vector <UnspentTxOut> processTransactions(vector<Transaction> aTransactions, vector<UnspentTxOut> aUnspentTxOuts, int blockIndex){
     if (!validateBlockTransactions(aTransactions, aUnspentTxOuts, blockIndex)) {
-      cout << "validateblocktransaction ha fallito" << endl;
         cout << endl;
         throw "EXCEPTION: invalid transactions in the block";
     }

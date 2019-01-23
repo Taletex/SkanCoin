@@ -7,8 +7,6 @@
 #ifndef __TRANSACTION_DEFINITION__
 #define __TRANSACTION_DEFINITION__
 
-const int COINBASE_AMOUNT = 10;
-
 class UnspentTxOut {
   public:
     std::string txOutId;

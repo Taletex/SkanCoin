@@ -1,13 +1,18 @@
-#include "HttpServer/HttpServer.cpp"
-#include "P2PServer/P2PServer.cpp"
-#include "Blockchain/Transactions.hpp"
-#include "Blockchain/Transactions.cpp"
-#include "Blockchain/TransactionPool.hpp"
-#include "Blockchain/TransactionPool.cpp"
+//header files//
 #include "Blockchain/Blockchain.hpp"
-#include "Blockchain/Blockchain.cpp"
+#include "Blockchain/Transactions.hpp"
+#include "Blockchain/TransactionPool.hpp"
 #include "Blockchain/Wallet.hpp"
+#include "HttpServer/HttpServer.hpp"
+#include "P2PServer/P2PServer.hpp"
+
+//source files//
+#include "Blockchain/TransactionPool.cpp"
+#include "Blockchain/Transactions.cpp"
+#include "Blockchain/Blockchain.cpp"
+#include "HttpServer/HttpServer.cpp"
 #include "Blockchain/Wallet.cpp"
+#include "P2PServer/P2PServer.cpp"
 #include <iostream>
 #include <thread>
 
@@ -15,20 +20,18 @@ using namespace std;
 
 
 int main(){
-  cout <<  BlockChain::getInstance().toString();
-thread httpServer (initHttpServer);
-  //thread p2pServer (initP2PServer);
-  //initWallet();
-  // BlockChain blockchain;
-  // list<Block> chain = blockchain.getBlockchain();
-  // list<Block>::iterator it;
-  // for(it = chain.begin(); it != chain.end(); ++it){
-  //   cout << "Hash del primo blocco: " << it->hash << endl;
-  //   cout << "ID della transazione: " << getTransactionId(it->data[0]) <<endl;
-  // }
-
+  cout <<"Starting node..." << endl << "Generating blockchain..." << endl;
+  try{
+    cout << "BLOCKCHAIN: " << endl <<  BlockChain::getInstance().toString() << endl;
+  }catch(const char* msg){
+    cout << msg << endl;
+    cout << "EXCEPTION: Blockchain generation failed!" << endl;
+    return 0;
+  }
+  initWallet();
+  thread httpServer (initHttpServer);
+  P2PServer::getInstance().initP2PServer();
   httpServer.join();
-  //p2pServer.join();
 
   return 0;
 }

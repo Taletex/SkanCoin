@@ -102,17 +102,15 @@ vector<UnspentTxOut> findTxOutsForAmount(float amount, vector<UnspentTxOut> myUn
   float currentAmount = 0;
   vector<UnspentTxOut> includedUnspentTxOuts;
   vector<UnspentTxOut>::iterator it;
-
   for (it = myUnspentTxOuts.begin(); it != myUnspentTxOuts.end(); ++it) {
-      includedUnspentTxOuts.push_back(*it);
-      currentAmount = currentAmount + it->amount;
-      if (currentAmount >= amount) {
-          *leftOverAmount = currentAmount - amount;
-          return includedUnspentTxOuts;
-      }
+    includedUnspentTxOuts.push_back(*it);
+    currentAmount = currentAmount + it->amount;
+    if (currentAmount >= amount) {
+        *leftOverAmount = currentAmount - amount;
+        return includedUnspentTxOuts;
+    }
   }
-  cout << endl;
-  throw "Cannot create transaction from the available unspent transaction outputs. Required amount:" + to_string(amount) + ". Available amount:" + to_string(getTotalFromOutputVector(myUnspentTxOuts));
+  throw "EXCEPTION: Cannot create transaction from the available unspent transaction outputs (not enough coins)";
 }
 
 //Generazione degli output di transazione dati l'amount e la differenza che deve tornare al mittente
