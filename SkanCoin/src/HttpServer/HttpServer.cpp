@@ -2,8 +2,6 @@
 
 using namespace std;
 
-const int HTTP_PORT= 3001;
-
 vector<TxIn> parseTxInVector(const rapidjson::Value &txIns){
   if(!txIns.IsArray() || txIns.IsNull()){
     cout << endl;
@@ -98,7 +96,7 @@ Transaction getTransactionFromId(list<Block> blockchain, string id){
   throw "EXCEPTION: Transaction not found in the blockchain";
 }
 
-void initHttpServer(){
+void initHttpServer(int port){
   crow::SimpleApp app;
 
   CROW_ROUTE(app, "/blocks")([]() {
@@ -246,6 +244,6 @@ void initHttpServer(){
     return "{\"success\" :true, \"peers\": " + P2PServer::getInstance().printPeers() + "}";
   });
 
-  cout << "Starting Http Server..." << endl;
-  app.port(HTTP_PORT).run();
+  cout << "Starting Http Server on port" << port << "..." << endl;
+  app.port(port).run();
 }

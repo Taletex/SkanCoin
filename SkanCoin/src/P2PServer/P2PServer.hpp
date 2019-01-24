@@ -29,12 +29,24 @@ class P2PServer {
 
     std::mutex mtx;
     std::unordered_set<crow::websocket::connection*> users;
-
-    void initP2PServer();
-
-    void connectToPeers(std::string peer);
-
     std::string printPeers();
+    void write(crow::websocket::connection* connection, Message message);
+    // void broadcast(Message message);
+    // void broadcastLates();
+    // void broadCastTransactionPool();
+    void initP2PServer(int port);
+    void initConnection(crow::websocket::connection& connection);
+    // void initMessageHandler(crow::websocket::connection* connection);
+    // void initErrorHandler(crow::websocket::connection* connection);
+    void connectToPeers(std::string peer);
+    // void handleBlockchainResponse(std::list<Block> receivedBlocks);
+    //
+    // Message queryChainLengthMsg();
+    // Message queryAllMsg();
+    // Message responseChainMsg();
+    // Message responseLatestMsg();
+    // Message queryTransactionPoolMsg();
+    // Message responseTransactionPoolMsg();
 
   private:
     P2PServer(){}

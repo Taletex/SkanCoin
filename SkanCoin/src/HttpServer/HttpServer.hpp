@@ -24,5 +24,5 @@ Block getBlockFromHash(std::list<Block> blockchain, std::string hash);
 
 Transaction getTransactionFromId(std::list<Block> blockchain, std::string id);
 
-void initHttpServer();
+void initHttpServer(int port);
 #endif

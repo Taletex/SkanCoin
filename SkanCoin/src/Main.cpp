@@ -18,6 +18,9 @@
 
 using namespace std;
 
+void initP2PServer(int port){
+  P2PServer::getInstance().initP2PServer(port);
+}
 
 int main(){
   cout <<"Starting node..." << endl << "Generating blockchain..." << endl;
@@ -29,9 +32,9 @@ int main(){
     return 0;
   }
   initWallet();
-  thread httpServer (initHttpServer);
-  P2PServer::getInstance().initP2PServer();
+  thread httpServer (initHttpServer,3001);
+  thread p2p (initP2PServer,6001);
   httpServer.join();
-
+  p2p.join();
   return 0;
 }
