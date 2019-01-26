@@ -33,5 +33,5 @@
 
 SkanCoin/build
 SkanCoin/NodeWallet/private_key
-SkanCoin/src/P2PServer/p2p.html
+SkanCoin/src/P2P/p2p.html
 
