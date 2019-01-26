@@ -32,7 +32,6 @@ vector<Transaction> parseTransactionVector(const rapidjson::Value &transactions)
     throw "Error parsing request: <Transactions Array>";
   }
   vector<Transaction> ret;
-  return ret;
   try{
     for (rapidjson::SizeType i = 0; i < transactions.Size(); i++){
       ret.push_back(Transaction(transactions[i]["id"].GetString(), parseTxInVector(transactions[i]["txIns"]), parseTxOutVector(transactions[i]["txOuts"])));
@@ -42,6 +41,24 @@ vector<Transaction> parseTransactionVector(const rapidjson::Value &transactions)
     throw "Error parsing request: <Transactions Array>";
   }
 
+  return ret;
+}
+
+list<Block> parseBlockList(const rapidjson::Value &blocks){
+  if(!blocks.IsArray() || blocks.IsNull()){
+    cout << endl;
+    throw "Error parsing request: <Block List>";
+  }
+  list<Block> ret;
+  return ret;
+  try{
+    for (rapidjson::SizeType i = 0; i < blocks.Size(); i++){
+      ret.push_back(Block(blocks[i]["index"].GetInt(), blocks[i]["hash"].GetString(), blocks[i]["previousHash"].GetString(), long(blocks[i]["timestamp"].GetInt()), parseTransactionVector(blocks[i]["data"]), blocks[i]["difficulty"].GetInt(), blocks[i]["nonce"].GetInt()));
+    }
+  }catch(const char* msg){
+    cout << endl;
+    throw "Error parsing request: <Block List>";
+  }
   return ret;
 }
 
@@ -241,7 +258,7 @@ void initHttpServer(int port){
   });
 
   CROW_ROUTE(app, "/peers")([]() {
-    return "{\"success\" :true, \"peers\": " + P2PServer::getInstance().printPeers() + "}";
+    return "{\"success\" :true, \"peers\": " + to_string(P2PServer::getInstance().countPeers() + 1) + "}";
   });
 
   cout << "Starting Http Server on port" << port << "..." << endl;

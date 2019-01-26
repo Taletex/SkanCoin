@@ -1,11 +1,11 @@
+#ifndef __TRANSACTION_DEFINITION__
+#define __TRANSACTION_DEFINITION__
+
 #include <vector>
 #include <map>
 #include <typeinfo>
 #include <regex>
 #include "picosha2.h"
-
-#ifndef __TRANSACTION_DEFINITION__
-#define __TRANSACTION_DEFINITION__
 
 class UnspentTxOut {
   public:

@@ -1,3 +1,6 @@
+#ifndef __BLOCKCHAIN_DEFINITION__
+#define __BLOCKCHAIN_DEFINITION__
+
 #include <list>
 #include <math.h>
 #include <ctime>
@@ -5,9 +8,6 @@
 #include "Wallet.hpp"
 #include "picosha2.h"
 #include "TransactionPool.hpp"
-
-#ifndef __BLOCKCHAIN_DEFINITION__
-#define __BLOCKCHAIN_DEFINITION__
 
 class Block {
   public:

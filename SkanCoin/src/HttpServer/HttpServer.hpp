@@ -1,14 +1,13 @@
-#include "crow.h"
+#ifndef __HTTP_SERVER_DEFINITION__
+#define __HTTP_SERVER_DEFINITION__
+
 #include "document.h"
+#include "crow.h"
 #include "../Blockchain/Transactions.hpp"
 #include "../Blockchain/Wallet.hpp"
 #include "../Blockchain/TransactionPool.hpp"
 #include "../Blockchain/Blockchain.hpp"
-#include "../P2PServer/P2PServer.hpp"
-
-
-#ifndef __HTTP_SERVER_DEFINITION__
-#define __HTTP_SERVER_DEFINITION__
+#include "../P2P/P2PServer.hpp"
 
 std::vector<TxIn> parseTxInVector(const rapidjson::Value &txIns);
 

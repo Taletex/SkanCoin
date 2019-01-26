@@ -1,10 +1,10 @@
+#ifndef __WALLET_DEFINITION__
+#define __WALLET_DEFINITION__
+
 #include <iostream>
 #include <string>
 #include <fstream>
 #include <streambuf>
-
-#ifndef __WALLET_DEFINITION__
-#define __WALLET_DEFINITION__
 
 //path del file contenente la chiave privata del nodo
 const std::string privateKeyLocation = "../NodeWallet/private_key";

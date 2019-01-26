@@ -1,10 +1,13 @@
+//Standard libraries//
+#include <iostream>
+#include <thread>
 //header files//
 #include "Blockchain/Blockchain.hpp"
 #include "Blockchain/Transactions.hpp"
 #include "Blockchain/TransactionPool.hpp"
 #include "Blockchain/Wallet.hpp"
 #include "HttpServer/HttpServer.hpp"
-#include "P2PServer/P2PServer.hpp"
+#include "P2P/P2PServer.hpp"
 
 //source files//
 #include "Blockchain/TransactionPool.cpp"
@@ -12,14 +15,16 @@
 #include "Blockchain/Blockchain.cpp"
 #include "HttpServer/HttpServer.cpp"
 #include "Blockchain/Wallet.cpp"
-#include "P2PServer/P2PServer.cpp"
-#include <iostream>
-#include <thread>
+#include "P2P/P2PServer.cpp"
 
 using namespace std;
 
 void initP2PServer(int port){
   P2PServer::getInstance().initP2PServer(port);
+}
+
+void startP2PClient(){
+  P2PServer::getInstance().startClientPoll();
 }
 
 int main(){
@@ -33,8 +38,10 @@ int main(){
   }
   initWallet();
   thread httpServer (initHttpServer,3001);
-  thread p2p (initP2PServer,6001);
+  thread p2pServer (initP2PServer,6001);
+  thread p2pClient (startP2PClient);
   httpServer.join();
-  p2p.join();
+  p2pServer.join();
+  p2pClient.join();
   return 0;
 }

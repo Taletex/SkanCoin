@@ -11,6 +11,19 @@ vector<Transaction> TransactionPool::getTransactionPool() {
   return { begin(this->unconfirmedTransactions), end(this->unconfirmedTransactions) };
 }
 
+string TransactionPool::toString(){
+  string ret = "[";
+  list<Transaction>::iterator it;
+  for(it = unconfirmedTransactions.begin(); it != unconfirmedTransactions.end(); ++it){
+    if(it != unconfirmedTransactions.begin()){
+      ret = ret + ", ";
+    }
+    ret = ret + it->toString();
+  }
+  ret = ret + "]";
+  return ret;
+}
+
 /* Adds a transaction to the transaction pool (if this transaction is valid ). */
 bool TransactionPool::addToTransactionPool(Transaction tx, vector<UnspentTxOut> unspentTxOuts) {
   if(!validateTransaction(tx, unspentTxOuts) || !isValidTxForPool(tx)) {
