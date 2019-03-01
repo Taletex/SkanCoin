@@ -1,6 +1,7 @@
 #ifndef __HTTP_SERVER_DEFINITION__
 #define __HTTP_SERVER_DEFINITION__
 
+#include <ctime>
 #include "document.h"
 #include "crow.h"
 #include "../Blockchain/Transactions.hpp"
@@ -8,6 +9,8 @@
 #include "../Blockchain/TransactionPool.hpp"
 #include "../Blockchain/Blockchain.hpp"
 #include "../P2P/P2PServer.hpp"
+
+const std::string basepath = "/webresources/";
 
 std::vector<TxIn> parseTxInVector(const rapidjson::Value &txIns);
 

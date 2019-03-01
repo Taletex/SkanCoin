@@ -252,6 +252,8 @@ Block BlockChain::generatenextBlockWithTransaction(string receiverAddress, float
 Block BlockChain::findBlock(int index, string previousHash, long timestamp, vector<Transaction> data, int difficulty) {
   int nonce = 0;
   string hash;
+  double duration;
+  clock_t start = clock();
 
   while (true) {
     hash = calculateHash(index, previousHash, timestamp, data, difficulty, nonce);
@@ -260,6 +262,8 @@ Block BlockChain::findBlock(int index, string previousHash, long timestamp, vect
     }
     nonce++;
   }
+
+  duration = (std::clock() - start)/(double)CLOCKS_PER_SEC; // calcolo il tempo di mining del blocco (per le stat)
 }
 
 //ritorna il totale degli output non spesi nel wallet del nodo
