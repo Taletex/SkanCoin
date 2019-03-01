@@ -274,33 +274,29 @@ void initHttpServer(int port){
     return "{\"success\" :true, \"peers\": " + to_string(P2PServer::getInstance().countPeers() + 1) + "}";
   });
 
-  // Ritorna le statistiche della blockchain in un istante temporale (numero di blocchi, di transazioni e coin in circolazione)
-  CROW_ROUTE(app, basepath + "blockchainstats")([](){
-    list<Block> blockchain = BlockChain::getInstance().getBlockchain();
-    vector<Block>::iterator it;
-    int transactionNumber = 0;
+  // TODO: testare
+  // Rest che consente di leggere le righe di un file, ritornate in un array. Questa rest serve ai fini delle statistiche del client rf
+  // Param: blockchainStats -> statistiche sulla blockchain, blocksminingtime -> statistiche sul tempo di mining dei blocchi, transactionWaitingTime -> statistiche sul tempo di attesa delle transazioni
+  CROW_ROUTE(app, basepath + "stats/<string>")([](string filename){
+    bool isFirst = true;
+    string data = "[";
+    string line;
+    ifstream inFile;
+    inFile.open(to_string(filename) + ".txt");  // blockchainstats, blocksminingtime, transactionwaitingtime
 
-    // prendo il numero di transazioni
-    for(it = blockchain.begin(); it != blockchain.end(); ++it) {
-      transactionNumber += it->data.size();
+    while (getline(inFile, line)) {
+      if(isFirst) {
+        data += line;
+        isFirst = false;
+      } else {
+        data = data + ", " + line;
+      }
     }
 
-    // prendo il tempo corrente (relativo al sistema corrente)
-    time_t now = time(0);
-    tm *ltm = localtime(&now);
-    string time = to_string(1 + ltm->tm_hour) + ":" + to_string(1 + ltm->tm_min) + ":" + to_string(1 + ltm->tm_sec) + " " + to_string(ltm->tm_mday) + "/" + to_string(1 + ltm->tm_mon) + "/" + to_string(1900 + ltm->tm_year);
-
-    return "{\"success\": true, " +
-            "\"time\": " + time + ", " +
-            "\"blocks\": " + to_string(blockchain.size()) + ", " +
-            "\"transactions\": " + to_string(transactionNumber) + ", " +
-            "\"coins\": " + to_string(BlockChain::getInstance().getUnspentTxOuts().size()) + "}";
+    return "{\"success\": true, \"data\": " + data + "}";
   });
 
-  // Ritorna il tempo di mining per ogni blocco della blockchain
-  CROW_ROUTE(app, basepath + "blocksminingtime")([](){
-  });
-
+  // TODO: testare
   // Ritorna il tempo di attesa per la conferma di ogni transazione della blockchain
   CROW_ROUTE(app, basepath + "blocksminingtime")([](){
   });

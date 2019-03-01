@@ -2,6 +2,7 @@
 #define __HTTP_SERVER_DEFINITION__
 
 #include <ctime>
+#include <sstream>
 #include "document.h"
 #include "crow.h"
 #include "../Blockchain/Transactions.hpp"

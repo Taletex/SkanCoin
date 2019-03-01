@@ -131,15 +131,16 @@ server <- function(input, output) {
   
   # HTTP REQUEST FUNCTIONS #
   getStats = function() {
-    #obj <- fromJSON("http://localhost:3001/webresources/blockchainstats")                   # bisogna controllare che obj sia una lista con i 4 elementi delle statistiche!
+    #obj <- fromJSON("http://localhost:3001/webresources/stats/blockchainstats")                   # bisogna controllare che obj sia una lista con i 4 elementi delle statistiche!
     load(file="/home/alessandro/Projects/SkanCoin/DiagnosticClient/app/data/data.Rda")  
     #rbind(stat, obj)
     #save(stat,file="/home/alessandro/Projects/SkanCoin/DiagnosticClient/app/data/data.Rda")
+    # TOD: cambiare tutto, ora ritorna un array di oggetti!
     stat
   }
   
   getBlocksMiningTime = function() {
-    #obj <- fromJSON("http://localhost:3001/webresources/blocksminingtime")                   # bisogna controllare cosa restituisce
+    #obj <- fromJSON("http://localhost:3001/webresources/stats/blocksminingtime")                   # bisogna controllare cosa restituisce
     stat <- data.frame("block"=c(1, 2, 3, 4, 5, 6, 7), "miningtime"=c(12, 15, 20, 11, 30, 12, 10))
   }
   
