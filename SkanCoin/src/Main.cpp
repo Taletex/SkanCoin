@@ -8,6 +8,8 @@
 #include "Blockchain/Wallet.hpp"
 #include "HttpServer/HttpServer.hpp"
 #include "P2P/Peer.hpp"
+#include "easywsclient.hpp"
+#include "easywsclient.cpp"
 #include "ecc.h"
 
 //source files//

@@ -44,31 +44,25 @@ ui <- fluidPage(
 # Define server logic ----
 server <- function(input, output) {
   
-  # INIT DATA FILE #
-  #stat <- data.frame("time"=c(0), "blocks"=c(1), "transactions"=c(0), "coins"=c(0))
-  #save(stat,file="/home/alessandro/Projects/SkanCoin/DiagnosticClient/app/data/data.Rda")
-  #load(file="/home/alessandro/Projects/SkanCoin/DiagnosticClient/app/data/data.Rda")     now "stat" variable contains the saved dataframe
-  
-  
   # OBSERVING VARIABLES AND EVENTS #
   v <- reactiveValues(query = 0, title = "", data = "")
   
   observeEvent(input$query1, {
     v$query <- 1
     v$title <- "Statistiche temporali della blockchain (numero di blocchi, numero di transazioni e numero di coin)"
-    v$data <- getStats()
+    v$data <- getStats("blockchainstats")
   })
   
   observeEvent(input$query2, {
     v$query <- 2
     v$title <- "Tempo di mining di ogni blocco"
-    v$data <- getBlocksMiningTime()
+    v$data <- getStats("transminingtime")
   })
   
   observeEvent(input$query3, {
     v$query <- 3
     v$title <- "Tempo di attesa per la conferma di ogni transazione"
-    v$data <- getWaitingTransactionMiningTime()
+    v$data <- getStats("transactionwaitingtime")
   })
   
   
@@ -78,17 +72,6 @@ server <- function(input, output) {
   })
   
   output$statgraph <- renderPlot({
-    # Commenti da rimuovere
-    #legend(1, 50, legend = c("Blocchi", "Transazioni", "Coins"), col = c("blue", "red", "black"), pch=c("o", "*", "+"), lty = c(1, 2, 3), ncol=2)
-    #x <- ts(v$data["time"])
-    #y1 <- ts(v$data["blocks"])
-    #y2 <- ts(v$data["transactions"])
-    #y3 <- ts(v$data["coins"])
-    #plot(x, y1, main="Blocchi", xlab = "Time", type="o", col="blue", pch="o", lty=1)
-    #points(x, y2, col="red", pch="*")
-    #lines(x, y2, col="red", lty=2)
-    #points(x, y3, col="dark red", pch="+")
-    #lines(x, y3, col="dark red", lty=3)
     
     if(v$query == 1) {
       # Blockchain stats
@@ -118,8 +101,8 @@ server <- function(input, output) {
         theme_bw() 
     } else if(v$query == 3) {
       # Transactions waiting time
-      x <- factor(unlist(v$data["transaction"], use.names=FALSE), levels = unlist(v$data["transaction"], use.names=FALSE))
-      y <- unlist(v$data["waitingtime"], use.names=FALSE)
+      x <- factor(unlist(v$data["transactionId"], use.names=FALSE), levels = unlist(v$data["transactionId"], use.names=FALSE))
+      y <- unlist(v$data["millisWaitTime"], use.names=FALSE)
       ggplot(v$data, aes(x, y)) + 
         geom_bar(stat="identity", width=.3, fill="darkblue") + 
         geom_text(aes(x, y, label=y, hjust=0.5, vjust=-1)) +
@@ -128,25 +111,22 @@ server <- function(input, output) {
     }
   })
   
-  
-  # HTTP REQUEST FUNCTIONS #
-  getStats = function() {
-    #obj <- fromJSON("http://localhost:3001/webresources/stats/blockchainstats")                   # bisogna controllare che obj sia una lista con i 4 elementi delle statistiche!
-    load(file="/home/alessandro/Projects/SkanCoin/DiagnosticClient/app/data/data.Rda")  
-    #rbind(stat, obj)
-    #save(stat,file="/home/alessandro/Projects/SkanCoin/DiagnosticClient/app/data/data.Rda")
-    # TOD: cambiare tutto, ora ritorna un array di oggetti!
-    stat
+  # HTTP REQUEST FUNCTION #
+  getStats = function(type) {
+    obj <- fromJSON(paste("http://localhost:3001/webresources/stats/", type, sep=""))  
+    if(typeof(obj$data) == "list") {
+      obj <- obj$data
+    } else {
+      v$title <- obj$message
+      print(v$title)
+      obj <- getEmptyDataFrame(v$query)
+    }
   }
   
-  getBlocksMiningTime = function() {
-    #obj <- fromJSON("http://localhost:3001/webresources/stats/blocksminingtime")                   # bisogna controllare cosa restituisce
-    stat <- data.frame("block"=c(1, 2, 3, 4, 5, 6, 7), "miningtime"=c(12, 15, 20, 11, 30, 12, 10))
-  }
-  
-  getWaitingTransactionMiningTime = function() {
-    #obj <- fromJSON("http://localhost:3001/webresources/transminingtime")                    # bisogna controllare cosa restituisce
-    stat <- data.frame("transaction"=c(1, 2, 3, 4, 5, 6, 7), "waitingtime"=c(1, 5, 5, 50, 12, 134, 73))
+  getEmptyDataFrame = function(type) {
+    if(type == 1) data.frame("time" = c(0), "blocks" = c(0), "transactions" = c(0), "coins" = c(0))
+    else if(type == 2) data.frame("block" = c(0), "miningtime" = c(0))
+    else if(type == 3) data.frame("transactionId" = c(0), "millisWaitTime" = c(0))
   }
 }
 
