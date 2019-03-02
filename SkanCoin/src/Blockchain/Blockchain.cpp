@@ -273,7 +273,7 @@ Block BlockChain::findBlock(int index, string previousHash, long timestamp, vect
       duration = (std::clock() - start)/(double)CLOCKS_PER_SEC;
       ofstream myfile;
       myfile.open ("blocksminingtime.txt", ios::out | ios::app);
-      if(myfile.isOpen()) {
+      if(myfile.is_open()) {
         myfile << "{\"block\": " <<  index << ", \"miningtime\": " << duration << "}";
       } else {
         throw "Errore: non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
@@ -497,7 +497,7 @@ void BlockChain::replaceChain(list<Block> newBlocks) {
   //Confronto della difficoltà cumulativa della blockchain attuale con quella
   //ricevuta, viene effettuata una conversione da liste a vettori per migliorare
   //le prestazioni del calcolo della difficoltà
-  if(getAccumulatedDifficulty({ begin(newBlocks), end(newBlocks) }) > getAccumulatedDifficulty({getBlockchain().begin(), getBlockchain.end()})) {
+  if(getAccumulatedDifficulty({ begin(newBlocks), end(newBlocks) }) > getAccumulatedDifficulty({getBlockchain().begin(), getBlockchain().end()})) {
     cout << "Received blockchain is valid: replacing current blockchain with the received one!" << endl;
     BlockChain::blockchain = newBlocks; //Sostituzione blockchain
     setUnspentTxOuts(aUnspentTxOuts); //Aggiornamento output non spesi
@@ -553,7 +553,7 @@ void BlockChain::saveBlockchainStats() {
   // salvataggio su file
   ofstream myfile;
   myfile.open ("blockchainstats.txt", ios::out | ios::app);
-  if(myfile.isOpen()) {
+  if(myfile.is_open()) {
     //Scrittura della nuova entry su file
     myfile << "{\"time\": " << time << ", \"blocks\": " << blockchain.size() << ", \"transactions\": " << transactionNumber << ", \"coins\": " << coins << "}";
   } else {
