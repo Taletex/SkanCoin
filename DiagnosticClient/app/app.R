@@ -72,17 +72,6 @@ server <- function(input, output) {
   })
   
   output$statgraph <- renderPlot({
-    # Commenti da rimuovere
-    #legend(1, 50, legend = c("Blocchi", "Transazioni", "Coins"), col = c("blue", "red", "black"), pch=c("o", "*", "+"), lty = c(1, 2, 3), ncol=2)
-    #x <- ts(v$data["time"])
-    #y1 <- ts(v$data["blocks"])
-    #y2 <- ts(v$data["transactions"])
-    #y3 <- ts(v$data["coins"])
-    #plot(x, y1, main="Blocchi", xlab = "Time", type="o", col="blue", pch="o", lty=1)
-    #points(x, y2, col="red", pch="*")
-    #lines(x, y2, col="red", lty=2)
-    #points(x, y3, col="dark red", pch="+")
-    #lines(x, y3, col="dark red", lty=3)
     
     if(v$query == 1) {
       # Blockchain stats
