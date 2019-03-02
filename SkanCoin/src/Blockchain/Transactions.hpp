@@ -66,11 +66,9 @@ bool isValidAddress(std::string address);
 bool isValidTxInStructure(TxIn txIn);
 
 //validazione struttura dell'output (type check)
-//NOTE: cercare un modo migliore per il type checking
 bool isValidTxOutStructure(TxOut txOut);
 
 //validazione della struttura (type check) della transazione e di tutti i suoi input e output
-//NOTE: cercare un modo migliore per il type checking
 bool isValidTransactionStructure(Transaction transaction);
 
 //Controlla se l'input fa riferimento ad un output non speso

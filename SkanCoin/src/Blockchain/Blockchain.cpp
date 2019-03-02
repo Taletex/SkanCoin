@@ -351,7 +351,10 @@ int BlockChain::getAccumulatedDifficulty(vector<Block> aBlockchain){
   return res;
 }
 
-//Validazione del timestamp, NOTE:rivedere la guida in merito a questo controllo
+//Validazione del timestamp, per evitare che venga introdotto un timestamp falso in modo da
+//rendere valido un blocco con difficoltà inferiore a quella attuale vengono accettati solo i blocchi per
+//cui il mining è iniziato al massimo un minuto prima del mining dell'ultimo blocco ed al
+//massimo un minuto prima del tempo percepito dal nodo che effettua la validazione
 bool BlockChain::isValidTimestamp(Block newBlock, Block previousBlock){
   return (( previousBlock.timestamp - 60 < newBlock.timestamp ) && ( newBlock.timestamp - 60 < time(nullptr) ) );
 }
@@ -508,7 +511,7 @@ void BlockChain::saveBlockchainStats() {
   list<Block>::iterator it;
   int transactionNumber = 0;
   vector<UnspentTxOut>::iterator it2;
-  int coins = 0;
+  float coins = 0;
   // prendo il numero di transazioni
   for(it = blockchain.begin(); it != blockchain.end(); ++it) {
     transactionNumber += it->data.size();

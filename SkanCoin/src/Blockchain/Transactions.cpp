@@ -139,7 +139,6 @@ bool isValidAddress(string address){
 }
 
 //validazione della struttura dell'input (type check)
-//NOTE: cercare un modo migliore per il type checking
 bool isValidTxInStructure(TxIn txIn){
     if (typeid(txIn.signature) != typeid(string)) {
         cout << "invalid signature type in txIn" << endl;
@@ -156,7 +155,6 @@ bool isValidTxInStructure(TxIn txIn){
 }
 
 //validazione struttura dell'output (type check)
-//NOTE: cercare un modo migliore per il type checking
 bool isValidTxOutStructure(TxOut txOut){
     if (typeid(txOut.address) != typeid(string)) {
         cout << "invalid address type in txOut" << endl;
@@ -173,7 +171,6 @@ bool isValidTxOutStructure(TxOut txOut){
 }
 
 //validazione della struttura (type check) della transazione e di tutti i suoi input e output
-//NOTE: cercare un modo migliore per il type checking
 bool isValidTransactionStructure(Transaction transaction){
     if (typeid(transaction.id) != typeid(string)) {
         cout << "transactionId missing" << endl;
@@ -397,8 +394,7 @@ string signTxIn(Transaction transaction, int txInIndex, string privateKey, vecto
     }
 
     if (getPublicKey(privateKey) != referencedAddress) {
-        cout << "trying to sign an input with private key that does not match the address that is referenced in txIn";
-        return ""; //NOTE: segnalare un errore al chiamante
+        throw "trying to sign an input with private key that does not match the address that is referenced in txIn";
     }
     string signature = "ciao";
     //TODO: produrre validSignature, trovare libreria adatta
