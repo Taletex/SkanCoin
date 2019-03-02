@@ -20,9 +20,10 @@ void handleClientMessage(const string & data){
   Message message = Message(static_cast<MessageType>(document["type"].GetInt()), document["data"].GetString());
   cout << "Received message: " << message.toString() << endl;
 
-  //Lists used for some type of oncoming messages
+  //Lists used for some type of oncoming messages (we must declare new variables here or use brackets to do it inside a case block)
   list<Block> receivedBlocks;
   vector<Transaction> receivedTransactions;
+  vector<Transaction>::iterator it;
 
   //This switch contains the business logic for messages handling, just invoke correct methods, no implementation here
   switch (message.type) {
@@ -59,7 +60,7 @@ void handleClientMessage(const string & data){
 
     //Some peer sent his version of transaction pool
     case RESPONSE_TRANSACTION_POOL:
-    //Parsing received transaction pool
+      //Parsing received transaction pool
       if(document["data"].IsNull()){
         cout << "Error parsing data: No data received" << endl;
         return;
@@ -72,7 +73,6 @@ void handleClientMessage(const string & data){
         return;
       }
       //For each transaction, Blockchain method to elaborate it is called, then the updated transaction pool is broadcasted
-      vector<Transaction>::iterator it;
       for(it = receivedTransactions.begin(); it != receivedTransactions.end(); ++it){
         try{
             BlockChain::getInstance().handleReceivedTransaction(*it);
@@ -84,9 +84,8 @@ void handleClientMessage(const string & data){
       }
       break;
 
-    default:
+    default :
       cout << "Received message has no valid message type" << endl;
-      break;
   }
 }
 

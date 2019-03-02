@@ -117,12 +117,12 @@ void initHttpServer(int port){
   crow::SimpleApp app;
 
   // Ritorna una stringa contenente la blockchain
-  CROW_ROUTE(app, basepath + "blocks")([]() {
+  CROW_ROUTE(app, "/webresources/blocks")([]() {
       return "{\"success\" :true, \"blockchain\": " + BlockChain::getInstance().toString() + "}";
   });
 
   // Ritorna un blocco della blockchain dato il suo hash
-  CROW_ROUTE(app,"webresources/block/<string>")([](string hash){
+  CROW_ROUTE(app,"/webresources/block/<string>")([](string hash){
     try{
       return "{\"success\" :true, \"block\": " + getBlockFromHash(BlockChain::getInstance().getBlockchain(), hash).toString() + "}";
     }catch(const char* msg){
@@ -133,7 +133,7 @@ void initHttpServer(int port){
   });
 
   // Ritorna una transazione della blockchain dato il suo id
-  CROW_ROUTE(app, basepath + "transaction/<string>")([](string id){
+  CROW_ROUTE(app, "/webresources/transaction/<string>")([](string id){
     list<Block> blockchain = BlockChain::getInstance().getBlockchain();
     try{
       return "{\"success\": true, \"transaction\": " + getTransactionFromId(blockchain, id).toString() + "}";
@@ -145,23 +145,23 @@ void initHttpServer(int port){
   });
 
   // Ritorna la lista degli output non spesi appartenenti ad un certo indirizzo (wallet)
-  CROW_ROUTE(app, basepath + "address/<string>")([](string address){
+  CROW_ROUTE(app, "/webresources/address/<string>")([](string address){
       string ret = "{\"success\": true, \"unspentTxOuts\":" + printUnspentTxOuts(findUnspentTxOutsOfAddress(address, BlockChain::getInstance().getUnspentTxOuts())) + "}";
       return ret;
   });
 
   // Ritorna la lista degli output non spesi dell'intera blockchain
-  CROW_ROUTE(app, basepath + "unspentTransactionOutputs")([]() {
+  CROW_ROUTE(app, "/webresources/unspentTransactionOutputs")([]() {
       return "{\"success\" :true, \"unspentTxOuts\": " + printUnspentTxOuts(BlockChain::getInstance().getUnspentTxOuts()) + "}";
   });
 
   // Ritorna la lista degli output non spesi relativi al wallet dell'utente
-  CROW_ROUTE(app, basepath + "myUnspentTransactionOutputs")([]() {
+  CROW_ROUTE(app, "/webresources/myUnspentTransactionOutputs")([]() {
       return "{\"success\" :true, \"myUnspentTxOuts\": " + printUnspentTxOuts(BlockChain::getInstance().getMyUnspentTransactionOutputs()) + "}";
   });
 
   // Effettua il mine di un raw block (TODO: Controllare bene cosa bisogna passargli)
-  CROW_ROUTE(app, basepath + "mineRawBlock").methods("POST"_method)([](const crow::request& req){
+  CROW_ROUTE(app, "/webresources/mineRawBlock").methods("POST"_method)([](const crow::request& req){
     rapidjson::Document document;
     document.Parse(req.body.c_str());
     const rapidjson::Value& data = document["data"];
@@ -188,7 +188,7 @@ void initHttpServer(int port){
   });
 
   // Effettua il mine di un blocco normale (senza transazioni)
-  CROW_ROUTE(app, basepath + "mineBlock").methods("POST"_method)([](){
+  CROW_ROUTE(app, "/webresources/mineBlock").methods("POST"_method)([](){
     try{
       Block newBlock = BlockChain::getInstance().generateNextBlock();
       return "{\"success\" :true, \"newBlock\": " + newBlock.toString() + "}";
@@ -200,12 +200,12 @@ void initHttpServer(int port){
   });
 
   // Ritorna il balance del wallet
-  CROW_ROUTE(app, basepath + "balance")([]() {
+  CROW_ROUTE(app, "/webresources/balance")([]() {
     return "{\"success\" :true, \"balance\": " + to_string(BlockChain::getInstance().getAccountBalance()) + "}";
   });
 
   // Effettua il mine di una transazione (TODO: Controllare bene cosa bisogna passargli)
-  CROW_ROUTE(app, basepath + "mineTransaction").methods("POST"_method)([](const crow::request& req){
+  CROW_ROUTE(app, "/webresources/mineTransaction").methods("POST"_method)([](const crow::request& req){
     rapidjson::Document document;
     document.Parse(req.body.c_str());
     if(document["amount"].IsNull() || document["address"].IsNull()){
@@ -225,7 +225,7 @@ void initHttpServer(int port){
   });
 
   // Invia una transazione (TODO: Controllare bene cosa bisogna passargli)
-  CROW_ROUTE(app, basepath + "sendTransaction").methods("POST"_method)([](const crow::request& req){
+  CROW_ROUTE(app, "/webresources/sendTransaction").methods("POST"_method)([](const crow::request& req){
     rapidjson::Document document;
     document.Parse(req.body.c_str());
     if(document["amount"].IsNull() || document["address"].IsNull()){
@@ -245,12 +245,12 @@ void initHttpServer(int port){
   });
 
   // Ritorna la transaction pool del nodo
-  CROW_ROUTE(app, basepath + "transactionPool")([]() {
+  CROW_ROUTE(app, "/webresources/transactionPool")([]() {
       return "{\"success\" :true, \"transactionPool\": " + printTransactions(TransactionPool::getInstance().getTransactionPool()) + "}";
   });
 
   // Aggiunge un peer alla lista di peer
-  CROW_ROUTE(app, basepath + "addPeer").methods("POST"_method)([](const crow::request& req){
+  CROW_ROUTE(app, "/webresources/addPeer").methods("POST"_method)([](const crow::request& req){
     rapidjson::Document document;
     document.Parse(req.body.c_str());
     if(document["peer"].IsNull()){
@@ -270,19 +270,19 @@ void initHttpServer(int port){
   });
 
   // Ritorna i peer del nodo
-  CROW_ROUTE(app, basepath + "peers")([]() {
+  CROW_ROUTE(app, "/webresources/peers")([]() {
     return "{\"success\" :true, \"peers\": " + to_string(Peer::getInstance().countPeers() + 1) + "}";
   });
 
   // TODO: testare
   // Rest che consente di leggere le righe di un file, ritornate in un array. Questa rest serve ai fini delle statistiche del client rf
   // Param: blockchainStats -> statistiche sulla blockchain, blocksminingtime -> statistiche sul tempo di mining dei blocchi, transactionWaitingTime -> statistiche sul tempo di attesa delle transazioni
-  CROW_ROUTE(app, basepath + "stats/<string>")([](string filename){
+  CROW_ROUTE(app, "/webresources/stats/<string>")([](string filename){
     bool isFirst = true;
     string data = "[";
     string line;
     ifstream inFile;
-    inFile.open(to_string(filename) + ".txt");  // blockchainstats, blocksminingtime, transactionwaitingtime
+    inFile.open(filename + ".txt");  // blockchainstats, blocksminingtime, transactionwaitingtime
 
     while (getline(inFile, line)) {
       if(isFirst) {
@@ -296,9 +296,10 @@ void initHttpServer(int port){
     return "{\"success\": true, \"data\": " + data + "}";
   });
 
-  // TODO: testare
+  // TODO: sviluppare testare
   // Ritorna il tempo di attesa per la conferma di ogni transazione della blockchain
-  CROW_ROUTE(app, basepath + "blocksminingtime")([](){
+  CROW_ROUTE(app, "/webresources/blocksminingtime")([](){
+    return "{\"success\" :true, \"time\": " + to_string(0) + "}";
   });
 
   // Start del server HTTP sulla porta designata

@@ -269,7 +269,7 @@ Block BlockChain::findBlock(int index, string previousHash, long timestamp, vect
   ofstream myfile;
   myfile.open ("blocksminingtime.txt", ios::out | ios::app);
   if(myfile) {
-    myfile << "{\"block\": " + to_string(index) + ", \"miningtime\": " + duration + "}";
+    myfile << "{\"block\": " <<  index << ", \"miningtime\": " << duration << "}";
   } else {
     cout << "Errore: non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
   }
@@ -481,7 +481,7 @@ void BlockChain::handleReceivedTransaction(Transaction transaction) {
 
 /* Salva in un file le statistiche della blockchain (numero di blocchi, di transazioni e di coin) */
 void BlockChain::saveBlockchainStats() {
-  vector<Block>::iterator it;
+  list<Block>::iterator it;
   int transactionNumber = 0;
 
   // prendo il numero di transazioni
@@ -498,7 +498,7 @@ void BlockChain::saveBlockchainStats() {
   ofstream myfile;
   myfile.open ("blockchainstats.txt", ios::out | ios::app);
   if(myfile) {
-    myfile << "{\"time\": " + to_string(time) + ", \"blocks\": " + to_string(blockchain.size()) + ", \"transactions\": " + to_string(transactionNumber) + ", \"coins\": " + to_string(BlockChain::getInstance().getUnspentTxOuts().size()) + "}";
+    myfile << "{\"time\": " << time << ", \"blocks\": " << blockchain.size() << ", \"transactions\": " << transactionNumber << ", \"coins\": " << BlockChain::getInstance().getUnspentTxOuts().size() << "}";
   } else {
     cout << "Errore: non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
   }
