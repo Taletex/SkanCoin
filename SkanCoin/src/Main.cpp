@@ -7,7 +7,7 @@
 #include "Blockchain/TransactionPool.hpp"
 #include "Blockchain/Wallet.hpp"
 #include "HttpServer/HttpServer.hpp"
-#include "P2P/P2PServer.hpp"
+#include "P2P/Peer.hpp"
 
 //source files//
 #include "Blockchain/TransactionPool.cpp"
@@ -15,16 +15,16 @@
 #include "Blockchain/Blockchain.cpp"
 #include "HttpServer/HttpServer.cpp"
 #include "Blockchain/Wallet.cpp"
-#include "P2P/P2PServer.cpp"
+#include "P2P/Peer.cpp"
 
 using namespace std;
 
 void initP2PServer(int port){
-  P2PServer::getInstance().initP2PServer(port);
+  Peer::getInstance().initP2PServer(port);
 }
 
 void startP2PClient(){
-  P2PServer::getInstance().startClientPoll();
+  Peer::getInstance().startClientPoll();
 }
 
 int main(){

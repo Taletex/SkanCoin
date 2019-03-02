@@ -7,7 +7,7 @@
 #include "../Blockchain/Wallet.hpp"
 #include "../Blockchain/TransactionPool.hpp"
 #include "../Blockchain/Blockchain.hpp"
-#include "../P2P/P2PServer.hpp"
+#include "../P2P/Peer.hpp"
 
 std::vector<TxIn> parseTxInVector(const rapidjson::Value &txIns);
 

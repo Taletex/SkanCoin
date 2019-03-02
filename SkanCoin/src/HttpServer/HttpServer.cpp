@@ -247,7 +247,7 @@ void initHttpServer(int port){
     }
     string peer = document["peer"].GetString();
     try{
-      P2PServer::getInstance().connectToPeers(peer);
+      Peer::getInstance().connectToPeers(peer);
       string ret = "{\"success\": true, \"peer\": \"" + peer + "\" }";
       return ret;
     }catch (const char* msg) {
@@ -258,7 +258,7 @@ void initHttpServer(int port){
   });
 
   CROW_ROUTE(app, "/peers")([]() {
-    return "{\"success\" :true, \"peers\": " + to_string(P2PServer::getInstance().countPeers() + 1) + "}";
+    return "{\"success\" :true, \"peers\": " + to_string(Peer::getInstance().countPeers() + 1) + "}";
   });
 
   cout << "Starting Http Server on port" << port << "..." << endl;

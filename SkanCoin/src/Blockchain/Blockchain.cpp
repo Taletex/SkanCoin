@@ -190,7 +190,7 @@ Block BlockChain::generateRawNextBlock(vector<Transaction> blockData){
     throw "EXCEPTION: error occurred during new block mining";
   }
   if (addBlockToChain(newBlock)) {
-      P2PServer::getInstance().broadcastLatest();
+      Peer::getInstance().broadcastLatest();
       return newBlock;
   } else {
       cout << endl;
@@ -284,7 +284,7 @@ Transaction BlockChain::sendTransaction(string address, float amount){
     cout << endl;
     throw "EXCEPTION: Creation of the transaction to be sent failed";
   }
-  // p2pServer.broadCastTransactionPool();
+  Peer::getInstance().broadCastTransactionPool();
   return tx;
 }
 
@@ -448,7 +448,7 @@ void BlockChain::replaceChain(list<Block> newBlocks) {
     BlockChain::blockchain = newBlocks;
     setUnspentTxOuts(aUnspentTxOuts);
     TransactionPool::getInstance().updateTransactionPool(getUnspentTxOuts());
-    P2PServer::getInstance().broadcastLatest();
+    Peer::getInstance().broadcastLatest();
   }
 }
 
