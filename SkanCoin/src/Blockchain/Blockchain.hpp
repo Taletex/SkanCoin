@@ -125,6 +125,9 @@ class BlockChain {
     /* Replaces the blockchain with the passed blocks if possible */
     void replaceChain(std::list<Block> newBlocks);
 
+    /* Salva in un file le statistiche della blockchain (numero di blocchi, di transazioni e di coin) */
+    void saveBlockchainStats();
+
     /* Handles the received transaction adding it to the transaction pool */
     void handleReceivedTransaction(Transaction transaction);
     private:

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>SkanCoin</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+        <!-- Font awesome import -->
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css">
+
+        <!-- Bootstrap import -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+        <!-- AngularJs import -->
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+
+        <!-- MomentJs import -->
+        <script src="https://momentjs.com/downloads/moment-with-locales.js"></script>
+
+        <!-- main css -->
+        <link rel="stylesheet" href="main.css">
+
+        <!-- main controller import -->
+        <script src="mainController.js"></script>
+
+        <!-- Favicon -->
+        <link rel="shortcut icon" href="res/favicon.ico">
+    </head>
+    <body>
+        <div ng-app="myApp" ng-controller="mainCtrl">
+            <div style="text-align:center; padding:20px;" class="d-flex align-items-center justify-content-between">
+                <div class="d-flex">
+                    <img style="width:45px; height: 45px;" src="res/coin.png">
+                    <h1 class="mb-0 ml-2">Skan Coin UI</h1>
+                </div>
+                <div>
+                    <a href="https://github.com/Taletex/SkanCoin.git"><button class="btn btn-success">Go to Official Repo (GIT)</button></a>
+                </div>
+            </div>
+            <hr class="m-0">
+            <div style="text-align:center; padding: 20px;">
+                <div class="row m-0">
+                    <div class="col-md-12 d-flex m-0 alert alert-dark" style="border-radius: 5px 5px 0px 0px;">
+                        <h3 class="m-0">Chiave pubblica <span class="text-primary">inserire chiave pubblica</span></h3>
+                    </div>
+
+                    <!-- NODE QUERIES -->
+                    <div class="col-md-6 card p-0 border-radius-0 h-100">
+                        <div class="card-header d-flex align-items-center justify-content-between py-2">
+                            <h4 class="m-0">Queries</h4>
+                        </div>
+                        <div class="card-body" style="overflow:auto; height: calc(100vh - 300px);">
+                            <div class="h-100">
+                                <ul class="w-100 h-100 p-0 m-0">
+                                    <li class="d-flex align-items-center justify-content-between list-group-item py-2">
+                                        <div><span>Stampa la blockchain</span></div>
+                                        <div class="form-group m-0 d-flex ml-auto">
+                                          <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="getBlockchain()">Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
+                                        </div>
+                                    </li>
+                                    <li class="d-flex align-items-center justify-content-between list-group-item py-2">
+                                        <div><span>Stampa blocco (da hash)</span></div>
+                                        <div class="form-group m-0 d-flex ml-auto">
+                                            <input type="text" class="form-control form-control-sm" placeholder="Hash" name="blockHash" ng-model="inputs.blockHash">
+                                            <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="getBlockFromHash(inputs.blockHash)" ng-disabled="(inputs.blockHash==null || inputs.blockHash=='')" ng-class="{'disabled cursor-not-allowed': (inputs.blockHash==null || inputs.blockHash=='')}">Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
+                                        </div>
+                                    </li>
+                                    <li class="d-flex align-items-center justify-content-between list-group-item py-2">
+                                        <div><span>Stampa transazione (da id)</span></div>
+                                        <div class="form-group m-0 d-flex ml-auto">
+                                            <input type="text" class="form-control form-control-sm" placeholder="Id transazione" name="transactionId" ng-model="inputs.transactionId">
+                                            <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="getTransactionFromId(inputs.transactionId)" ng-disabled="(inputs.transactionId==null || inputs.transactionId=='')" ng-class="{'disabled cursor-not-allowed': (inputs.transactionId==null || inputs.transactionId=='')}">Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
+                                        </div>
+                                    </li>
+                                    <li class="d-flex align-items-center justify-content-between list-group-item py-2">
+                                        <div><span>Stampa transazioni non spese della blokchain per un wallet</span></div>
+                                        <div class="form-group m-0 d-flex ml-auto">
+                                            <input type="text" class="form-control form-control-sm" placeholder="Hash" name="Indirizzo" ng-model="inputs.address">
+                                            <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="getWalletUnspentTransactionOutputs(inputs.address)" ng-disabled="(inputs.address==null || inputs.address=='')" ng-class="{'disabled cursor-not-allowed': (inputs.address==null || inputs.address=='')}">Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
+                                        </div>
+                                    </li>
+                                    <li class="d-flex align-items-center justify-content-between list-group-item py-2">
+                                        <div><span>Stampa transazioni non spese della blockchain</span></div>
+                                        <div class="form-group m-0 d-flex ml-auto">
+                                            <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="getBlockchainUnspentTransactionOutputs()">Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
+                                        </div>
+                                    </li>
+                                    <li class="d-flex align-items-center justify-content-between list-group-item py-2">
+                                        <div><span>Stampa transazioni non spese della blockchain per il tuo wallet</span></div>
+                                        <div class="form-group m-0 d-flex ml-auto">
+                                            <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="getMyUnspentTransactionOutputs()">Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
+                                        </div>
+                                    </li>
+                                    <!-- TODO: METTERE GLI INPUT GIUSTI -->
+                                    <li class="list-group-item py-2">
+                                        <div class="row m-0 d-flex align-items-center justify-content-between">
+                                            <div><span>Effettua il mining di un blocco (raw, con transazioni)</div>
+                                            <div class="form-group m-0 d-flex ml-auto">
+                                                <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="mineRawBlock()" ng-class="{'disabled cursor-not-allowed': false}"><span class="fa fa-right-arrow"></span>Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
+                                            </div>
+                                        </div>
+                                        <!-- Passare le transazioni -->
+                                    </li>
+                                    <li class="list-group-item py-2">
+                                        <div class="row m-0 d-flex align-items-center justify-content-between">
+                                            <div><span>Effettua il mining di un blocco (senza transazioni)</div>
+                                            <div class="form-group m-0 d-flex ml-auto">
+                                                <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="insertDocument()" ng-class="{'disabled cursor-not-allowed': false}"><span class="fa fa-right-arrow"></span>Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
+                                            </div>
+                                        </div>
+                                        <!-- Passare le transazioni -->
+                                    </li>
+                                    <li class="d-flex align-items-center justify-content-between list-group-item py-2">
+                                        <div><span>Stampa il mio bilancio</span></div>
+                                        <div class="form-group m-0 d-flex ml-auto">
+                                            <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="getMyBalance()">Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item py-2">
+                                        <div class="row m-0 d-flex align-items-center justify-content-between">
+                                            <div><span>Effettua il mining di una transazione</div>
+                                            <div class="form-group m-0 d-flex ml-auto">
+                                                <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="mineTransaction(inputs.mineTransactionAmount, inputs.mineTransactionAddress)" ng-disabled="(inputs.mineTransactionAmount==null || inputs.mineTransactionAmount=='' || inputs.mineTransactionAddress==null || inputs.mineTransactionAddress=='')" ng-class="{'disabled cursor-not-allowed': (inputs.mineTransactionAmount==null || inputs.mineTransactionAmount=='' || inputs.mineTransactionAddress==null || inputs.mineTransactionAddress=='')}"><span class="fa fa-right-arrow"></span>Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
+                                            </div>
+                                        </div>
+                                        <div class="row mx-0 my-2 card" ng-init="bShowDoc1=false">
+                                            <div class="card-header text-left px-2 py-1 cursor-pointer" ng-click="bShowDoc1 = !bShowDoc1">
+                                                <span ng-show="!bShowDoc1" class="fa fa-plus-circle mr-2" style="font-size: 14px;"></span>
+                                                <span ng-show="bShowDoc1" class="fa fa-minus-circle mr-2" style="font-size: 14px;"></span>
+                                                <span>Quantità e Indirizzo (chiave pubblica)</span>
+                                            </div>
+                                            <div class="card-body row m-0 px-2 py-1" ng-show="bShowDoc1">
+                                                <div class="form-group m-0 col-3 text-left pl-0">
+                                                    <label class="text-muted col-form-label-sm p-0 m-0">Quantità</label>
+                                                    <input type="number" min='1' class="form-control form-control-sm" placeholder="quantità" name="quantità_mine" ng-model="inputs.mineTransactionAmount">
+                                                </div>
+                                                <div class="form-group m-0 col-9 text-left pl-0">
+                                                    <label class="text-muted col-form-label-sm p-0 m-0">Indirizzo</label>
+                                                    <input type="text" class="form-control form-control-sm" placeholder="Indirizzo" name="indirizzo_mine" ng-model="inputs.mineTransactionAddress">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item py-2">
+                                        <div class="row m-0 d-flex align-items-center justify-content-between">
+                                            <div><span>Effettua l'invio di una transazione</div>
+                                            <div class="form-group m-0 d-flex ml-auto">
+                                                <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="sendTransaction(inputs.sendTransactionAmount, inputs.sendTransactionAddress)" ng-disabled="(inputs.sendTransactionAmount==null || inputs.sendTransactionAmount=='' || inputs.sendTransactionAddress==null || inputs.sendTransactionAddress=='')" ng-class="{'disabled cursor-not-allowed': (inputs.sendTransactionAmount==null || inputs.sendTransactionAmount=='' || inputs.sendTransactionAddress==null || inputs.sendTransactionAddress=='')}"><span class="fa fa-right-arrow"></span>Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
+                                            </div>
+                                        </div>
+                                        <div class="row mx-0 my-2 card" ng-init="bShowDoc2=false">
+                                            <div class="card-header text-left px-2 py-1 cursor-pointer" ng-click="bShowDoc2 = !bShowDoc2">
+                                                <span ng-show="!bShowDoc2" class="fa fa-plus-circle mr-2" style="font-size: 14px;"></span>
+                                                <span ng-show="bShowDoc2" class="fa fa-minus-circle mr-2" style="font-size: 14px;"></span>
+                                                <span>Quantità e Indirizzo (chiave pubblica)</span>
+                                            </div>
+                                            <div class="card-body row m-0 px-2 py-1" ng-show="bShowDoc2">
+                                                <div class="form-group m-0 col-3 text-left pl-0">
+                                                    <label class="text-muted col-form-label-sm p-0 m-0">Quantità</label>
+                                                    <input type="number" min='1' class="form-control form-control-sm" placeholder="quantità" name="quantità_send" ng-model="inputs.sendTransactionAmount">
+                                                </div>
+                                                <div class="form-group m-0 col-9 text-left pl-0">
+                                                    <label class="text-muted col-form-label-sm p-0 m-0">Indirizzo</label>
+                                                    <input type="text" class="form-control form-control-sm" placeholder="Indirizzo" name="indirizzo_send" ng-model="inputs.sendTransactionAddress">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="d-flex align-items-center justify-content-between list-group-item py-2">
+                                        <div><span>Stampa la transaction pool</span></div>
+                                        <div class="form-group m-0 d-flex ml-auto">
+                                            <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="getTransactionPool()">Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item py-2">
+                                        <div class="row m-0 d-flex align-items-center justify-content-between">
+                                            <div><span>Aggiungi peer</div>
+                                            <div class="form-group m-0 d-flex ml-auto">
+                                                <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="addPeer(inputs.peer)" ng-disabled="(inputs.peer==null || inputs.peer=='')" ng-class="{'disabled cursor-not-allowed': (inputs.peer==null || inputs.peer=='')}"><span class="fa fa-right-arrow"></span>Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
+                                            </div>
+                                        </div>
+                                        <div class="row mx-0 my-2 card" ng-init="bShowDoc3=false">
+                                            <div class="card-header text-left px-2 py-1 cursor-pointer" ng-click="bShowDoc3 = !bShowDoc3">
+                                                <span ng-show="!bShowDoc3" class="fa fa-plus-circle mr-2" style="font-size: 14px;"></span>
+                                                <span ng-show="bShowDoc3" class="fa fa-minus-circle mr-2" style="font-size: 14px;"></span>
+                                                <span>Peer</span>
+                                            </div>
+                                            <div class="card-body row m-0 px-2 py-1" ng-show="bShowDoc3">
+                                                <div class="form-group m-0 col-12 text-left pl-0">
+                                                    <label class="text-muted col-form-label-sm p-0 m-0">Indirizzo peer</label>
+                                                    <input type="text" class="form-control form-control-sm" placeholder="Indirizzo peer" name="peer_address" ng-model="inputs.peer">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="d-flex align-items-center justify-content-between list-group-item py-2">
+                                        <div><span>Stampa la lista dei peer</span></div>
+                                        <div class="form-group m-0 d-flex ml-auto">
+                                            <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="getPeer()">Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                             <div class="d-flex align-items-center justify-content-start">
+                                 <span>&nbsp;</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- QUERY RESULT -->
+                    <div class="col-md-6 card p-0 border-radius-0 h-100">
+                        <div class="card-header d-flex align-items-center justify-content-between py-2">
+                            <h4 class="m-0">Query Output</h4>
+                        </div>
+                        <div class="card-body" style="overflow:auto; height: calc(100vh - 300px);">
+                            <div class="h-100">
+                                <div ng-show="queryOutput == null && !bLoading">
+                                    <h6>Nessun output da mostrare</h6>
+                                </div>
+                                <div ng-show="bLoading" class="w-100 h-100 align-items-center d-flex justify-content-center">
+                                    <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+                                </div>
+                                <div ng-show="queryOutput != null && !bLoading">
+                                    <pre id="output" class="text-left"></pre>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                             <div class="d-flex align-items-center justify-content-start">
+                                 <span>&nbsp;</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

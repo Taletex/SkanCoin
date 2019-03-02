@@ -252,7 +252,10 @@ Block BlockChain::generatenextBlockWithTransaction(string receiverAddress, float
 Block BlockChain::findBlock(int index, string previousHash, long timestamp, vector<Transaction> data, int difficulty) {
   int nonce = 0;
   string hash;
+  double duration;
+  clock_t start = clock();
 
+  // calcolo dell'hash (mining)
   while (true) {
     hash = calculateHash(index, previousHash, timestamp, data, difficulty, nonce);
     if(hashMatchesDifficulty(hash, difficulty)) {
@@ -260,6 +263,17 @@ Block BlockChain::findBlock(int index, string previousHash, long timestamp, vect
     }
     nonce++;
   }
+
+  // calcolo e salvataggio del tempo di mining del blocco in secondi (per le stat)
+  duration = (std::clock() - start)/(double)CLOCKS_PER_SEC;
+  ofstream myfile;
+  myfile.open ("blocksminingtime.txt", ios::out | ios::app);
+  if(myfile) {
+    myfile << "{\"block\": " + to_string(index) + ", \"miningtime\": " + duration + "}";
+  } else {
+    cout << "Errore: non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
+  }
+  myfile.close();
 }
 
 //ritorna il totale degli output non spesi nel wallet del nodo
@@ -427,6 +441,7 @@ bool BlockChain::addBlockToChain(Block newBlock) {
     BlockChain::blockchain.push_back(newBlock);
     setUnspentTxOuts(ret);
     TransactionPool::getInstance().updateTransactionPool(getUnspentTxOuts());
+    saveBlockchainStats();
     return true;
   }else{
     return false;
@@ -449,6 +464,7 @@ void BlockChain::replaceChain(list<Block> newBlocks) {
     setUnspentTxOuts(aUnspentTxOuts);
     TransactionPool::getInstance().updateTransactionPool(getUnspentTxOuts());
     Peer::getInstance().broadcastLatest();
+    saveBlockchainStats();
   }
 }
 
@@ -460,5 +476,31 @@ void BlockChain::handleReceivedTransaction(Transaction transaction) {
     cout << msg << endl;
     cout << endl;
     throw "EXCEPTION: Received invalid transaction!";
+    }
+}
+
+/* Salva in un file le statistiche della blockchain (numero di blocchi, di transazioni e di coin) */
+void BlockChain::saveBlockchainStats() {
+  vector<Block>::iterator it;
+  int transactionNumber = 0;
+
+  // prendo il numero di transazioni
+  for(it = blockchain.begin(); it != blockchain.end(); ++it) {
+    transactionNumber += it->data.size();
   }
+
+  // prendo il tempo corrente (relativo al sistema corrente)
+  time_t now = time(0);
+  tm *ltm = localtime(&now);
+  string time = to_string(1 + ltm->tm_hour) + ":" + to_string(1 + ltm->tm_min) + ":" + to_string(1 + ltm->tm_sec) + " " + to_string(ltm->tm_mday) + "/" + to_string(1 + ltm->tm_mon) + "/" + to_string(1900 + ltm->tm_year);
+
+  // salvataggio su file
+  ofstream myfile;
+  myfile.open ("blockchainstats.txt", ios::out | ios::app);
+  if(myfile) {
+    myfile << "{\"time\": " + to_string(time) + ", \"blocks\": " + to_string(blockchain.size()) + ", \"transactions\": " + to_string(transactionNumber) + ", \"coins\": " + to_string(BlockChain::getInstance().getUnspentTxOuts().size()) + "}";
+  } else {
+    cout << "Errore: non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
+  }
+  myfile.close();
 }
