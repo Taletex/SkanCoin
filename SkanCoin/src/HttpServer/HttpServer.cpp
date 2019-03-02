@@ -113,22 +113,28 @@ Transaction getTransactionFromId(list<Block> blockchain, string id){
   throw "EXCEPTION: Transaction not found in the blockchain";
 }
 
+crow::response createResponse(string data, int code) {
+  crow::response resp(data);
+  resp.code = code;
+  resp.add_header("Access-Control-Allow-Origin", "*");
+  return resp;
+}
+
 void initHttpServer(int port){
   crow::SimpleApp app;
 
   // Ritorna una stringa contenente la blockchain
   CROW_ROUTE(app, "/webresources/blocks")([]() {
-      return "{\"success\" :true, \"blockchain\": " + BlockChain::getInstance().toString() + "}";
+      return createResponse("{\"success\" :true, \"blockchain\": " + BlockChain::getInstance().toString() + "}", 200);
   });
 
   // Ritorna un blocco della blockchain dato il suo hash
   CROW_ROUTE(app,"/webresources/block/<string>")([](string hash){
     try{
-      return "{\"success\" :true, \"block\": " + getBlockFromHash(BlockChain::getInstance().getBlockchain(), hash).toString() + "}";
+      return createResponse("{\"success\" :true, \"block\": " + getBlockFromHash(BlockChain::getInstance().getBlockchain(), hash).toString() + "}", 200);
     }catch(const char* msg){
       CROW_LOG_INFO << msg << "\n";
-      string ret = "{\"success\": false, \"message\": \"Block not found\" }";
-      return ret;
+      return createResponse("{\"success\": false, \"message\": \"Block not found\" }", 200);
     }
   });
 
@@ -136,28 +142,26 @@ void initHttpServer(int port){
   CROW_ROUTE(app, "/webresources/transaction/<string>")([](string id){
     list<Block> blockchain = BlockChain::getInstance().getBlockchain();
     try{
-      return "{\"success\": true, \"transaction\": " + getTransactionFromId(blockchain, id).toString() + "}";
+      return createResponse("{\"success\": true, \"transaction\": " + getTransactionFromId(blockchain, id).toString() + "}", 200);
     }catch(const char* msg){
       CROW_LOG_INFO << msg << "\n";
-      string ret = "{\"success\": false, \"message\": \"Transaction not found in the blockchain!\" }";
-      return ret;
+      return createResponse("{\"success\": false, \"message\": \"Transaction not found in the blockchain!\" }", 200);
     }
   });
 
   // Ritorna la lista degli output non spesi appartenenti ad un certo indirizzo (wallet)
   CROW_ROUTE(app, "/webresources/address/<string>")([](string address){
-      string ret = "{\"success\": true, \"unspentTxOuts\":" + printUnspentTxOuts(findUnspentTxOutsOfAddress(address, BlockChain::getInstance().getUnspentTxOuts())) + "}";
-      return ret;
+      return createResponse("{\"success\": true, \"unspentTxOuts\":" + printUnspentTxOuts(findUnspentTxOutsOfAddress(address, BlockChain::getInstance().getUnspentTxOuts())) + "}", 200);
   });
 
   // Ritorna la lista degli output non spesi dell'intera blockchain
   CROW_ROUTE(app, "/webresources/unspentTransactionOutputs")([]() {
-      return "{\"success\" :true, \"unspentTxOuts\": " + printUnspentTxOuts(BlockChain::getInstance().getUnspentTxOuts()) + "}";
+      return createResponse("{\"success\" :true, \"unspentTxOuts\": " + printUnspentTxOuts(BlockChain::getInstance().getUnspentTxOuts()) + "}", 200);
   });
 
   // Ritorna la lista degli output non spesi relativi al wallet dell'utente
   CROW_ROUTE(app, "/webresources/myUnspentTransactionOutputs")([]() {
-      return "{\"success\" :true, \"myUnspentTxOuts\": " + printUnspentTxOuts(BlockChain::getInstance().getMyUnspentTransactionOutputs()) + "}";
+      return createResponse("{\"success\" :true, \"myUnspentTxOuts\": " + printUnspentTxOuts(BlockChain::getInstance().getMyUnspentTransactionOutputs()) + "}", 200);
   });
 
   // Effettua il mine di un raw block (TODO: Controllare bene cosa bisogna passargli)
@@ -166,24 +170,21 @@ void initHttpServer(int port){
     document.Parse(req.body.c_str());
     const rapidjson::Value& data = document["data"];
     if(!data.IsArray() || data.IsNull()){
-      string ret = "{\"success\": false, \"message\": \"Error parsing request: Block data not present\" }";
-      return ret;
+      return createResponse("{\"success\": false, \"message\": \"Error parsing request: Block data not present\" }", 200);
     }
     vector<Transaction> transactions;
     try{
       transactions = parseTransactionVector(data);
     }catch(const char* msg){
       CROW_LOG_INFO << msg << "\n";
-      string ret = "{\"success\": false, \"message\": \"Error parsing request: <Transaction vector>\" }";
-      return ret;
+      return createResponse("{\"success\": false, \"message\": \"Error parsing request: <Transaction vector>\" }", 200);
     }
     try{
       Block newBlock = BlockChain::getInstance().generateRawNextBlock(transactions);
-      return "{\"success\" :true, \"newBlock\": " + newBlock.toString() + "}";
+      return createResponse("{\"success\" :true, \"newBlock\": " + newBlock.toString() + "}", 200);
     }catch(const char* msg){
       CROW_LOG_INFO << msg << "\n";
-      string ret = "{\"success\": false, \"message\": \"Error generating new block\" }";
-      return ret;
+      return createResponse("{\"success\": false, \"message\": \"Errore durante la generazione del nuovo blocco\" }", 200);
     }
   });
 
@@ -191,17 +192,16 @@ void initHttpServer(int port){
   CROW_ROUTE(app, "/webresources/mineBlock").methods("POST"_method)([](){
     try{
       Block newBlock = BlockChain::getInstance().generateNextBlock();
-      return "{\"success\" :true, \"newBlock\": " + newBlock.toString() + "}";
+      return createResponse("{\"success\" :true, \"newBlock\": " + newBlock.toString() + "}", 200);
     }catch(const char* msg){
       CROW_LOG_INFO << msg << "\n";
-      string ret = "{\"success\": false, \"message\": \"Error generating new block\" }";
-      return ret;
+      return createResponse("{\"success\": false, \"message\": \"Errore durante la generazione del nuovo blocco\" }", 200);
     }
   });
 
   // Ritorna il balance del wallet
   CROW_ROUTE(app, "/webresources/balance")([]() {
-    return "{\"success\" :true, \"balance\": " + to_string(BlockChain::getInstance().getAccountBalance()) + "}";
+    return createResponse("{\"success\" :true, \"balance\": " + to_string(BlockChain::getInstance().getAccountBalance()) + "}", 200);
   });
 
   // Effettua il mine di una transazione (TODO: Controllare bene cosa bisogna passargli)
@@ -209,18 +209,16 @@ void initHttpServer(int port){
     rapidjson::Document document;
     document.Parse(req.body.c_str());
     if(document["amount"].IsNull() || document["address"].IsNull()){
-      string ret = "{\"success\": false, \"message\": \"Error parsing request: invalid address or amount\" }";
-      return ret;
+      return createResponse("{\"success\": false, \"message\": \"Error parsing request: invalid address or amount\" }", 200);
     }
     string address = document["address"].GetString();
     float amount = document["amount"].GetFloat();
     try {
       Block newBlock = BlockChain::getInstance().generatenextBlockWithTransaction(address, amount);
-      return "{\"success\" :true, \"newBlock\": " + newBlock.toString() + "}";
+      return createResponse("{\"success\" :true, \"newBlock\": " + newBlock.toString() + "}", 200);
     } catch (const char* msg) {
       CROW_LOG_INFO << msg << "\n";
-      string ret = "{\"success\": false, \"message\": \"Error generating new block\" }";
-      return ret;
+      return createResponse("{\"success\": false, \"message\": \"Error generating new block\" }", 200);
     }
   });
 
@@ -229,24 +227,22 @@ void initHttpServer(int port){
     rapidjson::Document document;
     document.Parse(req.body.c_str());
     if(document["amount"].IsNull() || document["address"].IsNull()){
-      string ret = "{\"success\": false, \"message\": \"Error parsing request: invalid address or amount\" }";
-      return ret;
+      return createResponse("{\"success\": false, \"message\": \"Error parsing request: invalid address or amount\" }", 200);
     }
     string address = document["address"].GetString();
     float amount = document["amount"].GetFloat();
     try {
       Transaction tx = BlockChain::getInstance().sendTransaction(address, amount);
-      return "{\"success\" :true, \"Transaction\": " + tx.toString() + "}";
+      return createResponse("{\"success\" :true, \"Transaction\": " + tx.toString() + "}", 200);
     } catch (const char* msg) {
       CROW_LOG_INFO << msg << "\n";
-      string ret = "{\"success\": false, \"message\": \"Error sending the transaction\" }";
-      return ret;
+      return createResponse("{\"success\": false, \"message\": \"Error sending the transaction\" }", 200);
     }
   });
 
   // Ritorna la transaction pool del nodo
   CROW_ROUTE(app, "/webresources/transactionPool")([]() {
-      return "{\"success\" :true, \"transactionPool\": " + printTransactions(TransactionPool::getInstance().getTransactionPool()) + "}";
+      return createResponse("{\"success\" :true, \"transactionPool\": " + printTransactions(TransactionPool::getInstance().getTransactionPool()) + "}", 200);
   });
 
   // Aggiunge un peer alla lista di peer
@@ -254,24 +250,21 @@ void initHttpServer(int port){
     rapidjson::Document document;
     document.Parse(req.body.c_str());
     if(document["peer"].IsNull()){
-      string ret = "{\"success\": false, \"message\": \"Error parsing request: cannot find field <peer>\" }";
-      return ret;
+      return createResponse("{\"success\": false, \"message\": \"Error parsing request: cannot find field <peer>\" }", 200);
     }
     string peer = document["peer"].GetString();
     try{
       Peer::getInstance().connectToPeers(peer);
-      string ret = "{\"success\": true, \"peer\": \"" + peer + "\" }";
-      return ret;
+      return createResponse("{\"success\": true, \"peer\": \"" + peer + "\" }", 200);
     }catch (const char* msg) {
       CROW_LOG_INFO << msg << "\n";
-      string ret = "{\"success\": false, \"message\": \"Error connecting to new peer\" }";
-      return ret;
+      return createResponse("{\"success\": false, \"message\": \"Error connecting to new peer\" }", 200);
     }
   });
 
   // Ritorna i peer del nodo
   CROW_ROUTE(app, "/webresources/peers")([]() {
-    return "{\"success\" :true, \"peers\": " + to_string(Peer::getInstance().countPeers() + 1) + "}";
+    return createResponse("{\"success\" :true, \"peers\": " + to_string(Peer::getInstance().countPeers() + 1) + "}", 200);
   });
 
   // TODO: testare
@@ -284,7 +277,7 @@ void initHttpServer(int port){
     string ret;
     try{
       ifstream inFile;
-      inFile.open(filename + ".txt");  // blockchainstats, blocksminingtime, transactionwaitingtime
+      inFile.open(filename + ".txt", ios::in);  // blockchainstats, blocksminingtime, transactionwaitingtime
       if(inFile) {
         while (getline(inFile, line)) {
           if(isFirst) {
@@ -296,14 +289,14 @@ void initHttpServer(int port){
         }
         ret = "{\"success\": true, \"data\": " + data + "}";
       } else {
-        throw "Errore: non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
+        throw "Errore: non è stato possibile aprire il file per leggere il tempo di mining del blocco!";
       }
     }catch(const char* msg){
       cout << msg << endl;
       cout << endl;
-      ret = "{\"success\": false, \"message\": \"Error opening stats file\" }";
+      ret = "{\"success\": false, \"message\": \"Errore durante l'apertura del file " + filename + ".txt\"" + "}";
     }
-    return ret;
+    return createResponse(ret, 200);
 
   });
 

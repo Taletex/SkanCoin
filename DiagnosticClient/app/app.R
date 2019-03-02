@@ -50,19 +50,19 @@ server <- function(input, output) {
   observeEvent(input$query1, {
     v$query <- 1
     v$title <- "Statistiche temporali della blockchain (numero di blocchi, numero di transazioni e numero di coin)"
-    v$data <- getStats()
+    v$data <- getStats("blockchainstats")
   })
   
   observeEvent(input$query2, {
     v$query <- 2
     v$title <- "Tempo di mining di ogni blocco"
-    v$data <- getBlocksMiningTime()
+    v$data <- getStats("transminingtime")
   })
   
   observeEvent(input$query3, {
     v$query <- 3
     v$title <- "Tempo di attesa per la conferma di ogni transazione"
-    v$data <- getWaitingTransactionMiningTime()
+    v$data <- getStats("transactionwaitingtime")
   })
   
   
@@ -111,18 +111,22 @@ server <- function(input, output) {
     }
   })
   
-  
-  # HTTP REQUEST FUNCTIONS #
-  getStats = function() {
-    obj <- fromJSON("http://localhost:3001/webresources/stats/blockchainstats")                 
+  # HTTP REQUEST FUNCTION #
+  getStats = function(type) {
+    obj <- fromJSON(paste("http://localhost:3001/webresources/stats/", type, sep=""))  
+    if(typeof(obj$data) == "list") {
+      obj <- obj$data
+    } else {
+      v$title <- obj$message
+      print(v$title)
+      obj <- getEmptyDataFrame(v$query)
+    }
   }
   
-  getBlocksMiningTime = function() {
-    obj <- fromJSON("http://localhost:3001/webresources/stats/blocksminingtime")            
-  }
-  
-  getWaitingTransactionMiningTime = function() {
-    obj <- fromJSON("http://localhost:3001/webresources/stats/transminingtime")                  
+  getEmptyDataFrame = function(type) {
+    if(type == 1) data.frame("time" = c(0), "blocks" = c(0), "transactions" = c(0), "coins" = c(0))
+    else if(type == 2) data.frame("block" = c(0), "miningtime" = c(0))
+    else if(type == 3) data.frame("transactionId" = c(0), "millisWaitTime" = c(0))
   }
 }
 
