@@ -273,7 +273,7 @@ Block BlockChain::findBlock(int index, string previousHash, long timestamp, vect
       duration = (std::clock() - start)/(double)CLOCKS_PER_SEC;
       ofstream myfile;
       myfile.open ("blocksminingtime.txt", ios::out | ios::app);
-      if(myfile) {
+      if(myfile.isOpen()) {
         myfile << "{\"block\": " <<  index << ", \"miningtime\": " << duration << "}";
       } else {
         throw "Errore: non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
@@ -301,12 +301,14 @@ Transaction BlockChain::sendTransaction(string address, float amount){
     throw "EXCEPTION: Creation of the transaction to be sent failed";
   }
   try{
+    //Aggiunta della nuova transazione al transaction pool
     TransactionPool::getInstance().addToTransactionPool(tx, getUnspentTxOuts());
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;
     throw "EXCEPTION: Creation of the transaction to be sent failed";
   }
+  //Broadcast a tutti gli altri peer della transactionpool aggiornata
   Peer::getInstance().broadCastTransactionPool();
   return tx;
 }
@@ -337,7 +339,8 @@ bool BlockChain::isValidBlockStructure(Block block){
     typeid(block.data) != typeid(vector<Transaction>) );
 }
 
-//Calcolo della complessità del mining del prossimo blocco
+//Calcolo della complessità del mining del prossimo blocco (numero di
+//zeri iniziali necessari nell'hash) della blockchain data
 int BlockChain::getAccumulatedDifficulty(vector<Block> aBlockchain){
   int res = 0;
   vector<Block>::iterator it;
@@ -365,11 +368,11 @@ bool BlockChain::hashMatchesBlockContent(Block block){
 bool BlockChain::hashMatchesDifficulty(string hash, int difficulty){
     string hashInBinary = hexToBinary(hash);
     int n = hashInBinary.length();
-    // declaring character array
     char charArray[n+1];
-    // copying the contents of the string to char array
     strcpy(charArray, hashInBinary.c_str());
 
+    //Controllo che i primi byte dell'hash siano zeri, fino a raggiungere
+    //un numero pari alla difficoltà attuale
     for(int i = 0; i < difficulty; i++){
       if(charArray[i] != '0'){
         return false;
@@ -392,37 +395,42 @@ bool BlockChain::hasValidHash(Block block){
 
 //Validazione della struttura e della correttezza del blocco
 bool BlockChain::isValidNewBlock(Block newBlock, Block previousBlock){
-    if (!isValidBlockStructure(newBlock)) {
-        cout << "invalid block structure: " <<  newBlock.toString();
-        return false;
-    }
-    if (previousBlock.index + 1 != newBlock.index) {
-        cout << "invalid index";
-        return false;
-    } else if (previousBlock.hash != newBlock.previousHash) {
-        cout << "invalid previoushash";
-        return false;
-    } else if (!isValidTimestamp(newBlock, previousBlock)) {
-        cout << "invalid timestamp";
-        return false;
-    } else if (!hasValidHash(newBlock)) {
-        return false;
-    }
-    return true;
+  if (!isValidBlockStructure(newBlock)) { //Validazione struttura
+    cout << "invalid block structure: " <<  newBlock.toString();
+    return false;
+  }
+  //Correttezza indice del blocco precedente
+  if (previousBlock.index + 1 != newBlock.index) {
+    cout << "invalid index";
+    return false;
+  } else if (previousBlock.hash != newBlock.previousHash) {
+    //Correttezza hash del blocco precedente
+    cout << "invalid previoushash";
+    return false;
+  } else if (!isValidTimestamp(newBlock, previousBlock)) {
+    //Validità timestamp
+    cout << "invalid timestamp";
+    return false;
+  } else if (!hasValidHash(newBlock)) {
+    //Validità hash
+    return false;
+  }
+  return true;
 }
 
-/* Checks if the given BlockChain::blockchain is valid. Return the unspent txOuts if the chain is valid */
+//Verifica la validità della blockchain ricevutaa, ritorna la lista aggiornata degli
+//output non spesi se questa è valida
 vector<UnspentTxOut> BlockChain::isValidChain(list<Block> blockchainToValidate) {
   vector<UnspentTxOut> aUnspentTxOuts;
   list<Block>::iterator it1;
 
-  /* Validate the genesis block */
+  //Validità del blocco di genesi
   if(blockchainToValidate.front().isEqual(getGenesisBlock())) {
     cout << endl;
     throw "EXCEPTION: genesis block is invalid!";
   }
 
-  /* Validate each block in the chain. The block is valid if the block structure is valid and the transaction are valid */
+  //Controllo validità di ogni blocco della blockchain (struttura e transazioni contenute)
   for(it1 = blockchainToValidate.begin(); it1 != blockchainToValidate.end(); ++it1) {
     if(it1 != blockchainToValidate.begin() && !isValidNewBlock(*it1, *(--it1))) {
       cout << endl;
@@ -430,6 +438,8 @@ vector<UnspentTxOut> BlockChain::isValidChain(list<Block> blockchainToValidate) 
     }
     it1++;
     try{
+      //Check e aggiornamento lista output non spesi in base alle
+      //transazioni presenti nel blocco
       aUnspentTxOuts = processTransactions(it1->data, aUnspentTxOuts, it1->index);
     }catch(const char* msg){
       cout << msg << endl;
@@ -440,11 +450,14 @@ vector<UnspentTxOut> BlockChain::isValidChain(list<Block> blockchainToValidate) 
   return aUnspentTxOuts;
 }
 
-/* Add a block to the blockchain */
+//Aggiunta di un blocco alla blockchain
 bool BlockChain::addBlockToChain(Block newBlock) {
+  //Controllo validità del blocco
   if(isValidNewBlock(newBlock, getLatestBlock())) {
     vector<UnspentTxOut> ret;
     try{
+      //Check e aggiornamento lista output non spesi in base alle
+      //transazioni presenti nel blocco
       ret = processTransactions(newBlock.data, getUnspentTxOuts(), newBlock.index);
     }catch(const char* msg){
       cout << msg << endl;
@@ -452,6 +465,8 @@ bool BlockChain::addBlockToChain(Block newBlock) {
     }
     BlockChain::blockchain.push_back(newBlock);
     setUnspentTxOuts(ret);
+    //Check e aggiornamento del transactionPool (rimozione delle
+    //transazioni minate nel blocco ricevuto)
     TransactionPool::getInstance().updateTransactionPool(getUnspentTxOuts());
     try{
         saveBlockchainStats();
@@ -466,24 +481,34 @@ bool BlockChain::addBlockToChain(Block newBlock) {
   }
 }
 
-/* Replaces the BlockChain::blockchain with the passed blocks if possible */
+//Sostituzione blockchain con i blocchi ricevuti (se questa è
+//valida ed ha una difficoltà complessiva maggiore) si ricorda infatti che non
+//è valida la chain più lunga ma quella con la difficoltà cumulativa maggiore
 void BlockChain::replaceChain(list<Block> newBlocks) {
   vector<UnspentTxOut> aUnspentTxOuts;
   try{
+    //Verifica validità blocchi ricevuti
     aUnspentTxOuts = isValidChain(newBlocks);
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;
     throw "EXCEPTION: Received blockchain is invalid!";
   }
-  if(getAccumulatedDifficulty({ begin(newBlocks), end(newBlocks) }) > getAccumulatedDifficulty({ begin(newBlocks), end(newBlocks) })) {
+  //Confronto della difficoltà cumulativa della blockchain attuale con quella
+  //ricevuta, viene effettuata una conversione da liste a vettori per migliorare
+  //le prestazioni del calcolo della difficoltà
+  if(getAccumulatedDifficulty({ begin(newBlocks), end(newBlocks) }) > getAccumulatedDifficulty({getBlockchain().begin(), getBlockchain.end()})) {
     cout << "Received blockchain is valid: replacing current blockchain with the received one!" << endl;
-    BlockChain::blockchain = newBlocks;
-    setUnspentTxOuts(aUnspentTxOuts);
+    BlockChain::blockchain = newBlocks; //Sostituzione blockchain
+    setUnspentTxOuts(aUnspentTxOuts); //Aggiornamento output non spesi
+    //Aggiornamento transactionPool in base agli output non spesi aggiornati
     TransactionPool::getInstance().updateTransactionPool(getUnspentTxOuts());
+    //Broadcast della nuova blockchain a tutti i nodi (non indichiamo alcuna
+    // statistica perchè non si tratta di un nuovo blocco per cui si vuole il tempo di mining)
     Peer::getInstance().broadcastLatest("");
     try{
-        saveBlockchainStats();
+      //Salvataggio dei nuovi dati relativi alla blockchain nell'apposito file
+      saveBlockchainStats();
     }catch(const char* msg){
       cout << msg << endl;
       cout << endl;
@@ -491,7 +516,8 @@ void BlockChain::replaceChain(list<Block> newBlocks) {
   }
 }
 
-/* Handles the received transaction adding it to the transaction pool */
+//Gestione per la ricezione di una nuova transazione, questa deve essere
+//aggiunta al transaction pool
 void BlockChain::handleReceivedTransaction(Transaction transaction) {
   try{
     TransactionPool::getInstance().addToTransactionPool(transaction, getUnspentTxOuts());
@@ -502,22 +528,24 @@ void BlockChain::handleReceivedTransaction(Transaction transaction) {
     }
 }
 
-/* Salva in un file le statistiche della blockchain (numero di blocchi, di transazioni e di coin) */
+//Salva in un file le statistiche della blockchain (numero di blocchi,
+//di transazioni e di coin)
 void BlockChain::saveBlockchainStats() {
   list<Block>::iterator it;
   int transactionNumber = 0;
   vector<UnspentTxOut>::iterator it2;
   float coins = 0;
-  // prendo il numero di transazioni
+  //Conteggio numero di transazioni effettuate
   for(it = blockchain.begin(); it != blockchain.end(); ++it) {
     transactionNumber += it->data.size();
   }
 
+  //Conteggio dei coin in circolazione
   for(it2 = unspentTxOuts.begin(); it2 != unspentTxOuts.end(); ++it2){
     coins += it2->amount;
   }
 
-  // prendo il tempo corrente (relativo al sistema corrente)
+  //Prendo il tempo corrente per abbinarlo ai dati prelevati
   time_t now = time(0);
   tm *ltm = localtime(&now);
   string time = to_string(1 + ltm->tm_hour) + ":" + to_string(1 + ltm->tm_min) + ":" + to_string(1 + ltm->tm_sec) + " " + to_string(ltm->tm_mday) + "/" + to_string(1 + ltm->tm_mon) + "/" + to_string(1900 + ltm->tm_year);
@@ -525,7 +553,8 @@ void BlockChain::saveBlockchainStats() {
   // salvataggio su file
   ofstream myfile;
   myfile.open ("blockchainstats.txt", ios::out | ios::app);
-  if(myfile) {
+  if(myfile.isOpen()) {
+    //Scrittura della nuova entry su file
     myfile << "{\"time\": " << time << ", \"blocks\": " << blockchain.size() << ", \"transactions\": " << transactionNumber << ", \"coins\": " << coins << "}";
   } else {
     throw "Errore: non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
