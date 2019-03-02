@@ -58,10 +58,7 @@ std::string getTransactionId (Transaction transaction);
 //controlla se il vettore di input contiene dei duplicati
 bool hasDuplicates(std::vector<TxIn> txIns);
 
-std::string getPublicKey(std::string privateKey);
-
-// valid address is a valid ecdsa public key in the 04 + X-coordinate + Y-coordinate format
-bool isValidAddress(std::string address);
+std::string getPublicKey();
 
 bool isValidTxInStructure(TxIn txIn);
 

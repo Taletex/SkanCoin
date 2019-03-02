@@ -2,62 +2,218 @@
 
 using namespace std;
 
-//TODO: DEFINIZIONE CURVA ELLITTICA, trovare libreria adatta per le funzioni ECDSA
+//Carica la chiave (pubblica o privata) dall'apposito file
+void loadKey(bool isPrivate, uint8_t *dest){
+  string location;
+  if(isPrivate == false){
+    location = publicKeyLocation;
+  }else{
+    location = privateKeyLocation;
+  }
+  ifstream inFile;
+  inFile.open(location);
+  if(inFile.is_open()) {
+    int i = 0;
+      while (!inFile.eof()) {
+          inFile >> dest[i];
+          i++;
+      }
+  } else {
+    throw "EXCEPTION: non è stato possibile aprire il file per leggere la chiave!";
+  }
+}
 
-//Legge la chiave privata (wallet) del nodo dal file
+//Salvataggio della chiave (pubblica o privata) nell'apposito file
+void saveKey(uint8_t *key, bool isPrivate){
+  int len;
+  string location;
+  if(isPrivate == false){
+    len = ECC_BYTES+1;
+    location = publicKeyLocation;
+  }else{
+    len = ECC_BYTES;
+    location = privateKeyLocation;
+  }
+  ofstream myfile;
+  myfile.open (location, ios::out | ios::trunc);
+  if(myfile.is_open()) {
+    for(int i = 0; i < len; i++){
+      myfile << key[i] << endl;
+    }
+  } else {
+    throw "EXCEPTION: non è stato possibile aprire il file per salvare la chiave!";
+  }
+}
+
+//Effettuiamo una conversione a stringa sulle chiavi che sia reversibile
+//per semplificare la gestione delle chiavi nelle classi esterne
+
+//Una conversione analoga viene applicata alle signature, per avere un formato
+//stampabile e più facilmente interpretabile nelle interazioni tra i peer e
+//e nei payload delle richieste/risposte HTTP
+string stringFromByteArray(uint8_t *array, int len){
+  string ret = "";
+  for (int a = 0; a < len; a++) {
+    if(a != 0){
+      ret += ".";
+    }
+    ret +=  to_string((int)array[a]);
+  }
+  return ret;
+}
+
+void byteArrayFromString(string str, uint8_t *dest){
+  stringstream tempstream(str);
+  string segment;
+  int x;
+
+  //Conversione all'indietro da stringa ad array di uint8_t della chiave pubblica
+  int i = 0;
+  while(std::getline(tempstream, segment, '.')){
+    x = stoi(segment);
+    dest[i] = x;
+    i++;
+  }
+}
+
+
+
+//Legge la chiave privata del nodo dal file
 string getPrivateFromWallet(){
-  ifstream infile { privateKeyLocation };
-  string fileContent { istreambuf_iterator<char>(infile), istreambuf_iterator<char>() };
-  return fileContent;
+  try{
+    uint8_t privateKey[ECC_BYTES];
+    loadKey(true, privateKey);
+    //Effettuiamo una conversione a stringa che sia reversibile per semplificare
+    // la gestione delle chiavi nelle classi esterne
+    return stringFromByteArray(privateKey, ECC_BYTES);
+  }catch(const char* msg){
+    cout << msg << endl;
+    cout << endl;
+    throw "EXCEPTION: Errore durante il caricamento della chiave privata!";
+  }
 }
 
-//Legge la chiave privata del nodo dal file, da essa genera la chiave pubblica e la ritorna
+//Legge la chiave pubblica del nodo dal file
 string getPublicFromWallet(){
-    string privateKey = getPrivateFromWallet();
-    //TODO usare funzione per ottenere la chiave pubblica da quella privata appena ottenuta, ritornare la chiave pubblica
-    return "04bfcab8722991ae774db48f934ca79cfb7dd991229153b9f732ba5334aafcd8e7266e47076996b55a14bf9913ee3145ce0cfc1372ada8ada74bd287450313534a";
+  try{
+    uint8_t publicKey[ECC_BYTES+1];
+    loadKey(false, publicKey);
+    //Effettuiamo una conversione a stringa che sia reversibile per semplificare
+    // la gestione delle chiavi nelle classi esterne
+    return stringFromByteArray(publicKey, ECC_BYTES+1);
+  }catch(const char* msg){
+    cout << msg << endl;
+    cout << endl;
+    throw "EXCEPTION: Errore durante il caricamento della chiave pubblica!";
+  }
 }
 
-//Generazione di una nuova chiave privata
-string generatePrivateKey(){
-    //TODO funzione per generare chiave privata, ritornare il risultato
-    return "privata";
+//Controllo per eventuali chiavi già esistenti, in caso non esistano già si effettua
+//la generazione di una nuova coppia di chiavi e il salvataggio negi appositi file
+void generateKeys(){
+  uint8_t p_publicKey[ECC_BYTES+1];
+  uint8_t p_privateKey[ECC_BYTES];
+  bool valid = false;
+
+  while(valid == false){
+    //Generazione nuova coppia di chiavi
+    int createdKeys = ecc_make_key(p_publicKey, p_privateKey);
+
+    //La generazione non è andata a buon fine
+    if(createdKeys != 1){
+      continue;
+    }
+
+    //Salvataggio delle chiavi negli appositi files
+    try{
+      saveKey(p_publicKey, false);
+      saveKey(p_privateKey, true);
+    }catch(const char* msg){
+      cout << msg << endl;
+      cout << endl;
+      throw "EXCEPTION: Errore durante il salvataggio delle chiavi";
+    }
+
+    //Vogliamo ottenere una conversione a stringa che sia reversibile
+    //In modo da semplificare la gestione all'esterno, in particolare utilizziamo
+    //una notazione puntata in cui ogni byte viene convertito in un intero e successivamente
+    //tutti gli interi vengono concatenati, usando come carattere di separazione un punto.
+    string tempPublic = stringFromByteArray(p_publicKey, ECC_BYTES+1);
+    string tempPrivate = stringFromByteArray(p_privateKey, ECC_BYTES);
+
+    //Effettuo una conversione all'indietro per poi verificare che sulla la coppia di
+    //chiavi generate la conversione sia fattibile senza perdite di informazioni.
+    //Per evitare errori di conversione accetto solo chiavi che non contengono
+    //caratteri senza una corrispondenza biunivoca con i valori stampabili su file
+    //NOTA: ovviamente ogni possibile valore di uint8_t ha una corrispondenza biunivoca
+    //con un intero, tuttavia la presenza di un salvataggio/recupero da file restringe
+    //il set di valori accettabili a quelli stampabili su file
+    byteArrayFromString(tempPublic, p_publicKey);
+    byteArrayFromString(tempPrivate, p_privateKey);
+
+    //Recupero delle chiavi da file per la verifica di reversibilità della conversione
+    try{
+      uint8_t new_private[ECC_BYTES];
+      loadKey(true, new_private);
+      uint8_t new_public[ECC_BYTES+1];
+      loadKey(false, new_public);
+      //Verifica della correttezza della conversione effettuata
+      valid = true;
+      if(p_publicKey[0] != new_public[0]){
+        valid = false;
+        continue;
+      }
+      for(int i = 0; i < ECC_BYTES; i++){
+        if(p_publicKey[i+1] != new_public[i+1] || p_privateKey[i] != new_private[i]){
+          valid = false;
+          continue;
+        }
+      }
+    }catch(const char* msg){
+      cout << msg << endl;
+      cout << endl;
+      throw "EXCEPTION: Errore durante il caricamento delle chiavi!";
+    }
+  }
 }
 
-//inizializzazione del wallet (chiave privata), se il file non esiste si genera una nuova chiave e si salva su file
+
+//Inizializzazione del wallet (chiave privata), se il file non esiste si genera una nuova chiave e si salva su file
 void initWallet(){
     //controllo se esiste il file con la chiave privata
     if (FILE* file = fopen(privateKeyLocation.c_str(), "r")) {
       fclose(file);
+      cout << "Foud existing wallet" << endl;
       return;
     }
 
-    //genero nuova chiave
-    string newPrivateKey = generatePrivateKey();
-
-    //salvataggio nuova chiave su file
-    ofstream out(privateKeyLocation);
-    out << newPrivateKey;
-    out.close();
-    cout << "new wallet with private key created" << endl;;
+    //genero nuova coppia di chiavi ed effettuo il salvataggio su file
+    try{
+        generateKeys();
+        cout << "New wallet created!" << endl;
+    }catch(const char* msg){
+      cout << msg << endl;
+      cout << endl;
+      throw "EXCEPTION: Transaction creation failed, sender does not own enough coins!";
+    }
 }
 
-//delete the file containing the wallet if it exists
+//Eliminazione del wallet (file contenenti le chiavi)
 void deleteWallet(){
   if (FILE* file = fopen(privateKeyLocation.c_str(), "r")) {
     fclose(file);
 
-    if( remove( privateKeyLocation.c_str() ) != 0 ){
+    if( remove( privateKeyLocation.c_str() ) != 0 || remove( publicKeyLocation.c_str() ) != 0){
       cout << "Error deleting file" << endl;
     }
     else{
-      cout << "File successfully deleted" << endl;
+      cout << "Files successfully deleted" << endl;
     }
     return;
   }
 }
 
-//ritorna la lista degli output non spesi appartenenti ad un certo indirizzo (wallet)
+//Ritorna la lista degli output non spesi appartenenti ad un certo indirizzo (wallet)
 vector<UnspentTxOut> findUnspentTxOutsOfAddress(string ownerAddress, vector<UnspentTxOut> unspentTxOuts){
   vector<UnspentTxOut> res;
   //per fare una copia del vettore faccio solo una allocazione per avere migliori prestazioni
@@ -75,7 +231,7 @@ vector<UnspentTxOut> findUnspentTxOutsOfAddress(string ownerAddress, vector<Unsp
   return res;
 }
 
-//calcola il totale degli output non spesi appartenenti ad un certo indirizzo
+//Totale degli output non spesi appartenenti ad un certo indirizzo
 float getBalance(string address, vector<UnspentTxOut> unspentTxOuts){
   float total = 0;
   vector<UnspentTxOut> unspentTxOutsOfAddress = findUnspentTxOutsOfAddress(address, unspentTxOuts);
@@ -86,7 +242,7 @@ float getBalance(string address, vector<UnspentTxOut> unspentTxOuts){
     return total;
 }
 
-//calcola il totale data una lista di output non spesi
+//Calcola il totale data una lista di output non spesi
 float getTotalFromOutputVector(vector<UnspentTxOut> unspentTxOuts){
   float total = 0;
   vector<UnspentTxOut>::iterator it;
@@ -110,7 +266,7 @@ vector<UnspentTxOut> findTxOutsForAmount(float amount, vector<UnspentTxOut> myUn
         return includedUnspentTxOuts;
     }
   }
-  throw "EXCEPTION: Cannot create transaction from the available unspent transaction outputs (not enough coins)";
+  throw "EXCEPTION: Impossibile creare la transazione, il wallet sorgente non contiene abbastanza skancoin!";
 }
 
 //Generazione degli output di transazione dati l'amount e la differenza che deve tornare al mittente
@@ -135,7 +291,8 @@ bool isReferencedUnspentTxOut(UnspentTxOut uTxOut, vector<TxIn> txIns){
   return false;
 }
 
-//Ritorna la lista di tutti gli output non spesi, senza quelli che sono referenziati da un qualche input in una delle transazioni presenti nella transaction pool
+//Ritorna la lista di tutti gli output non spesi, senza quelli che sono
+//referenziati da un qualche input in una delle transazioni presenti nella transaction pool
 vector<UnspentTxOut> filterTxPoolTxs(vector<UnspentTxOut> unspentTxOuts, vector<Transaction> transactionPool){
   vector<TxIn> txIns;
 
@@ -151,7 +308,8 @@ vector<UnspentTxOut> filterTxPoolTxs(vector<UnspentTxOut> unspentTxOuts, vector<
   res.reserve(res.size() + unspentTxOuts.size());
   res.insert(res.end(), unspentTxOuts.begin(), unspentTxOuts.end());
 
-  //per ogni output non speso cerco nel vettore di txIn quella che fa riferimento ad esso, se la trovo rimuovo dal vettore l'output non speso
+  //per ogni output non speso cerco nel vettore di txIn quella che fa riferimento
+  //ad esso, se la trovo rimuovo dal vettore l'output non speso
   vector<UnspentTxOut>::iterator it3;
   for(it3 = res.begin(); it3 != res.end();){
     if (isReferencedUnspentTxOut(*it3, txIns)) {
@@ -170,6 +328,7 @@ TxIn toUnsignedTxIn(UnspentTxOut unspentTxOut){
     return txIn;
 }
 
+//Generazione di una nuova transazione
 Transaction createTransaction(string receiverAddress, float amount, string privateKey, vector<UnspentTxOut> unspentTxOuts, vector<Transaction> txPool){
   //Stampa tutte le transazioni nel pool
   cout << "txPool: " << endl;
@@ -178,7 +337,7 @@ Transaction createTransaction(string receiverAddress, float amount, string priva
     cout << it->toString();
   }
   //Ottengo la lista degli output non spesi per il mio wallet
-  string myAddress = getPublicKey(privateKey);
+  string myAddress = getPublicKey();
   vector<UnspentTxOut> myUnspentTxOutsA = findUnspentTxOutsOfAddress(myAddress, unspentTxOuts);
   //Ottengo la lista dei miei output non spesi a cui sono stati togli gli outpu che vengono usati come input in una delle transazioni nel pool
   vector<UnspentTxOut> myUnspentTxOuts = filterTxPoolTxs(myUnspentTxOutsA, txPool);
@@ -190,7 +349,7 @@ Transaction createTransaction(string receiverAddress, float amount, string priva
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;
-    throw "EXCEPTION: Transaction creation failed, sender does not own enough coins!";
+    throw "EXCEPTION: Impossibile creare la transazione, il mittente nonpossiede abbastanza skanCoin!";
   }
   //raccolti gli outpud da usare di creano i rispettivi input per la nuova transazione (che faranno riferimento ad essi), ANCORA NON SONO FIRMATI!
   vector<TxIn> unsignedTxIns;
@@ -214,7 +373,7 @@ Transaction createTransaction(string receiverAddress, float amount, string priva
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;
-    throw "EXCEPTION: Transaction creation failed, could not sign some of the TxIns";
+    throw "EXCEPTION: Creazione della transazione fallita, alcuni input di transazione non sono stati firmati correttamente";
   }
   return tx;
 }

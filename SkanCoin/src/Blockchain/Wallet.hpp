@@ -7,7 +7,22 @@
 #include <streambuf>
 
 //path del file contenente la chiave privata del nodo
-const std::string privateKeyLocation = "../NodeWallet/private_key";
+const std::string privateKeyLocation = "private_key";
+const std::string publicKeyLocation = "public_key";
+
+//Converte la chiave/signature in una stringa contenente i valori numerici
+//dei vari byte, separati da punti
+std::string stringFromByteArray(uint8_t *array, int len);
+
+//Converte la stringa che rappresenta la chiave in notazione puntata
+//in un array di byte (uint8_t)
+void byteArrayFromString(std::string str, uint8_t *dest);
+
+//Carica la chiave (pubblica o privata) dall'apposito file
+void loadKey(bool isPrivate, uint8_t *dest);
+
+//Salva la chiave (pubblica o privata) nell'apposito file
+void saveKey(bool isPrivate);
 
 //Legge la chiave privata (wallet) del nodo dal file
 std::string getPrivateFromWallet();
@@ -16,7 +31,10 @@ std::string getPrivateFromWallet();
 std::string getPublicFromWallet();
 
 //Generazione di una nuova chiave privata
-std::string generatePrivateKey();
+void generateKeys();
+
+//Lettura chiave privata da file
+std::string getPrivateKey();
 
 //inizializzazione del wallet (chiave privata), se il file non esiste si genera una nuova chiave e si salva su file
 void initWallet();

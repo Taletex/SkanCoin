@@ -123,19 +123,9 @@ bool hasDuplicates(vector<TxIn> txIns){
   return false;
 }
 
-string getPublicKey(string privateKey){
-    //TODO: Calcolo chiave pubblica da quella privata (stringa esadecimale), trovare una libreria adatta
-    //return keyFromPrivate(aPrivateKey, 'hex').getPublic().encode('hex');
-    return "ciao";
-}
+string getPublicKey(){
 
-// valid address is a valid ecdsa public key in the 04 + X-coordinate + Y-coordinate format
-bool isValidAddress(string address){
-  if(!regex_match (address, regex("^[0][4][a-fA-F0-9]{128}$") )){
-    cout << "ERROR: public key must contain only 130 hex characters and must begin with '04': " << address << endl;
-    return false;
-  }
-  return true;
+    return "ciao";
 }
 
 //validazione della struttura dell'input (type check)
@@ -158,9 +148,6 @@ bool isValidTxInStructure(TxIn txIn){
 bool isValidTxOutStructure(TxOut txOut){
     if (typeid(txOut.address) != typeid(string)) {
         cout << "invalid address type in txOut" << endl;
-        return false;
-    } else if (!isValidAddress(txOut.address)) {
-        cout << "invalid TxOut address" << endl;
         return false;
     } else if (typeid(txOut.amount) != typeid(float)) {
         cout << "invalid amount type in txOut" << endl;
@@ -217,14 +204,26 @@ bool validateTxIn(TxIn txIn, Transaction transaction, vector<UnspentTxOut> aUnsp
         return false;
     }
 
-    string address = referencedUTxOut.address;
-    /*
-    TODO: VERIFICA DELLA FIRMA, TROVARE UNA LIBRERIA ADATTA
-    if (ecc_make_key((uint8_t*)address.c_str(), (uint8_t*)transaction.id.c_str()) == 0) {
-        cout << "invalid txIn signature: " + txIn.signature + ", txId: " + transaction.id + ", address: " + referencedUTxOut.address;
-        return false;
+    //Verifica della firma
+
+    //Chiave pubblica del proprietario dell'output non speso
+    uint8_t p_public[ECC_BYTES+1];
+    byteArrayFromString(referencedUTxOut.address, p_public);
+
+    //Id della transazione (hash su cui è stata fatta la firma)
+    uint8_t p_hash[ECC_BYTES];
+    byteArrayFromString(transaction.id, p_hash);
+
+    //Signature creata con la chiave privata del proprietario dell'output non speso
+    uint8_t p_signature[ECC_BYTES*2];
+    byteArrayFromString(txIn.signature, p_signature);
+
+    int signOk = ecdsa_verify(p_public, p_hash , p_signature);
+    cout << signOk << endl;
+    if(signOk != 1){
+      return false;
     }
-    */
+
     return true;
 }
 
@@ -390,20 +389,25 @@ string signTxIn(Transaction transaction, int txInIndex, string privateKey, vecto
     }catch(const char* msg){
       cout << msg << endl;
       cout << endl;
-      throw "EXCEPTION: TxIn Sign failed, not found referenced UnspentTxOut";
+      throw "EXCEPTION: Firma dell'input di transazione abortita, output non speso referenziato non trovato!";
     }
 
-    if (getPublicKey(privateKey) != referencedAddress) {
-        throw "trying to sign an input with private key that does not match the address that is referenced in txIn";
+    if (getPublicKey() != referencedAddress) {
+        throw "EXCEPTION: Firma dell'input di transazione abortita, tentativo di firmare con una chiave privata che non corrisponde all'indirizzo referenziato";
     }
-    string signature = "ciao";
-    //TODO: produrre validSignature, trovare libreria adatta
-    /*
-    key = ec.keyFromPrivate(privateKey, 'hex');
-    string signature= toHexString(key.sign(dataToSign).toDER());
 
-    */
-    return signature;
+    //Generazione della firma a partire dall'hash (id della transazione)
+    uint8_t p_hash[ECC_BYTES];
+    memcpy (p_hash, dataToSign.c_str(), ECC_BYTES);
+    uint8_t p_private[ECC_BYTES];
+    byteArrayFromString(privateKey, p_private);
+    uint8_t p_signature[ECC_BYTES*2];
+    int signCreated = ecdsa_sign(p_private, p_hash, p_signature);
+    if(signCreated == false){
+      throw "EXCEPTION: operazione di firma dell'input di transazione fallita!";
+    }
+
+    return stringFromByteArray(p_signature, ECC_BYTES*2);
 }
 
 //Aggiornamento della lista di output non spesi dopo un nuovo blocco di transazioni
