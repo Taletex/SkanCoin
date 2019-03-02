@@ -281,25 +281,30 @@ void initHttpServer(int port){
     bool isFirst = true;
     string data = "[";
     string line;
-    ifstream inFile;
-    inFile.open(filename + ".txt");  // blockchainstats, blocksminingtime, transactionwaitingtime
-
-    while (getline(inFile, line)) {
-      if(isFirst) {
-        data += line;
-        isFirst = false;
+    string ret;
+    try{
+      ifstream inFile;
+      inFile.open(filename + ".txt");  // blockchainstats, blocksminingtime, transactionwaitingtime
+      if(inFile) {
+        while (getline(inFile, line)) {
+          if(isFirst) {
+            data += line;
+            isFirst = false;
+          } else {
+            data = data + ", " + line;
+          }
+        }
+        ret = "{\"success\": true, \"data\": " + data + "}";
       } else {
-        data = data + ", " + line;
+        throw "Errore: non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
       }
+    }catch(const char* msg){
+      cout << msg << endl;
+      cout << endl;
+      ret = "{\"success\": false, \"message\": \"Error opening stats file\" }";
     }
+    return ret;
 
-    return "{\"success\": true, \"data\": " + data + "}";
-  });
-
-  // TODO: sviluppare testare
-  // Ritorna il tempo di attesa per la conferma di ogni transazione della blockchain
-  CROW_ROUTE(app, "/webresources/blocksminingtime")([](){
-    return "{\"success\" :true, \"time\": " + to_string(0) + "}";
   });
 
   // Start del server HTTP sulla porta designata

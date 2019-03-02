@@ -24,12 +24,12 @@ void handleClientMessage(const string & data){
   list<Block> receivedBlocks;
   vector<Transaction> receivedTransactions;
   vector<Transaction>::iterator it;
-
+  ofstream myfile;
   //This switch contains the business logic for messages handling, just invoke correct methods, no implementation here
   switch (message.type) {
     //Some peer sent a query message for last block, send it
     case QUERY_LATEST:
-      Peer::getInstance().tempWs->send(Peer::getInstance().responseLatestMsg());
+      Peer::getInstance().tempWs->send(Peer::getInstance().responseLatestMsg(""));
       break;
 
     //Some peer sent a query for entire blockchain, send it
@@ -45,12 +45,22 @@ void handleClientMessage(const string & data){
       }
       try{
         receivedBlocks = parseBlockList(document["data"]);
+        Peer::getInstance().handleBlockchainResponse(receivedBlocks);
       }catch(const char* msg){
         cout << msg << endl;
         cout << "EXCEPTION: Error parsing message!" << endl;
         return;
       }
-      Peer::getInstance().handleBlockchainResponse(receivedBlocks);
+      if(!document["stat"].IsNull()){
+        ofstream myfile;
+        myfile.open ("blocksminingtime.txt", ios::out | ios::app);
+        if(myfile) {
+          myfile << document["stat"].GetString();
+        } else {
+          throw "Errore: non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
+        }
+        myfile.close();
+      }
       break;
 
     //Some peer sent a query for transaction pool, send it
@@ -83,8 +93,24 @@ void handleClientMessage(const string & data){
         }
       }
       break;
+      case TRANSACTION_POOL_STATS:
+        if(!document["data"].IsNull()){
+          try{
+            myfile.open ("transactionwaitingtime.txt", ios::out | ios::app);
+            if(myfile) {
+              myfile << document["data"].GetString();
+            } else {
+              throw "EXCEPTION: non è stato possibile aprire il file per salvare le statistiche di attesa delle transazioni!";
+            }
+          }catch(const char* msg) {
+              cout << msg << endl;
+              cout << "EXCEPTION: Error opening transaction pool file stats..." << endl;
+          }
+          myfile.close();
+        }
+        break;
 
-    default :
+    default:
       cout << "Received message has no valid message type" << endl;
   }
 }
@@ -93,10 +119,16 @@ void handleClientMessage(const string & data){
 Message::Message(MessageType type, string data){
   this->type = type;
   this->data = data;
+  this->stat = "";
+}
+Message::Message(MessageType type, string data, string stat){
+  this->type = type;
+  this->data = data;
+  this->stat = stat;
 }
 //Print json representation of Message Object
 string Message::toString(){
-  return "{\"type\": " + to_string(type) + ", \"data\": \"" + data + "\"}";
+  return "{\"type\": " + to_string(type) + ", \"data\": \"" + data + "\", \"stat\": \"" + stat + "\"}";
 }
 
 //PEER METHODS//
@@ -141,6 +173,7 @@ void Peer::clearClosedWs(){
   openedConnections.reserve(openedConnections.size() + temp.size());
   openedConnections.insert(openedConnections.end(), temp.begin(), temp.end());
 }
+
 void Peer::connectToPeers(std::string peer){
   cout << "Adding " << peer << " to the list of peers..." << endl;
   WebSocket::pointer ws;
@@ -151,9 +184,11 @@ void Peer::connectToPeers(std::string peer){
   openedConnections.push_back(ws);
   broadcast(queryTransactionPoolMsg());
 }
+
 int Peer::countPeers(){
   return receivedConnections.size() + openedConnections.size();
 }
+
 //business logic, questa funzione è chiamata nell'handler dei messaggi in arrivo//
 void Peer::handleBlockchainResponse(list<Block> receivedBlocks){
     if (receivedBlocks.size() == 0) {
@@ -170,7 +205,7 @@ void Peer::handleBlockchainResponse(list<Block> receivedBlocks){
         cout << "Blockchain possibly behind. We got: " << latestBlockHeld.index << " Peer got: " << latestBlockReceived.index << endl;
         if (latestBlockHeld.hash == latestBlockReceived.previousHash) {
             if (BlockChain::getInstance().addBlockToChain(latestBlockReceived)) {
-                broadcast(responseLatestMsg());
+                broadcast(responseLatestMsg(""));
             }
         } else if (receivedBlocks.size() == 1) {
             cout << "We have to query the chain from our peer" << endl;
@@ -228,9 +263,11 @@ void Peer::messageHandler(crow::websocket::connection& connection, const string&
   cout << "Received message: " << message.toString() << endl;
   list<Block> receivedBlocks;
   vector<Transaction> receivedTransactions;
+  vector<Transaction>::iterator it;
+  ofstream myfile;
   switch (message.type) {
     case QUERY_LATEST:
-      connection.send_text(responseLatestMsg());
+      connection.send_text(responseLatestMsg(""));
       break;
     case QUERY_ALL:
       connection.send_text(responseChainMsg());
@@ -242,12 +279,22 @@ void Peer::messageHandler(crow::websocket::connection& connection, const string&
       }
       try{
         receivedBlocks = parseBlockList(document["data"]);
+        Peer::getInstance().handleBlockchainResponse(receivedBlocks);
       }catch(const char* msg){
         cout << msg << endl;
         cout << "EXCEPTION: Error parsing message!" << endl;
         return;
       }
-      handleBlockchainResponse(receivedBlocks);
+      if(!document["stat"].IsNull()){
+        ofstream myfile;
+        myfile.open ("blocksminingtime.txt", ios::out | ios::app);
+        if(myfile) {
+          myfile << document["stat"].GetString();
+        } else {
+          throw "Errore: non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
+        }
+        myfile.close();
+      }
       break;
     case QUERY_TRANSACTION_POOL:
       connection.send_text(responseTransactionPoolMsg());
@@ -264,7 +311,6 @@ void Peer::messageHandler(crow::websocket::connection& connection, const string&
         cout << "EXCEPTION: Error parsing message!" << endl;
         return;
       }
-      vector<Transaction>::iterator it;
       for(it = receivedTransactions.begin(); it != receivedTransactions.end(); ++it){
         try{
             BlockChain::getInstance().handleReceivedTransaction(*it);
@@ -275,6 +321,24 @@ void Peer::messageHandler(crow::websocket::connection& connection, const string&
         }
       }
       break;
+    case TRANSACTION_POOL_STATS:
+      if(!document["data"].IsNull()){
+        try{
+          myfile.open("transactionwaitingtime.txt", ios::out | ios::app);
+          if(myfile) {
+            myfile << document["data"].GetString();
+          } else {
+            throw "EXCEPTION: non è stato possibile aprire il file per salvare le statistiche di attesa delle transazioni!";
+          }
+        }catch(const char* msg) {
+            cout << msg << endl;
+            cout << "EXCEPTION: Error opening transaction pool file stats..." << endl;
+        }
+        myfile.close();
+      }
+      break;
+    default:
+      cout << "Received message has no valid message type" << endl;
   }
 }
 bool Peer::isValidType(int type){
@@ -303,9 +367,14 @@ void Peer::broadcast(string message){
 void Peer::broadCastTransactionPool(){
   broadcast(responseTransactionPoolMsg());
 }
-void Peer::broadcastLatest(){
-  broadcast(responseLatestMsg());
+void Peer::broadcastLatest(string stat){
+  broadcast(responseLatestMsg(stat));
 }
+
+void Peer::broadcastTxPoolStat(vector<string> stats){
+  broadcast(txPoolStatsMessage(stats));
+}
+
 string Peer::queryChainLengthMsg(){
   return Message(QUERY_LATEST, "").toString();
 }
@@ -318,9 +387,18 @@ string Peer::queryTransactionPoolMsg(){
 string Peer::responseChainMsg(){
   return Message(RESPONSE_BLOCKCHAIN, BlockChain::getInstance().toString()).toString();
 }
-string Peer::responseLatestMsg(){
-  return Message(RESPONSE_BLOCKCHAIN, "[" + BlockChain::getInstance().getLatestBlock().toString() + "]").toString();
+string Peer::responseLatestMsg(string stat){
+  return Message(RESPONSE_BLOCKCHAIN, "[" + BlockChain::getInstance().getLatestBlock().toString() + "]", stat).toString();
 }
 string Peer::responseTransactionPoolMsg(){
   return Message(RESPONSE_TRANSACTION_POOL, TransactionPool::getInstance().toString()).toString();
+}
+
+string Peer::txPoolStatsMessage(vector<string> stats){
+  string msg = "";
+  vector<string>::iterator it;
+  for(it = stats.begin(); it != stats.end(); ++it){
+    msg = msg + *it + "\n";
+  }
+  return Message(TRANSACTION_POOL_STATS, msg).toString();
 }

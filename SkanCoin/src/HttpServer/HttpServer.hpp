@@ -11,8 +11,6 @@
 #include "../Blockchain/Blockchain.hpp"
 #include "../P2P/Peer.hpp"
 
-const std::string basepath = "/webresources/";
-
 std::vector<TxIn> parseTxInVector(const rapidjson::Value &txIns);
 
 std::vector<TxOut> parseTxOutVector(const rapidjson::Value &txOuts);

@@ -15,7 +15,8 @@ enum MessageType {
     QUERY_ALL = 1,
     RESPONSE_BLOCKCHAIN = 2,
     QUERY_TRANSACTION_POOL = 3,
-    RESPONSE_TRANSACTION_POOL = 4
+    RESPONSE_TRANSACTION_POOL = 4,
+    TRANSACTION_POOL_STATS = 5
 };
 
 //This class models a peer message and contains a toString method used to send it in a websocket
@@ -23,7 +24,9 @@ class Message {
   public:
     MessageType type;
     std::string data;
+    std::string stat;
     Message(MessageType type, std::string data);
+    Message(MessageType type, std::string data, std::string stat);
     std::string toString();
 };
 
@@ -49,18 +52,20 @@ class Peer {
     std::string queryAllMsg();
     std::string queryTransactionPoolMsg();
     std::string responseChainMsg();
-    std::string responseLatestMsg();
+    std::string responseLatestMsg(std::string stat);
     std::string responseTransactionPoolMsg();
+    std::string txPoolStatsMessage(std::vector<std::string> stats);
     void initP2PServer(int port);
     void clearClosedWs();
     void broadcast(std::string message);
     void broadCastTransactionPool();
-    void broadcastLatest();
+    void broadcastLatest(std::string stat);
     void startClientPoll();
     void messageHandler(crow::websocket::connection& connection, const std::string& data);
     void checkReceivedMessage();
     void handleBlockchainResponse(std::list<Block> receivedBlocks);
     void connectToPeers(std::string peer);
+    void broadcastTxPoolStat(std::vector<std::string>);
 
   private:
     //We declare this methods as private to implement Singleton pattern

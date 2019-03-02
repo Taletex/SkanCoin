@@ -4,10 +4,12 @@ using namespace std;
 
 TransactionPool::TransactionPool(){
   unconfirmedTransactions = {};
+  stats = {};
 }
 
 /* Returns the list of unconfirmed transaction of the transaction pool */
 vector<Transaction> TransactionPool::getTransactionPool() {
+  //Conversione da lista a vettore per una gestione più efficiente all'esterno della classe
   return { begin(this->unconfirmedTransactions), end(this->unconfirmedTransactions) };
 }
 
@@ -32,6 +34,7 @@ bool TransactionPool::addToTransactionPool(Transaction tx, vector<UnspentTxOut> 
   }
   cout << "Adding to transaction pool: " << tx.toString() << endl;
   unconfirmedTransactions.push_back(tx);
+  stats.push_back(TransactionStat(tx.id));
 
   return true;
 }
@@ -92,4 +95,28 @@ bool TransactionPool::isValidTxForPool(Transaction tx) {
   }
 
   return true;
+}
+
+vector<string> TransactionPool::getStatStrings(){
+  vector<string> ret = {};
+  list<TransactionStat>::iterator it;
+  for(it = stats.begin(); it != stats.end(); ++it){
+    ret.push_back(it->getDiffTimeString());
+  }
+  return ret;
+}
+
+TransactionStat::TransactionStat(string transactionId){
+  this->transactionId = transactionId;
+  this->insertionTimestamp = chrono::high_resolution_clock::now();
+}
+
+//Get milliseconds from insertion of the transaction in the transaction pool
+long TransactionStat::getDiffTime(){
+  chrono::high_resolution_clock::time_point t = chrono::high_resolution_clock::now();
+  return chrono::duration_cast<chrono::microseconds>( t - this->insertionTimestamp ).count();
+}
+
+string TransactionStat::getDiffTimeString(){
+  return "{\"transactionId\": " + this->transactionId + ", \"millisWaitTime\": " + to_string(this->getDiffTime()) + "}";
 }
