@@ -44,12 +44,6 @@ ui <- fluidPage(
 # Define server logic ----
 server <- function(input, output) {
   
-  # INIT DATA FILE #
-  #stat <- data.frame("time"=c(0), "blocks"=c(1), "transactions"=c(0), "coins"=c(0))
-  #save(stat,file="/home/alessandro/Projects/SkanCoin/DiagnosticClient/app/data/data.Rda")
-  #load(file="/home/alessandro/Projects/SkanCoin/DiagnosticClient/app/data/data.Rda")     now "stat" variable contains the saved dataframe
-  
-  
   # OBSERVING VARIABLES AND EVENTS #
   v <- reactiveValues(query = 0, title = "", data = "")
   
@@ -118,8 +112,8 @@ server <- function(input, output) {
         theme_bw() 
     } else if(v$query == 3) {
       # Transactions waiting time
-      x <- factor(unlist(v$data["transaction"], use.names=FALSE), levels = unlist(v$data["transaction"], use.names=FALSE))
-      y <- unlist(v$data["waitingtime"], use.names=FALSE)
+      x <- factor(unlist(v$data["transactionId"], use.names=FALSE), levels = unlist(v$data["transactionId"], use.names=FALSE))
+      y <- unlist(v$data["millisWaitTime"], use.names=FALSE)
       ggplot(v$data, aes(x, y)) + 
         geom_bar(stat="identity", width=.3, fill="darkblue") + 
         geom_text(aes(x, y, label=y, hjust=0.5, vjust=-1)) +
@@ -131,22 +125,15 @@ server <- function(input, output) {
   
   # HTTP REQUEST FUNCTIONS #
   getStats = function() {
-    #obj <- fromJSON("http://localhost:3001/webresources/stats/blockchainstats")                   # bisogna controllare che obj sia una lista con i 4 elementi delle statistiche!
-    load(file="/home/alessandro/Projects/SkanCoin/DiagnosticClient/app/data/data.Rda")  
-    #rbind(stat, obj)
-    #save(stat,file="/home/alessandro/Projects/SkanCoin/DiagnosticClient/app/data/data.Rda")
-    # TOD: cambiare tutto, ora ritorna un array di oggetti!
-    stat
+    obj <- fromJSON("http://localhost:3001/webresources/stats/blockchainstats")                 
   }
   
   getBlocksMiningTime = function() {
-    #obj <- fromJSON("http://localhost:3001/webresources/stats/blocksminingtime")                   # bisogna controllare cosa restituisce
-    stat <- data.frame("block"=c(1, 2, 3, 4, 5, 6, 7), "miningtime"=c(12, 15, 20, 11, 30, 12, 10))
+    obj <- fromJSON("http://localhost:3001/webresources/stats/blocksminingtime")            
   }
   
   getWaitingTransactionMiningTime = function() {
-    #obj <- fromJSON("http://localhost:3001/webresources/transminingtime")                    # bisogna controllare cosa restituisce
-    stat <- data.frame("transaction"=c(1, 2, 3, 4, 5, 6, 7), "waitingtime"=c(1, 5, 5, 50, 12, 134, 73))
+    obj <- fromJSON("http://localhost:3001/webresources/stats/transminingtime")                  
   }
 }
 
