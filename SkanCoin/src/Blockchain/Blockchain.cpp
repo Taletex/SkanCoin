@@ -242,9 +242,23 @@ Block BlockChain::generateNextBlock(){
     blockData.insert (blockData.begin() , coinbaseTx);
     try{
       Block ret = generateRawNextBlock(blockData);
-      /*Aggiornamento verso tutti i peer delle statistiche relative ai tempi di attesa
+      /*Aggiornamento locale e verso tutti i peer delle statistiche relative ai tempi di attesa
       delle transazioni nel pool, vengono comunicati i tempi di attesa delle transazioni appena prelevate*/
-      Peer::getInstance().broadcastTxPoolStat(TransactionPool::getInstance().getStatStrings());
+      vector<string> stats = TransactionPool::getInstance().getStatStrings();
+      vector<string>::iterator it;
+      Peer::getInstance().broadcastTxPoolStat(stats);
+      ofstream myfile;
+      myfile.open ("transactionwaitingtime.txt", ios::out | ios::app);
+      if(myfile.is_open()) {
+        string msg = "";
+        for(it = stats.begin(); it != stats.end(); ++it){
+          msg = msg + *it + "\n";
+        }
+        myfile << msg;
+        myfile.close();
+      } else {
+        throw "EXCEPTION (handleClientMessage - TRANSACTION_POOL_STATS): Blocco generato, ma non è stato possibile aprire il file per salvare le statistiche di attesa delle transazioni!";
+      }
       return ret;
     }catch(const char* msg){
       cout << msg << endl;
@@ -294,7 +308,7 @@ Block BlockChain::findBlock(int index, string previousHash, long timestamp, vect
     if(hashMatchesDifficulty(hash, difficulty)) {
       /*Il blocco generato ha un hash valido, si effetua il calcolo ed il
        salvataggio del tempo di mining del blocco in secondi (per le statistiche)*/
-      duration = (std::clock() - start)/(double)CLOCKS_PER_SEC;
+      duration = (std::clock() - start)/((double)CLOCKS_PER_SEC / 1000);
       ofstream myfile;
       myfile.open ("blocksminingtime.txt", ios::out | ios::app);
       if(myfile.is_open()) {

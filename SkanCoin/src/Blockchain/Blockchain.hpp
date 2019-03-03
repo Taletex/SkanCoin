@@ -29,6 +29,7 @@ class BlockChain {
   int DIFFICULTY_ADJUSTMENT_INTERVAL = 10;
 
   public:
+    /*Metodo getInstance per l'implementazione del pattern Singleton*/
     static BlockChain& getInstance() {
         static BlockChain bc;
         return bc;
