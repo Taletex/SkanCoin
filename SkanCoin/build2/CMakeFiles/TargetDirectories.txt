@@ -1,0 +1,3 @@
+/home/orazio/git/SkanCoin/SkanCoin/build2/CMakeFiles/rebuild_cache.dir
+/home/orazio/git/SkanCoin/SkanCoin/build2/CMakeFiles/skancoin.dir
+/home/orazio/git/SkanCoin/SkanCoin/build2/CMakeFiles/edit_cache.dir

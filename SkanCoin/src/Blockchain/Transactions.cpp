@@ -56,7 +56,7 @@ Transaction::Transaction(string id, vector<TxIn> txIns, vector<TxOut> txOuts){
 }
 
 string Transaction::toString(){
-  string ret = "{\"Id\": \"" + this->id + "\",\"txIns\": [";
+  string ret = "{\"id\": \"" + this->id + "\",\"txIns\": [";
   vector<TxIn>::iterator it;
   for(it = txIns.begin(); it != txIns.end(); ++it){
     if(it != txIns.begin()){
@@ -68,6 +68,9 @@ string Transaction::toString(){
   ret = ret + "],\"txOuts\": [";
   vector<TxOut>::iterator it2;
   for(it2 = txOuts.begin(); it2 != txOuts.end(); ++it2){
+    if(it2 != txOuts.begin()){
+      ret = ret + ", ";
+    }
     ret = ret + it2->toString();
   }
 

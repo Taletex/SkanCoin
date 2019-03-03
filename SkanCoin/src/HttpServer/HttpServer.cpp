@@ -287,7 +287,6 @@ list<Block> parseBlockList(const rapidjson::Value &blocks){
     throw "Error parsing request: <Block List>";
   }
   list<Block> ret;
-  return ret;
   try{
     for (rapidjson::SizeType i = 0; i < blocks.Size(); i++){
       ret.push_back(Block(blocks[i]["index"].GetInt(), blocks[i]["hash"].GetString(), blocks[i]["previousHash"].GetString(), long(blocks[i]["timestamp"].GetInt()), parseTransactionVector(blocks[i]["data"]), blocks[i]["difficulty"].GetInt(), blocks[i]["nonce"].GetInt()));

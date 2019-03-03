@@ -222,7 +222,9 @@ Block BlockChain::generateRawNextBlock(vector<Transaction> blockData){
       cout << msg << endl << endl;
       cout << "ERRORE (generateRawNextBlock): Apertura del file contenente i tempi di mining fallita!";
     }
+      Peer::getInstance().connectionsMtx.lock();
       Peer::getInstance().broadcastLatest(data);
+      Peer::getInstance().connectionsMtx.unlock();
       return newBlock;
   } else {
       cout << endl;
@@ -248,7 +250,9 @@ Block BlockChain::generateNextBlock(){
       delle transazioni nel pool, vengono comunicati i tempi di attesa delle transazioni appena prelevate*/
       vector<string> stats = TransactionPool::getInstance().getStatStrings();
       vector<string>::iterator it;
+      Peer::getInstance().connectionsMtx.lock();
       Peer::getInstance().broadcastTxPoolStat(stats);
+      Peer::getInstance().connectionsMtx.unlock();
       ofstream myfile;
       myfile.open ("transactionwaitingtime.txt", ios::out | ios::app);
       if(myfile.is_open()) {
@@ -349,7 +353,9 @@ Transaction BlockChain::sendTransaction(string address, float amount){
     throw "EXCEPTION (sendTransaction):Inserimento della transazione nel pool fallito!";
   }
   //Broadcast a tutti gli altri peer della transactionpool aggiornata
+  Peer::getInstance().connectionsMtx.lock();
   Peer::getInstance().broadCastTransactionPool();
+  Peer::getInstance().connectionsMtx.unlock();
   return tx;
 }
 
@@ -481,7 +487,7 @@ vector<UnspentTxOut> BlockChain::isValidChain(list<Block> blockchainToValidate) 
   }
 
   //Controllo validità di ogni blocco della blockchain (struttura e transazioni contenute)
-  for(it1 = blockchainToValidate.begin(); it1 != blockchainToValidate.end(); ++it1) {
+  for(it1 = blockchainToValidate.begin(); it1 != blockchainToValidate.end();) {
     if(it1 != blockchainToValidate.begin() && !isValidNewBlock(*it1, *(--it1))) {
       cout << endl;
       throw "EXCEPTION (isValidChain): la blockchain ricevuta contiene blocchi non validi!";
@@ -552,8 +558,11 @@ void BlockChain::replaceChain(list<Block> newBlocks) {
     setUnspentTxOuts(aUnspentTxOuts); //Aggiornamento output non spesi
     //Aggiornamento transactionPool in base agli output non spesi aggiornati
     TransactionPool::getInstance().updateTransactionPool(getUnspentTxOuts());
-    //Broadcast della nuova blockchain a tutti i nodi (non indichiamo alcuna
-    // statistica perchè non si tratta di un nuovo blocco per cui si vuole il tempo di mining)
+    /*Broadcast della nuova blockchain a tutti i nodi (non indichiamo alcuna
+     statistica perchè non si tratta di un nuovo blocco per cui si vuole il tempo di mining)
+     in questo caso non effettuiamo il lock del mutex perchè questo metodo viene usato solo
+     dai thread peer durante l'handling dei messaggi, dunque il lock è già acquisito
+    */
     Peer::getInstance().broadcastLatest("");
     cout << "Blockchain sostituita! Nuova BlockChain:" << endl << BlockChain::getInstance().toString();
     try{

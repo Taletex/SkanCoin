@@ -7,20 +7,23 @@ using easywsclient::WebSocket;
 Questo metodo deve avere un solo parametro (const string & data), questo è il motivo per cui
  abbiamo bisogno di una variabile esterna di supporto (tempWs) che sia un riferimento alla socket corrente*/
 void handleClientMessage(const string & data){
+  /*std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+  cout << "Ricevuto: " << data << endl;
+  Peer::getInstance().broadcast("ciao");
+  return;*/
   //Parsing dell'oggetto JSON ricevuto dalla socket
   rapidjson::Document document;
+  cout << endl << "Client Peer: Messaggio ricevuto: " << data;
   document.Parse(data.c_str());
-  const rapidjson::Value& type = document["type"];
 
   //Controllo che il messaggio ricevuto sia valido
-  if(document["type"].IsNull() || Peer::getInstance().isValidType(type.GetInt()) == false){
-    cout << "ERRORE (handleClientMessage): il tipo di messaggio ricevuto non è valido" << endl;
+  if(document["type"].IsNull() || Peer::getInstance().isValidType(document["type"].GetInt()) == false){
+    cout << endl << "ERRORE (handleClientMessage): il tipo di messaggio ricevuto non è valido" << endl;
     return;
   }
 
   //Mapping dell'oggetto in una nuova istanza di Message
-  Message message = Message(static_cast<MessageType>(document["type"].GetInt()), document["data"].GetString());
-  cout << "Client Peer: Messaggio ricevuto: " << message.toString() << endl;
+  Message message = Message(static_cast<MessageType>(document["type"].GetInt()), "");
 
   /*Liste usade per la gestione di alcuni tipi di messaggi (non è possibile inizializzare
    nuove variabili all'interno dei singoli case, se non si usano le parentesi graffe)*/
@@ -32,17 +35,17 @@ void handleClientMessage(const string & data){
   switch (message.type) {
     //Un peer ha richiesto l'ultimo blocco, esso viene inserito nella risposta
     case QUERY_LATEST:
-      cout << "Client Peer: Ricevuto messaggio - QUERY_LATEST" << endl;
+      cout << " - QUERY_LATEST" << endl;
       Peer::getInstance().tempWs->send(Peer::getInstance().responseLatestMsg(""));
       break;
     //Un peer ha richiesto la blockchain, essa viene inserita nella risposta
     case QUERY_ALL:
-      cout << "Client Peer: Ricevuto messaggio - QUERY_ALL" << endl;
+      cout << " - QUERY_ALL" << endl;
       Peer::getInstance().tempWs->send(Peer::getInstance().responseChainMsg());
       break;
     //Un peer ha inviato la propria versione di blockchain
     case RESPONSE_BLOCKCHAIN:
-      cout << "Client Peer: Ricevuto messaggio - RESPONSE_BLOCKCHAIN" << endl;
+      cout << " - RESPONSE_BLOCKCHAIN" << endl;
       if(document["data"].IsNull()){
         cout << "ERROR (handleClientMessage - RESPONSE_BLOCKCHAIN): Nessun dato ricevuto" << endl;
         return;
@@ -71,13 +74,13 @@ void handleClientMessage(const string & data){
       break;
     //Un peer ha richiesto il transaction pool, esso viene inserito nella risposta
     case QUERY_TRANSACTION_POOL:
-      cout << "Client Peer: Ricevuto messaggio - QUERY_TRANSACTION_POOL" << endl;
+      cout << " - QUERY_TRANSACTION_POOL" << endl;
       Peer::getInstance().tempWs->send(Peer::getInstance().responseTransactionPoolMsg());
       break;
 
     //Un peer ha inviato la propria versione di transaction pool
     case RESPONSE_TRANSACTION_POOL:
-      cout << "Clent Peer: Ricevuto messaggio - RESPONSE_TRANSACTION_POOL" << endl;
+      cout << " - RESPONSE_TRANSACTION_POOL" << endl;
 
       //Parsing del pool ricevuto
       if(document["data"].IsNull()){
@@ -106,7 +109,7 @@ void handleClientMessage(const string & data){
       /*Un peer ha prelevato delle transazioni dal proprio pool,, aggiornamento
       del file contenente le statistiche*/
       case TRANSACTION_POOL_STATS:
-        cout << "Client Peer: Ricevuto messaggio - TRANSACTION_POOL_STATS" << endl;
+        cout << " - TRANSACTION_POOL_STATS" << endl;
         if(!document["data"].IsNull()){
           try{
             myfile.open ("transactionwaitingtime.txt", ios::out | ios::app);
@@ -132,16 +135,22 @@ Message::Message(MessageType type, string data){
   this->type = type;
   this->data = data;
   this->stat = "";
+  if(data.compare("") == 0){
+    this->data = "\"\"";
+  }
 }
 Message::Message(MessageType type, string data, string stat){
   this->type = type;
   this->data = data;
   this->stat = stat;
+  if(data.compare("") == 0){
+    this->data = "\"\"";
+  }
 }
 
 /*Rappresentazione in formato JSON dell'oggetto Message*/
 string Message::toString(){
-  return "{\"type\": " + to_string(type) + ", \"data\": \"" + data + "\", \"stat\": \"" + stat + "\"}";
+  return "{\"type\": " + to_string(type) + ", \"data\": " + data + ", \"stat\": \"" + stat + "\"}";
 }
 
 /* Questa funzione esegue il polling sulla lista delle connessioni aperte dal
@@ -152,10 +161,7 @@ void Peer::checkReceivedMessage(){
   abbiamo bisogno di un riferimento diretto in tale loop, mentre è necessario utilizzare
   un iteratore per rimuovere l'elemento dal vettore */
   bool flag = false;
-
-  //Lock del mutex per accedere alle liste di connessioni
-  std::lock_guard<std::mutex> _(ConnectionsMtx);
-
+  connectionsMtx.lock();
   //Controllo dei messaggi in arrivo in ogni socket
   for(auto ws: openedConnections){
     //Controlla se la socket è stat chiusa
@@ -181,6 +187,8 @@ void Peer::checkReceivedMessage(){
   if(flag == true){
     clearClosedWs();
   }
+
+  connectionsMtx.unlock();
 }
 
 /*Questo metodo controlla il vettore di socket (client), eliminando quelle
@@ -208,16 +216,23 @@ void Peer::connectToPeers(std::string peer){
   if(!ws) throw "EXCEPTION (ConnectToPeers): Errore durante la connessione al peer!";
 
   //Lock del mutex sulle liste di connessioni per l'inserimento della nuova connessione
-  std::lock_guard<std::mutex> _(ConnectionsMtx);
+  connectionsMtx.lock();
   ws->send(queryChainLengthMsg());
   openedConnections.push_back(ws);
+  connectionsMtx.unlock();
   //Viene triggerata la diffusione del transaction pool di ogni nodo
+  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+  connectionsMtx.lock();
   broadcast(queryTransactionPoolMsg());
+  connectionsMtx.unlock();
 }
 
 /*Ritorna il numero d peer (si considerano sia le connessioni aperte dal thread client che quelle ricevute dal thread server)*/
 int Peer::countPeers(){
-  return receivedConnections.size() + openedConnections.size();
+  connectionsMtx.lock();
+  int count = receivedConnections.size() + openedConnections.size();
+  connectionsMtx.unlock();
+  return count;
 }
 
 /*Business logic per un messaggio di tipo RESPONSE_BLOCKCHAIN, questa funzione
@@ -263,26 +278,29 @@ void Peer::initP2PServer(int port){
     //Gesitione della ricezione di nuove connessioni
     .onopen([&](crow::websocket::connection& connection){
       CROW_LOG_INFO << "Server Peer: ricevuta nuova connessione";
-
-      //Lock del mutex per aggiungere la nuova connessione alla lista
-      std::lock_guard<std::mutex> _(ConnectionsMtx);
+      connectionsMtx.lock();
       receivedConnections.insert(&connection);
       connection.send_text(queryChainLengthMsg());
+      connectionsMtx.unlock();
+      //
+      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+      connectionsMtx.lock();
       broadcast(queryTransactionPoolMsg());
+      connectionsMtx.unlock();
+
     })
     //Gestione della chiusura di una socket
     .onclose([&](crow::websocket::connection& connection, const std::string& reason){
       CROW_LOG_INFO << "Server Peer: Una websocket è stata chiusa: " << reason;
-      //Lock del mutex per rimuovere la socket dalla lista di connessioni del server
-      std::lock_guard<std::mutex> _(ConnectionsMtx);
+      connectionsMtx.lock();
       receivedConnections.erase(&connection);
+      connectionsMtx.unlock();
     })
     //Gestione della ricezione di un messaggio
     .onmessage([&](crow::websocket::connection& connection, const std::string& data, bool){
-      /*Lock del mutex sulla lista di connessioni in modo da poter eseguire
-      l'handler per i messaggi in arrivo al server P2P*/
-      std::lock_guard<std::mutex> _(ConnectionsMtx);
+      connectionsMtx.lock();
       handleServerMessage(connection, data);
+      connectionsMtx.unlock();
     });
 
   cout << "Starting P2PServer on port " << port << "..." << endl;
@@ -302,19 +320,23 @@ void Peer::startClientPoll(){
 
 /*Gestore dei messaggi in arrivo al Server Peer*/
 void Peer::handleServerMessage(crow::websocket::connection& connection, const string& data){
+  /*std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+  cout << "Ricevuto: " << data << endl;
+  broadcast("ciao2");
+  return;*/
   //Parsing dell'oggetto JSON ricevuto dalla socket
+
   rapidjson::Document document;
+  cout << endl << "Server Peer: Messaggio ricevuto: " << data;
   document.Parse(data.c_str());
-  const rapidjson::Value& type = document["type"];
 
   //Controllo che il messaggio ricevuto sia valido
-  if(document["type"].IsNull() || isValidType(type.GetInt()) == false){
-cout << "ERRORE (handleServerMessage): il tipo di messaggio ricevuto non è valido" << endl;    return;
+  if(document["type"].IsNull() || isValidType(document["type"].GetInt()) == false){
+    cout << endl << "ERRORE (handleServerMessage): il tipo di messaggio ricevuto non è valido" << endl;    return;
   }
 
   //Mapping dell'oggetto in una nuova istanza di Message
-  Message message = Message(static_cast<MessageType>(document["type"].GetInt()), document["data"].GetString());
-  cout << "Server Peer: Messaggio ricevuto: " << message.toString() << endl;
+  Message message = Message(static_cast<MessageType>(document["type"].GetInt()), "");
 
   /*Liste usade per la gestione di alcuni tipi di messaggi (non è possibile inizializzare
    nuove variabili all'interno dei singoli case, se non si usano le parentesi graffe)*/
@@ -326,17 +348,17 @@ cout << "ERRORE (handleServerMessage): il tipo di messaggio ricevuto non è vali
   switch (message.type) {
     //Un peer ha richiesto l'ultimo blocco, esso viene inserito nella risposta
     case QUERY_LATEST:
-      cout << "Server Peer: Ricevuto messaggio - QUERY_LATEST" << endl;
+      cout << " - QUERY_LATEST" << endl;
       connection.send_text(responseLatestMsg(""));
       break;
     //Un peer ha richiesto la blockchain, essa viene inserita nella risposta
     case QUERY_ALL:
-      cout << "Peer Server: Ricevuto messaggio - QUERY_ALL" << endl;
+      cout << " - QUERY_ALL" << endl;
       connection.send_text(responseChainMsg());
       break;
     //Un peer ha inviato la propria versione di blockchain
     case RESPONSE_BLOCKCHAIN:
-      cout << "Server Peer: Ricevuto messaggio - RESPONSE_BLOCKCHAIN" << endl;
+      cout << " - RESPONSE_BLOCKCHAIN" << endl;
       if(document["data"].IsNull()){
         cout << "ERROR (handleServerMessage - RESPONSE_BLOCKCHAIN): Nessun dato ricevuto" << endl;
         return;
@@ -365,12 +387,12 @@ cout << "ERRORE (handleServerMessage): il tipo di messaggio ricevuto non è vali
       break;
     //Un peer ha richiesto il transaction pool, esso viene inserito nella risposta
     case QUERY_TRANSACTION_POOL:
-      cout << "Server Peer: Ricevuto messaggio - QUERY_TRANSACTION_POOL" << endl;
+      cout << " - QUERY_TRANSACTION_POOL" << endl;
       connection.send_text(responseTransactionPoolMsg());
       break;
     //Un peer ha inviato la propria versione di transaction pool
     case RESPONSE_TRANSACTION_POOL:
-      cout << "Server Peer: Ricevuto messaggio - RESPONSE_TRANSACTION_POOL" << endl;
+      cout << " - RESPONSE_TRANSACTION_POOL" << endl;
 
       if(document["data"].IsNull()){
         cout << "ERRORE (handleServerMessage - RESPONSE_TRANSACTION_POOL) nessun dato ricevuto!" << endl;
@@ -380,7 +402,7 @@ cout << "ERRORE (handleServerMessage): il tipo di messaggio ricevuto non è vali
         receivedTransactions = parseTransactionVector(document["data"]);
       }catch(const char* msg){
         cout << msg << endl;
-        cout << "ERRORE (handleServerMessage - RESPONSE_TRANSACTION_POOL): errore durante ilparsing del messaggio!" << endl;
+        cout << "ERRORE (handleServerMessage - RESPONSE_TRANSACTION_POOL): errore durante il parsing del messaggio!" << endl;
         return;
       }
       /*Per ogni transazione questa viene elaborata e successivamente si
@@ -398,7 +420,7 @@ cout << "ERRORE (handleServerMessage): il tipo di messaggio ricevuto non è vali
     /*Un peer ha prelevato delle transazioni dal proprio pool,, aggiornamento
     del file contenente le statistiche*/
     case TRANSACTION_POOL_STATS:
-      cout << "Server Peer: Ricevuto messaggio - TRANSACTION_POOL_STATS" << endl;
+      cout << " - TRANSACTION_POOL_STATS" << endl;
       if(!document["data"].IsNull()){
         try{
           myfile.open("transactionwaitingtime.txt", ios::out | ios::app);
@@ -422,7 +444,7 @@ cout << "ERRORE (handleServerMessage): il tipo di messaggio ricevuto non è vali
 /*Controllo della validità del tipo di messaggio (se appartiene all'enumeratore)*/
 bool Peer::isValidType(int type){
   MessageType receivedType = static_cast<MessageType>(type);
-  for ( int val = QUERY_LATEST; val != RESPONSE_TRANSACTION_POOL; val++ ){
+  for ( int val = QUERY_LATEST; val != TRANSACTION_POOL_STATS+1; val++ ){
     if(receivedType == val)return true;
   }
   return false;
@@ -471,7 +493,7 @@ string Peer::responseChainMsg(){
   return Message(RESPONSE_BLOCKCHAIN, BlockChain::getInstance().toString()).toString();
 }
 string Peer::responseLatestMsg(string stat){
-  return Message(RESPONSE_BLOCKCHAIN, "[" + BlockChain::getInstance().getLatestBlock().toString() + "]", stat).toString();
+  return Message(RESPONSE_BLOCKCHAIN, "[" + BlockChain::getInstance().getLatestBlock().toString() + "]",  stat).toString();
 }
 string Peer::responseTransactionPoolMsg(){
   return Message(RESPONSE_TRANSACTION_POOL, TransactionPool::getInstance().toString()).toString();

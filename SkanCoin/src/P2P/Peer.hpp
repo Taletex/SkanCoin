@@ -36,7 +36,7 @@ class Peer {
     /*Usiamo un mutex perchè le liste usate per gestire le connessioni ricevute e
     quelle aperte non possono essere usate da thread diversi contemporaneamente
     (e noi abbiamo bisogno di usare due thread differenti per gestire questi due tipi di connessione) */
-    std::mutex ConnectionsMtx;
+    std::mutex connectionsMtx;
     /*Lista di connessioni ricevute dal thread server*/
     std::unordered_set<crow::websocket::connection*> receivedConnections;
     /*Lista di connessioni aperte dal thread client*/
@@ -85,6 +85,11 @@ class Peer {
     è chiamata nell'handler dei messaggi in arrivo*/
     void handleBlockchainResponse(std::list<Block> receivedBlocks);
 
+    /*Questo metodo effettua un broadcast di un certo messaggio, per fare ciò lo invia
+     su tutte le socket aperte dal thread client e su tutte quelle aperte da altri
+     client verso il thread server*/
+    void broadcast(std::string message);
+
   private:
     /*Il pattern singleton viene implementato rendendo il costruttore di default privato
     ed eliminando il costruttore di copia e l'operazione di assegnamento*/
@@ -95,11 +100,6 @@ class Peer {
     /*Questo metodo controlla il vettore di socket (client), eliminando quelle
     che sono state chiuse*/
     void clearClosedWs();
-
-    /*Questo metodo effettua un broadcast di un certo messaggio, per fare ciò lo invia
-     su tutte le socket aperte dal thread client e su tutte quelle aperte da altri
-     client verso il thread server*/
-    void broadcast(std::string message);
 
     /*Gestore dei messaggi in arrivo al Server Peer*/
     void handleServerMessage(crow::websocket::connection& connection, const std::string& data);
