@@ -22,6 +22,7 @@ class TransactionStat {
 
 class TransactionPool {
   public:
+    /*Metodo getInstance per l'implementazione del pattern Singleton*/
     static TransactionPool& getInstance() {
        static TransactionPool tp;
        return tp;
@@ -44,6 +45,8 @@ class TransactionPool {
     delle transazioni nel pool prima di essere confermate*/
     std::vector<std::string> getStatStrings();
   private:
+    /*Il pattern singleton viene implementato rendendo il costruttore di default privato
+    ed eliminando il costruttore di copia e l'operazione di assegnamento*/
     TransactionPool();
     TransactionPool(const TransactionPool&) = delete;
     TransactionPool& operator=(const TransactionPool&) = delete;
