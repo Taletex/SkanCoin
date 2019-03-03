@@ -34,9 +34,8 @@ bool Block::isEqual(Block other){
 BlockChain::BlockChain(){
   Block genesisBlock = getGenesisBlock();
   blockchain = {genesisBlock};
-  vector<UnspentTxOut> unspentTxOuts = {};
   try{
-    unspentTxOuts = processTransactions(blockchain.front().data, unspentTxOuts, 0);
+    this->unspentTxOuts = processTransactions(blockchain.front().data, unspentTxOuts, 0);
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;
@@ -359,11 +358,11 @@ string BlockChain::calculateHash (int index, string previousHash, long timestamp
 //Validazione della struttura del blocco (type checking)
 bool BlockChain::isValidBlockStructure(Block block){
   return (
-    typeid(block.index) != typeid(int) &&
-    typeid(block.hash) != typeid(string) &&
-    typeid(block.previousHash) != typeid(string) &&
-    typeid(block.timestamp) != typeid(int) &&
-    typeid(block.data) != typeid(vector<Transaction>) );
+    typeid(block.index).name() == typeid(int).name() &&
+    typeid(block.hash).name() == typeid(string).name() &&
+    typeid(block.previousHash).name() == typeid(string).name() &&
+    typeid(block.timestamp).name() == typeid(long).name() &&
+    typeid(block.data).name() == typeid(vector<Transaction>).name() );
 }
 
 //Calcolo della complessità del mining del prossimo blocco (numero di
