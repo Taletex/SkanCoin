@@ -115,7 +115,7 @@ server <- function(input, output) {
   # Effettua una richiesta HTTP sulla base del parametro passato, gestendo risposte d'errore
   getStats = function(type) {
     obj <- fromJSON(paste("http://localhost:3001/webresources/stats/", type, sep=""))
-    if(typeof(obj$data) == "list") {
+    if(typeof(obj$data) == "list" && length(obj$data) > 0) {
       obj <- obj$data
     } else {
       v$title <- obj$message
