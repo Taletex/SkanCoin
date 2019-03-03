@@ -143,6 +143,18 @@ Block BlockChain::getLatestBlock(){
   return blockchain.back();
 }
 
+// Ritorna un blocco dato il suo hash
+Block BlockChain::getBlockFromHash(string hash){
+  list<Block>::iterator it;
+  for(it = blockchain.begin(); it != blockchain.end(); ++it){
+    if(it->hash == hash){
+      return *it;
+    }
+  }
+  cout << endl;
+  throw "EXCEPTION: Block not found!";
+}
+
 //Calcola la nuova difficoltà per i blocchi
 int BlockChain::getAdjustedDifficulty(Block latestBlock, list<Block> aBlockchain){
   list<Block>::iterator it = aBlockchain.begin();
@@ -311,6 +323,21 @@ Transaction BlockChain::sendTransaction(string address, float amount){
   //Broadcast a tutti gli altri peer della transactionpool aggiornata
   Peer::getInstance().broadCastTransactionPool();
   return tx;
+}
+
+// Ritorna una transazione della blockchain noto il suo id
+Transaction BlockChain::getTransactionFromId(string transactionId){
+  list<Block>::iterator it;
+  vector<Transaction>::iterator it2;
+  for(it = blockchain.begin(); it != blockchain.end(); ++it){
+    for(it2 = it->data.begin(); it2 != it->data.end(); ++it2){
+      if(it2->id == transactionId){
+        return *it2;
+      }
+    }
+  }
+  cout << endl;
+  throw "EXCEPTION: Transaction not found in the blockchain";
 }
 
 //calcolo dell'hash del blocco

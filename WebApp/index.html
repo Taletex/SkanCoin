@@ -43,7 +43,7 @@
             <div style="text-align:center; padding: 20px;">
                 <div class="row m-0">
                     <div class="col-md-12 d-flex m-0 alert alert-dark" style="border-radius: 5px 5px 0px 0px;">
-                        <h3 class="m-0">Chiave pubblica <span class="text-primary ml-2" style="font-size:1.1rem">{{pubblicKey}}</span></h3>
+                        <h3 class="m-0">Chiave pubblica <span class="text-primary ml-2" style="font-size:1.1rem">{{publicKey}}</span></h3>
                     </div>
 
                     <!-- NODE QUERIES -->
@@ -75,70 +75,39 @@
                                         </div>
                                     </li>
                                     <li class="d-flex align-items-center justify-content-between list-group-item py-2">
-                                        <div class="text-left"><span>Stampa transazioni non spese della blokchain per un wallet</span></div>
+                                        <div><span>Stampa output non spesi della blockchain</span></div>
+                                        <div class="form-group m-0 d-flex ml-auto">
+                                            <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="getBlockchainUnspentTransactionOutputs()">Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
+                                        </div>
+                                    </li>
+                                    <li class="d-flex align-items-center justify-content-between list-group-item py-2">
+                                        <div class="text-left"><span>Stampa output non spesi della blokchain per un wallet</span></div>
                                         <div class="form-group m-0 d-flex ml-auto">
                                             <input type="text" class="form-control form-control-sm" placeholder="Indirizzo" name="Indirizzo" ng-model="inputs.address">
                                             <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="getWalletUnspentTransactionOutputs(inputs.address)" ng-disabled="(inputs.address==null || inputs.address=='')" ng-class="{'disabled cursor-not-allowed': (inputs.address==null || inputs.address=='')}">Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
                                         </div>
                                     </li>
                                     <li class="d-flex align-items-center justify-content-between list-group-item py-2">
-                                        <div><span>Stampa transazioni non spese della blockchain</span></div>
-                                        <div class="form-group m-0 d-flex ml-auto">
-                                            <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="getBlockchainUnspentTransactionOutputs()">Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
-                                        </div>
-                                    </li>
-                                    <li class="d-flex align-items-center justify-content-between list-group-item py-2">
-                                        <div><span>Stampa transazioni non spese della blockchain per il tuo wallet</span></div>
+                                        <div><span>Stampa output non spesi della blockchain per il tuo wallet</span></div>
                                         <div class="form-group m-0 d-flex ml-auto">
                                             <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="getMyUnspentTransactionOutputs()">Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
                                         </div>
                                     </li>
-                                    <!-- TODO: METTERE GLI INPUT GIUSTI -->
-                                    <li class="list-group-item py-2">
-                                        <div class="row m-0 d-flex align-items-center justify-content-between">
-                                            <div><span>Effettua il mining di un blocco indicando le transazioni</div>
-                                            <div class="form-group m-0 d-flex ml-auto">
-                                                <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="mineBlockWithTransactions()" ng-class="{'disabled cursor-not-allowed': false}"><span class="fa fa-right-arrow"></span>Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
-                                            </div>
+                                    <li class="d-flex align-items-center justify-content-between list-group-item py-2">
+                                        <div><span>Stampa il mio bilancio</span></div>
+                                        <div class="form-group m-0 d-flex ml-auto">
+                                            <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="getMyBalance()">Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
                                         </div>
-                                        <!-- Passare le transazioni -->
                                     </li>
-                                    <li class="list-group-item py-2">
-                                        <div class="row m-0 d-flex align-items-center justify-content-between">
-                                            <div><span>Effettua il mining di un blocco (dal transaction pool)</div>
-                                            <div class="form-group m-0 d-flex ml-auto">
-                                                <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="mineBlockWithTransactionPool()"><span class="fa fa-right-arrow"></span>Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
-                                            </div>
+                                    <li class="d-flex align-items-center justify-content-between list-group-item py-2">
+                                        <div><span>Stampa la transaction pool</span></div>
+                                        <div class="form-group m-0 d-flex ml-auto">
+                                            <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="getTransactionPool()">Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
                                         </div>
                                     </li>
                                     <li class="list-group-item py-2">
                                         <div class="row m-0 d-flex align-items-center justify-content-between">
-                                            <div><span>Effettua il mining di una transazione</div>
-                                            <div class="form-group m-0 d-flex ml-auto">
-                                                <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="mineBlockWithTransaction(inputs.mineTransactionAddress, inputs.mineTransactionAmount)" ng-disabled="(inputs.mineTransactionAmount==null || inputs.mineTransactionAmount=='' || inputs.mineTransactionAddress==null || inputs.mineTransactionAddress=='')" ng-class="{'disabled cursor-not-allowed': (inputs.mineTransactionAmount==null || inputs.mineTransactionAmount=='' || inputs.mineTransactionAddress==null || inputs.mineTransactionAddress=='')}"><span class="fa fa-right-arrow"></span>Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
-                                            </div>
-                                        </div>
-                                        <div class="row mx-0 my-2 card" ng-init="bShowDoc1=false">
-                                            <div class="card-header text-left px-2 py-1 cursor-pointer" ng-click="bShowDoc1 = !bShowDoc1">
-                                                <span ng-show="!bShowDoc1" class="fa fa-plus-circle mr-2" style="font-size: 14px;"></span>
-                                                <span ng-show="bShowDoc1" class="fa fa-minus-circle mr-2" style="font-size: 14px;"></span>
-                                                <span>Quantità e Indirizzo (chiave pubblica)</span>
-                                            </div>
-                                            <div class="card-body row m-0 px-2 py-1" ng-show="bShowDoc1">
-                                                <div class="form-group m-0 col-3 text-left pl-0">
-                                                    <label class="text-muted col-form-label-sm p-0 m-0">Quantità</label>
-                                                    <input type="number" min='1' class="form-control form-control-sm" placeholder="quantità" name="quantità_mine" ng-model="inputs.mineTransactionAmount">
-                                                </div>
-                                                <div class="form-group m-0 col-9 text-left pl-0">
-                                                    <label class="text-muted col-form-label-sm p-0 m-0">Indirizzo</label>
-                                                    <input type="text" class="form-control form-control-sm" placeholder="Indirizzo" name="indirizzo_mine" ng-model="inputs.mineTransactionAddress">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </li>
-                                    <li class="list-group-item py-2">
-                                        <div class="row m-0 d-flex align-items-center justify-content-between">
-                                            <div><span>Effettua l'invio di una transazione</div>
+                                            <div><span>Crea una transazione (da inserire nel pool)</div>
                                             <div class="form-group m-0 d-flex ml-auto">
                                                 <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="sendTransaction(inputs.sendTransactionAddress, inputs.sendTransactionAmount)" ng-disabled="(inputs.sendTransactionAmount==null || inputs.sendTransactionAmount=='' || inputs.sendTransactionAddress==null || inputs.sendTransactionAddress=='')" ng-class="{'disabled cursor-not-allowed': (inputs.sendTransactionAmount==null || inputs.sendTransactionAmount=='' || inputs.sendTransactionAddress==null || inputs.sendTransactionAddress=='')}"><span class="fa fa-right-arrow"></span>Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
                                             </div>
@@ -161,17 +130,48 @@
                                             </div>
                                         </div>
                                     </li>
-                                    <li class="d-flex align-items-center justify-content-between list-group-item py-2">
-                                        <div><span>Stampa il mio bilancio</span></div>
-                                        <div class="form-group m-0 d-flex ml-auto">
-                                            <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="getMyBalance()">Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
+                                    <li class="list-group-item py-2">
+                                        <div class="row m-0 d-flex align-items-center justify-content-between">
+                                            <div><span>Effettua il mining di un blocco (dal transaction pool)</div>
+                                            <div class="form-group m-0 d-flex ml-auto">
+                                                <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="mineBlockWithTransactionPool()"><span class="fa fa-right-arrow"></span>Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
+                                            </div>
                                         </div>
                                     </li>
-                                    <li class="d-flex align-items-center justify-content-between list-group-item py-2">
-                                        <div><span>Stampa la transaction pool</span></div>
-                                        <div class="form-group m-0 d-flex ml-auto">
-                                            <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="getTransactionPool()">Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
+                                    <li class="list-group-item py-2">
+                                        <div class="row m-0 d-flex align-items-center justify-content-between">
+                                            <div><span>Effettua il mining di un blocco con una transazione</div>
+                                            <div class="form-group m-0 d-flex ml-auto">
+                                                <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="mineBlockWithTransaction(inputs.mineTransactionAddress, inputs.mineTransactionAmount)" ng-disabled="(inputs.mineTransactionAmount==null || inputs.mineTransactionAmount=='' || inputs.mineTransactionAddress==null || inputs.mineTransactionAddress=='')" ng-class="{'disabled cursor-not-allowed': (inputs.mineTransactionAmount==null || inputs.mineTransactionAmount=='' || inputs.mineTransactionAddress==null || inputs.mineTransactionAddress=='')}"><span class="fa fa-right-arrow"></span>Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
+                                            </div>
                                         </div>
+                                        <div class="row mx-0 my-2 card" ng-init="bShowDoc1=false">
+                                            <div class="card-header text-left px-2 py-1 cursor-pointer" ng-click="bShowDoc1 = !bShowDoc1">
+                                                <span ng-show="!bShowDoc1" class="fa fa-plus-circle mr-2" style="font-size: 14px;"></span>
+                                                <span ng-show="bShowDoc1" class="fa fa-minus-circle mr-2" style="font-size: 14px;"></span>
+                                                <span>Quantità e Indirizzo (chiave pubblica) della transazione</span>
+                                            </div>
+                                            <div class="card-body row m-0 px-2 py-1" ng-show="bShowDoc1">
+                                                <div class="form-group m-0 col-3 text-left pl-0">
+                                                    <label class="text-muted col-form-label-sm p-0 m-0">Quantità</label>
+                                                    <input type="number" min='1' class="form-control form-control-sm" placeholder="quantità" name="quantità_mine" ng-model="inputs.mineTransactionAmount">
+                                                </div>
+                                                <div class="form-group m-0 col-9 text-left pl-0">
+                                                    <label class="text-muted col-form-label-sm p-0 m-0">Indirizzo</label>
+                                                    <input type="text" class="form-control form-control-sm" placeholder="Indirizzo" name="indirizzo_mine" ng-model="inputs.mineTransactionAddress">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <!-- TODO: METTERE GLI INPUT GIUSTI -->
+                                    <li class="list-group-item py-2">
+                                        <div class="row m-0 d-flex align-items-center justify-content-between">
+                                            <div><span>Effettua il mining di un blocco indicando tutte le transazioni</div>
+                                            <div class="form-group m-0 d-flex ml-auto">
+                                                <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="mineBlockWithTransactions()" ng-class="{'disabled cursor-not-allowed': false}"><span class="fa fa-right-arrow"></span>Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
+                                            </div>
+                                        </div>
+                                        <!-- Passare le transazioni -->
                                     </li>
                                     <li class="list-group-item py-2">
                                         <div class="row m-0 d-flex align-items-center justify-content-between">
@@ -199,7 +199,7 @@
                                         </div>
                                     </li>
                                     <li class="d-flex align-items-center justify-content-between list-group-item py-2">
-                                        <div><span>Stampa la lista dei peer</span></div>
+                                        <div><span>Stampa il numero di peer a cui si è connessi</span></div>
                                         <div class="form-group m-0 d-flex ml-auto">
                                             <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="getPeers()">Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
                                         </div>

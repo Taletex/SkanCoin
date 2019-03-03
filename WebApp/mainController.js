@@ -5,22 +5,22 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
   $scope.bLoading = false;
   $scope.inputs = {};
   $scope.queryOutput = null;
-  $scope.pubblicKey = "";
+  $scope.publicKey = "";
 
   /* === COLLECTION REST === */
 
-  // Ritorna la chiave pubblica del wallet
-  $scope.getPubblicKey = function() {
+  // Ritorna la chiave pubblica del wallet dell'utente corrente
+  $scope.getPublicKey = function() {
     $scope.bLoading = true;
-    $http.get($scope.baseUrl + "pubblickey").then(function(resp) {
-      $scope.pubblicKey = resp.data.pubblickey;
+    $http.get($scope.baseUrl + "publickey").then(function(resp) {
+      $scope.publicKey = resp.data.publickey;
       console.log(resp);
     }).finally (function(){
       $scope.bLoading = false;
     });
   };
 
-  // Ritorna una stringa contenente la blockchain
+  // Ritorna la blockchain
   $scope.getBlockchain = function() {
     $scope.bLoading = true;
     $http.get($scope.baseUrl + "blocks").then(function(resp) {
@@ -92,60 +92,6 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
     });
   };
 
-  // Richiama una REST per effettuare il mining di un nuovo blocco utilizzando le transazioni passate come argomento
-  $scope.mineBlockWithTransactions = function(transactions) {
-    if(transactions != null) {
-      $scope.bLoading = true;
-      $http.post($scope.baseUrl + "blocks/transactions", {data: transactions}, {headers:{'Content-Type': 'application/json'}}).then(function(resp) {
-        document.getElementById("output").innerHTML = syntaxHighlight(JSON.stringify(resp.data, undefined, 4));
-        $scope.queryOutput = resp.data;
-        console.log(resp);
-      }).finally (function(){
-        $scope.bLoading = false;
-      });
-    }
-  };
-
-  // Richiama una REST per effettuare il mining di un nuovo blocco utilizzando le transazioni del transaction pool
-  $scope.mineBlockWithTransactionPool = function() {
-    $scope.bLoading = true;
-    $http.post($scope.baseUrl + "blocks/pool").then(function(resp) {
-      document.getElementById("output").innerHTML = syntaxHighlight(JSON.stringify(resp.data, undefined, 4));
-      $scope.queryOutput = resp.data;
-      console.log(resp);
-    }).finally (function(){
-      $scope.bLoading = false;
-    });
-  };
-
-  // Effettua il mining di un nuovo blocco utilizzando una nuova transazione creata a partire dall'amount e address passati (più la coinbase transaction)
-  $scope.mineBlockWithTransaction = function(address, amount) {
-    if(address != null && amount != null) {
-      $scope.bLoading = true;
-      $http.post($scope.baseUrl + "blocks/transaction", {address: address, amount: amount}, {headers:{'Content-Type': 'application/json'}}).then(function(resp) {
-        document.getElementById("output").innerHTML = syntaxHighlight(JSON.stringify(resp.data, undefined, 4));
-        $scope.queryOutput = resp.data;
-        console.log(resp);
-      }).finally (function(){
-        $scope.bLoading = false;
-      });
-    }
-  };
-
-  // Crea una nuova transazione e la inserisce nel transaction pool
-  $scope.sendTransaction = function(address, amount) {
-    if(address != null && amount != null) {
-      $scope.bLoading = true;
-      $http.post($scope.baseUrl + "transactions", {address: address, amount: amount}, {headers:{'Content-Type': 'application/json'}}).then(function(resp) {
-        document.getElementById("output").innerHTML = syntaxHighlight(JSON.stringify(resp.data, undefined, 4));
-        $scope.queryOutput = resp.data;
-        console.log(resp);
-      }).finally (function(){
-        $scope.bLoading = false;
-      });
-    }
-  };
-
   // Ritorna il balance del wallet
   $scope.getMyBalance = function() {
     $scope.bLoading = true;
@@ -170,7 +116,61 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
     });
   };
 
-  // Aggiunge un peer alla lista di peer
+  // Crea una nuova transazione e la inserisce nel transaction pool
+  $scope.sendTransaction = function(address, amount) {
+    if(address != null && amount != null) {
+      $scope.bLoading = true;
+      $http.post($scope.baseUrl + "transactions", {address: address, amount: amount}, {headers:{'Content-Type': 'application/json'}}).then(function(resp) {
+        document.getElementById("output").innerHTML = syntaxHighlight(JSON.stringify(resp.data, undefined, 4));
+        $scope.queryOutput = resp.data;
+        console.log(resp);
+      }).finally (function(){
+        $scope.bLoading = false;
+      });
+    }
+  };
+
+  // Richiama una REST per effettuare il mining di un nuovo blocco utilizzando le transazioni del transaction pool (più la coinbase transaction)
+  $scope.mineBlockWithTransactionPool = function() {
+    $scope.bLoading = true;
+    $http.post($scope.baseUrl + "blocks/pool").then(function(resp) {
+      document.getElementById("output").innerHTML = syntaxHighlight(JSON.stringify(resp.data, undefined, 4));
+      $scope.queryOutput = resp.data;
+      console.log(resp);
+    }).finally (function(){
+      $scope.bLoading = false;
+    });
+  };
+
+  // Richiama una REST per effettuare il mining di un nuovo blocco utilizzando una nuova transazione creata a partire dall'amount e address passati (più la coinbase transaction)
+  $scope.mineBlockWithTransaction = function(address, amount) {
+    if(address != null && amount != null) {
+      $scope.bLoading = true;
+      $http.post($scope.baseUrl + "blocks/transaction", {address: address, amount: amount}, {headers:{'Content-Type': 'application/json'}}).then(function(resp) {
+        document.getElementById("output").innerHTML = syntaxHighlight(JSON.stringify(resp.data, undefined, 4));
+        $scope.queryOutput = resp.data;
+        console.log(resp);
+      }).finally (function(){
+        $scope.bLoading = false;
+      });
+    }
+  };
+
+  // Richiama una REST per effettuare il mining di un nuovo blocco utilizzando le transazioni passate come argomento (no coinbase transaction)
+  $scope.mineBlockWithTransactions = function(transactions) {
+    if(transactions != null) {
+      $scope.bLoading = true;
+      $http.post($scope.baseUrl + "blocks/transactions", {data: transactions}, {headers:{'Content-Type': 'application/json'}}).then(function(resp) {
+        document.getElementById("output").innerHTML = syntaxHighlight(JSON.stringify(resp.data, undefined, 4));
+        $scope.queryOutput = resp.data;
+        console.log(resp);
+      }).finally (function(){
+        $scope.bLoading = false;
+      });
+    }
+  };
+
+  // Aggiunge un peer alla lista di peer (dato il suo indirizzo IP e numero di porta)
   $scope.addPeer = function(Ipaddr, peerPort) {
     if(Ipaddr != null) {
       $scope.bLoading = true;
@@ -217,5 +217,5 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
       });
   }
 
-  $scope.getPubblicKey();
+  $scope.getPublicKey();
 });

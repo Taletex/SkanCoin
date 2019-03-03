@@ -11,6 +11,12 @@
 #include "../Blockchain/Blockchain.hpp"
 #include "../P2P/Peer.hpp"
 
+void initHttpServer(int port);
+
+crow::response optionsResponse();
+
+crow::response createResponse(std::string data, int code);
+
 std::vector<TxIn> parseTxInVector(const rapidjson::Value &txIns);
 
 std::vector<TxOut> parseTxOutVector(const rapidjson::Value &txOuts);
@@ -21,9 +27,4 @@ std::string printUnspentTxOuts(std::vector<UnspentTxOut> unspentTxOuts);
 
 std::string printTransactions(std::vector<Transaction> transactions);
 
-Block getBlockFromHash(std::list<Block> blockchain, std::string hash);
-
-Transaction getTransactionFromId(std::list<Block> blockchain, std::string id);
-
-void initHttpServer(int port);
 #endif

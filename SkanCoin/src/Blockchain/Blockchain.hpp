@@ -47,6 +47,9 @@ class BlockChain {
     //ritorna l'ultimo blocco della blockchain
     Block getLatestBlock();
 
+    // Ritorna un blocco dato il suo hash
+    Block getBlockFromHash(std::string hash);
+
     //Data la lista di transazioni da inserire nel blocco si esegue il mining
     //del blocco e si inserisce nella blockchain
     Block generateRawNextBlock(std::vector<Transaction> blockData);
@@ -67,6 +70,9 @@ class BlockChain {
 
     //Crea una nuova transazione e la inserisce nel transaction pool
     Transaction sendTransaction(std::string address, float amount);
+
+    // Ritorna una transazione della blockchain noto il suo id
+    Transaction getTransactionFromId(std::string id);
 
     //Validazione della struttura del blocco (type checking)
     bool isValidBlockStructure(Block block);
