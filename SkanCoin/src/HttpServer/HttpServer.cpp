@@ -113,6 +113,15 @@ Transaction getTransactionFromId(list<Block> blockchain, string id){
   throw "EXCEPTION: Transaction not found in the blockchain";
 }
 
+crow::response optionsResponse() {
+  crow::response resp;
+  resp.code = 200;
+  resp.add_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+  resp.add_header("Access-Control-Allow-Headers", "Content-Type");
+  resp.add_header("Access-Control-Allow-Origin", "*");
+  return resp;
+}
+
 crow::response createResponse(string data, int code) {
   crow::response resp(data);
   resp.code = code;
@@ -171,65 +180,81 @@ void initHttpServer(int port){
   });
 
   // Effettua il mining di un nuovo blocco utilizzando le transazioni passate come argomento (no coinbase transaction)
-  CROW_ROUTE(app, "/webresources/blocks/transactions").methods("POST"_method)([](const crow::request& req){
-    vector<Transaction> transactions;
-    rapidjson::Document document;
-    document.Parse(req.body.c_str());
-    const rapidjson::Value& data = document["data"];
+  CROW_ROUTE(app, "/webresources/blocks/transactions").methods("POST"_method, "OPTIONS"_method)([](const crow::request& req){
+    if(req.method == "OPTIONS"_method) {
+      return optionsResponse();           // Per gestire il CORS
+    } else {
+      vector<Transaction> transactions;
+      rapidjson::Document document;
+      document.Parse(req.body.c_str());
+      const rapidjson::Value& data = document["data"];
 
-    if(!data.IsArray() || data.IsNull()){
-      return createResponse("{\"success\": false, \"message\": \"Error parsing request: Block data not present\" }", 200);
-    }
-    try{
-      transactions = parseTransactionVector(data);
-      Block newBlock = BlockChain::getInstance().generateRawNextBlock(transactions);
-      return createResponse("{\"success\" :true, \"newBlock\": " + newBlock.toString() + "}", 200);
-    }catch(const char* msg){
-      CROW_LOG_INFO << msg << "\n";
-      return createResponse("{\"success\": false, \"message\": \"Error: an error occurs during the generation of the new block\" }", 200);
+      if(!data.IsArray() || data.IsNull()){
+        return createResponse("{\"success\": false, \"message\": \"Error parsing request: Block data not present\" }", 200);
+      }
+      try{
+        transactions = parseTransactionVector(data);
+        Block newBlock = BlockChain::getInstance().generateRawNextBlock(transactions);
+        return createResponse("{\"success\" :true, \"newBlock\": " + newBlock.toString() + "}", 200);
+      }catch(const char* msg){
+        CROW_LOG_INFO << msg << "\n";
+        return createResponse("{\"success\": false, \"message\": \"Error: an error occurs during the generation of the new block\" }", 200);
+      }
     }
   });
 
   // Effettua il mining di un nuovo blocco utilizzando le transazioni del transaction pool (più la coinbase transaction)
-  CROW_ROUTE(app, "/webresources/blocks/pool").methods("POST"_method)([](){
-    try{
-      Block newBlock = BlockChain::getInstance().generateNextBlock();
-      return createResponse("{\"success\" :true, \"newBlock\": " + newBlock.toString() + "}", 200);
-    }catch(const char* msg){
-      CROW_LOG_INFO << msg << "\n";
-      return createResponse("{\"success\": false, \"message\": \"Errore durante la generazione del nuovo blocco\" }", 200);
+  CROW_ROUTE(app, "/webresources/blocks/pool").methods("POST"_method, "OPTIONS"_method)([](const crow::request& req){
+    if(req.method == "OPTIONS"_method) {
+      return optionsResponse();           // Per gestire il CORS
+    } else {
+      try{
+        Block newBlock = BlockChain::getInstance().generateNextBlock();
+        return createResponse("{\"success\" :true, \"newBlock\": " + newBlock.toString() + "}", 200);
+      }catch(const char* msg){
+        CROW_LOG_INFO << msg << "\n";
+        return createResponse("{\"success\": false, \"message\": \"Errore durante la generazione del nuovo blocco\" }", 200);
+      }
     }
   });
 
   // Effettua il mining di un nuovo blocco utilizzando una nuova transazione creata a partire dall'amount e address passati (più la coinbase transaction)
-  CROW_ROUTE(app, "/webresources/blocks/transaction").methods("POST"_method)([](const crow::request& req){
-    rapidjson::Document document;
-    document.Parse(req.body.c_str());
-    if(document["amount"].IsNull() || document["address"].IsNull()){
-      return createResponse("{\"success\": false, \"message\": \"Error parsing request: invalid address or amount\" }", 200);
-    }
-    try {
-      Block newBlock = BlockChain::getInstance().generateNextBlockWithTransaction(document["address"].GetString(), document["amount"].GetFloat());
-      return createResponse("{\"success\" :true, \"newBlock\": " + newBlock.toString() + "}", 200);
-    } catch (const char* msg) {
-      CROW_LOG_INFO << msg << "\n";
-      return createResponse("{\"success\": false, \"message\": \"Error generating new block\" }", 200);
+  CROW_ROUTE(app, "/webresources/blocks/transaction").methods("POST"_method, "OPTIONS"_method)([](const crow::request& req){
+    if(req.method == "OPTIONS"_method) {
+      return optionsResponse();           // Per gestire il CORS
+    } else {
+      rapidjson::Document document;
+      document.Parse(req.body.c_str());
+      if(document["amount"].IsNull() || document["address"].IsNull()){
+        return createResponse("{\"success\": false, \"message\": \"Error parsing request: invalid address or amount\" }", 200);
+      }
+      try {
+        Block newBlock = BlockChain::getInstance().generateNextBlockWithTransaction(document["address"].GetString(), document["amount"].GetFloat());
+        return createResponse("{\"success\" :true, \"newBlock\": " + newBlock.toString() + "}", 200);
+      } catch (const char* msg) {
+        CROW_LOG_INFO << msg << "\n";
+        return createResponse("{\"success\": false, \"message\": \"Error generating new block\" }", 200);
+      }
     }
   });
 
   // Crea una nuova transazione e la inserisce nel transaction pool
-  CROW_ROUTE(app, "/webresources/transactions").methods("POST"_method)([](const crow::request& req){
-    rapidjson::Document document;
-    document.Parse(req.body.c_str());
-    if(document["amount"].IsNull() || document["address"].IsNull()){
-      return createResponse("{\"success\": false, \"message\": \"Error parsing request: invalid address or amount\" }", 200);
-    }
-    try {
-      Transaction tx = BlockChain::getInstance().sendTransaction(document["address"].GetString(), document["amount"].GetFloat());
-      return createResponse("{\"success\" :true, \"Transaction\": " + tx.toString() + "}", 200);
-    } catch (const char* msg) {
-      CROW_LOG_INFO << msg << "\n";
-      return createResponse("{\"success\": false, \"message\": \"Error sending the transaction\" }", 200);
+  CROW_ROUTE(app, "/webresources/transactions").methods("POST"_method, "OPTIONS"_method)([](const crow::request& req){
+    if(req.method == "OPTIONS"_method) {
+      return optionsResponse();           // Per gestire il CORS
+    } else {
+      rapidjson::Document document;
+      document.Parse(req.body.c_str());
+      if(document["amount"].IsNull() || document["address"].IsNull()){
+        return createResponse("{\"success\": false, \"message\": \"Error parsing request: invalid address or amount\" }", 200);
+      }
+      try {
+        Transaction tx = BlockChain::getInstance().sendTransaction(document["address"].GetString(), document["amount"].GetFloat());
+        return createResponse("{\"success\" :true, \"Transaction\": " + tx.toString() + "}", 200);
+      } catch (const char* msg) {
+        CROW_LOG_INFO << msg << "\n";
+        return createResponse("{\"success\": false, \"message\": \"Error sending the transaction\" }", 200);
+      }
     }
   });
 
@@ -244,19 +269,23 @@ void initHttpServer(int port){
   });
 
   // Aggiunge un peer alla lista di peer (dato il suo indirizzo IP)
-  CROW_ROUTE(app, "/webresources/peers").methods("POST"_method)([](const crow::request& req){
-    rapidjson::Document document;
-    document.Parse(req.body.c_str());
-    if(document["peer"].IsNull()){
-      return createResponse("{\"success\": false, \"message\": \"Error parsing request: cannot find field <peer>\" }", 200);
-    }
-    string peer = document["peer"].GetString();
-    try{
-      Peer::getInstance().connectToPeers(peer);
-      return createResponse("{\"success\": true, \"peer\": \"" + peer + "\" }", 200);
-    }catch (const char* msg) {
-      CROW_LOG_INFO << msg << "\n";
-      return createResponse("{\"success\": false, \"message\": \"Error connecting to new peer\" }", 200);
+  CROW_ROUTE(app, "/webresources/peers").methods("POST"_method, "OPTIONS"_method)([](const crow::request& req){
+    if(req.method == "OPTIONS"_method) {
+      return optionsResponse();           // Per gestire il CORS
+    } else {
+      rapidjson::Document document;
+      document.Parse(req.body.c_str());
+      if(document["peer"].IsNull()){
+        return createResponse("{\"success\": false, \"message\": \"Error parsing request: cannot find field <peer>\" }", 200);
+      }
+      string peer = document["peer"].GetString();
+      try{
+        Peer::getInstance().connectToPeers(peer);
+        return createResponse("{\"success\": true, \"peer\": \"" + peer + "\" }", 200);
+      }catch (const char* msg) {
+        CROW_LOG_INFO << msg << "\n";
+        return createResponse("{\"success\": false, \"message\": \"Error connecting to new peer\" }", 200);
+      }
     }
   });
 

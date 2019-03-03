@@ -96,7 +96,7 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
   $scope.mineBlockWithTransactions = function(transactions) {
     if(transactions != null) {
       $scope.bLoading = true;
-      $http.post($scope.baseUrl + "blocks/transactions", $httpParamSerializerJQLike({collection_name: collectionName, directory: directory, cycle: cycle, mean_add: meanAdd, mean_download: meanDownload, stddev_add: stdDevAdd, stddev_download: stdDevDownload, state: state, timestamp: moment().format("YYYY/MM/DD - HH:mm:ss")}), {headers:{'Content-Type': 'application/x-www-form-urlencoded'}}).then(function(resp) {
+      $http.post($scope.baseUrl + "blocks/transactions", {data: transactions}, {headers:{'Content-Type': 'application/json'}}).then(function(resp) {
         document.getElementById("output").innerHTML = syntaxHighlight(JSON.stringify(resp.data, undefined, 4));
         $scope.queryOutput = resp.data;
         console.log(resp);
@@ -122,7 +122,7 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
   $scope.mineBlockWithTransaction = function(address, amount) {
     if(address != null && amount != null) {
       $scope.bLoading = true;
-      $http.post($scope.baseUrl + "blocks/transaction", $httpParamSerializerJQLike({address: address, amount: amount}), {headers:{'Content-Type': 'application/x-www-form-urlencoded'}}).then(function(resp) {
+      $http.post($scope.baseUrl + "blocks/transaction", {address: address, amount: amount}, {headers:{'Content-Type': 'application/json'}}).then(function(resp) {
         document.getElementById("output").innerHTML = syntaxHighlight(JSON.stringify(resp.data, undefined, 4));
         $scope.queryOutput = resp.data;
         console.log(resp);
@@ -136,7 +136,7 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
   $scope.sendTransaction = function(address, amount) {
     if(address != null && amount != null) {
       $scope.bLoading = true;
-      $http.post($scope.baseUrl + "transactions", $httpParamSerializerJQLike({address: address, amount: amount}), {headers:{'Content-Type': 'application/x-www-form-urlencoded'}}).then(function(resp) {
+      $http.post($scope.baseUrl + "transactions", {address: address, amount: amount}, {headers:{'Content-Type': 'application/json'}}).then(function(resp) {
         document.getElementById("output").innerHTML = syntaxHighlight(JSON.stringify(resp.data, undefined, 4));
         $scope.queryOutput = resp.data;
         console.log(resp);
@@ -171,10 +171,10 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
   };
 
   // Aggiunge un peer alla lista di peer
-  $scope.addPeer = function(Ipaddr) {
+  $scope.addPeer = function(Ipaddr, peerPort) {
     if(Ipaddr != null) {
       $scope.bLoading = true;
-      $http.post($scope.baseUrl + "peers", $httpParamSerializerJQLike({peer: Ipaddr}), {headers:{'Content-Type': 'application/x-www-form-urlencoded'}}).then(function(resp) {
+      $http.post($scope.baseUrl + "peers", {peer: "ws://" + Ipaddr + ":" + (peerPort != null ? peerPort : "8080")}, {headers:{'Content-Type': 'application/json'}}).then(function(resp) {
         document.getElementById("output").innerHTML = syntaxHighlight(JSON.stringify(resp.data, undefined, 4));
         $scope.queryOutput = resp.data;
         console.log(resp);
