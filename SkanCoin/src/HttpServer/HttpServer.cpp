@@ -192,7 +192,7 @@ void initHttpServer(int port){
           }
         }
         inFile.close();
-        ret = "{\"success\": true, \"data\": " + data + "}";
+        ret = "{\"success\": true, \"data\": " + data + "]}";
       } else {
         throw "Errore: non è stato possibile aprire il file per leggere il tempo di mining del blocco!";
       }

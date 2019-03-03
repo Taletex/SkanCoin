@@ -34,6 +34,7 @@ BlockChain::BlockChain(){
   blockchain = {genesisBlock};
   try{
     this->unspentTxOuts = processTransactions(blockchain.front().data, unspentTxOuts, 0);
+    saveBlockchainStats();
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;
@@ -298,7 +299,7 @@ Block BlockChain::findBlock(int index, string previousHash, long timestamp, vect
       ofstream myfile;
       myfile.open ("blocksminingtime.txt", ios::out | ios::app);
       if(myfile.is_open()) {
-        myfile << "{\"block\": " <<  index << ", \"miningtime\": " << duration << "}";
+        myfile << "{\"block\": " <<  index << ", \"miningtime\": " << duration << "}\n";
       } else {
         cout << "Errore (findBlock): non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
       }
@@ -589,7 +590,7 @@ void BlockChain::saveBlockchainStats() {
   myfile.open ("blockchainstats.txt", ios::out | ios::app);
   if(myfile.is_open()) {
     //Scrittura della nuova entry su file
-    myfile << "{\"time\": " << time << ", \"blocks\": " << blockchain.size() << ", \"transactions\": " << transactionNumber << ", \"coins\": " << coins << "}";
+    myfile << "{\"time\": \"" << time << "\", \"timestamp\": " << (now - blockchain.front().timestamp) << ", \"blocks\": " << blockchain.size() << ", \"transactions\": " << transactionNumber << ", \"coins\": " << coins << "}\n";
   } else {
     cout << "ERRORE (saveBlockchainStats): non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
   }
