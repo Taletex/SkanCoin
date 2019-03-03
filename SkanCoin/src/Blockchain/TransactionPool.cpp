@@ -7,12 +7,14 @@ TransactionPool::TransactionPool(){
   stats = {};
 }
 
-/* Returns the list of unconfirmed transaction of the transaction pool */
+/*Ritorna la lista delle transazioni non confermate nel nodo
+(quelle contenute nel transaction pool) */
 vector<Transaction> TransactionPool::getTransactionPool() {
   //Conversione da lista a vettore per una gestione più efficiente all'esterno della classe
   return { begin(this->unconfirmedTransactions), end(this->unconfirmedTransactions) };
 }
 
+/*Rappresentazione in formato stringa del pool di transazioni*/
 string TransactionPool::toString(){
   string ret = "[";
   list<Transaction>::iterator it;
@@ -26,16 +28,15 @@ string TransactionPool::toString(){
   return ret;
 }
 
-/* Adds a transaction to the transaction pool (if this transaction is valid ). */
+/* Verifica la validità della transazione data e la inserisce nel transaction pool */
 bool TransactionPool::addToTransactionPool(Transaction tx, vector<UnspentTxOut> unspentTxOuts) {
   if(!validateTransaction(tx, unspentTxOuts) || !isValidTxForPool(tx)) {
     cout << endl;
-    throw "EXCEPTION: Trying to add invalid transaction to transaction pool!";
+    throw "EXCEPTION (addToTransactionPool): La transazione che si vuole inserire nel pool non è valida!";
   }
-  cout << "Adding to transaction pool: " << tx.toString() << endl;
+  cout << "Nuova transazione aggiunta al pool: " << tx.toString() << endl;
   unconfirmedTransactions.push_back(tx);
   stats.push_back(TransactionStat(tx.id));
-
   return true;
 }
 
@@ -47,7 +48,8 @@ void TransactionPool::updateTransactionPool(vector<UnspentTxOut> unspentTxOuts) 
   for(it1 = unconfirmedTransactions.begin(); it1 != unconfirmedTransactions.end(); ++it1) {
     for(it2 = it1->txIns.begin(); it2 != it1->txIns.end(); ++it2) {
       if(!hasTxIn(*it2, unspentTxOuts)) {
-        cout << "Removing the following transaction from transaction pool: " << it1->toString();
+        cout << "Rimozione dalla transaction pool della transazione: " << it1->toString() << endl;
+        deleteStat(it1->id);
         unconfirmedTransactions.erase(it1);
         break;
       }
@@ -55,7 +57,18 @@ void TransactionPool::updateTransactionPool(vector<UnspentTxOut> unspentTxOuts) 
   }
 }
 
-/* verifica se il TxIn passato come primo parametro è presente nell'array passato come secondo */
+/*Rimuove dal vettore di TransactionStat l'elemento corrispondente all'id di transazione indicato*/
+void TransactionPool::deleteStat(string transactionId) {
+  list<TransactionStat>::iterator it;
+  for(it = stats.begin(); it != stats.end(); ++it) {
+    if (it->transactionId.compare(transactionId)==0){
+      stats.erase(it);
+      return;
+    }
+  }
+}
+
+/*Verifica se il TxIn passato come primo parametro è presente nell'array passato come secondo */
 bool TransactionPool::hasTxIn(TxIn txIn, vector<UnspentTxOut> unspentTxOuts) {
   vector<UnspentTxOut>::iterator it;
   for(it = unspentTxOuts.begin(); it != unspentTxOuts.end(); ++it){
@@ -66,20 +79,20 @@ bool TransactionPool::hasTxIn(TxIn txIn, vector<UnspentTxOut> unspentTxOuts) {
   return false;
 }
 
-/* Returns a vector of TxIn finded in the unconfirmedTransactions of transaction pool */
+/*Ritorna un vettore contentente tutti gli input di transazione contenuti
+nelle transazioni presenti nel transaction pool */
 vector<TxIn> TransactionPool::getTxPoolIns() {
   vector<TxIn> txIns;
   list<Transaction>::iterator it;
-
   for(it = unconfirmedTransactions.begin(); it != unconfirmedTransactions.end(); ++it){
     txIns.reserve(txIns.size() + it->txIns.size());
     txIns.insert(txIns.end(), it->txIns.begin(), it->txIns.end());
   }
-
   return txIns;
 }
 
-/* Returns true if the transaction passed as param is not present in the unconfirmedTransactions of transaction pool, else false */
+/*Ritorna true se la transazione data non contiene input già presenti nel
+ transaction pool (indicati in altre transazioni), altrimenti false*/
 bool TransactionPool::isValidTxForPool(Transaction tx) {
   vector<TxIn>::iterator it1;
   vector<TxIn>::iterator it2;
@@ -88,7 +101,7 @@ bool TransactionPool::isValidTxForPool(Transaction tx) {
   for(it1 = tx.txIns.begin(); it1 != tx.txIns.end(); ++it1) {
     for(it2 = txPoolIns.begin(); it2 != txPoolIns.end(); ++it2) {
       if(it1->isEqual(*it2)) {
-        cout << "Transaction input already found in the transaction pool!" << endl;
+        cout << "ERRORE (isValidTxForPool): L'input di transazione è già presente in una delle transazioni presenti nel pool!" << it1->toString() << endl;
         return false;
       }
     }
@@ -97,6 +110,9 @@ bool TransactionPool::isValidTxForPool(Transaction tx) {
   return true;
 }
 
+/*Ritorna un vettore di stringhe, che sono le entries da inserire nell'apposito
+file per raccogliere le statistiche relative al tempo di attesa
+delle transazioni nel pool prima di essere confermate*/
 vector<string> TransactionPool::getStatStrings(){
   vector<string> ret = {};
   list<TransactionStat>::iterator it;
@@ -106,17 +122,21 @@ vector<string> TransactionPool::getStatStrings(){
   return ret;
 }
 
+/*Costruttore per un elemento del vettore contenente il tempo di inserimento
+della transazione del pool (per la valutazione del tempo di attesa per la conferma)*/
 TransactionStat::TransactionStat(string transactionId){
   this->transactionId = transactionId;
   this->insertionTimestamp = chrono::high_resolution_clock::now();
 }
 
-//Get milliseconds from insertion of the transaction in the transaction pool
+/*Ritorna il numero di millisecondi trascorsi dall'inserimento della transazione nel pool*/
 long TransactionStat::getDiffTime(){
   chrono::high_resolution_clock::time_point t = chrono::high_resolution_clock::now();
   return chrono::duration_cast<chrono::microseconds>( t - this->insertionTimestamp ).count();
 }
 
+/*Ritorna la stringa da inserire nel file relativo alla statistica del
+tempo di attesa nel pool, per la transazione che sta per essere prelevata dal pool*/
 string TransactionStat::getDiffTimeString(){
   return "{\"transactionId\": " + this->transactionId + ", \"millisWaitTime\": " + to_string(this->getDiffTime()) + "}";
 }
