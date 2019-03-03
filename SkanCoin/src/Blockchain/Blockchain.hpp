@@ -60,7 +60,7 @@ class BlockChain {
 
     //Genera un nuovo blocco con una sola transazione (oltre alla coinbase)
     //e lo inserisce nella blockchain
-    Block generatenextBlockWithTransaction(std::string receiverAddress, float amount);
+    Block generateNextBlockWithTransaction(std::string receiverAddress, float amount);
 
     //ritorna il totale degli output non spesi nel wallet del nodo
     float getAccountBalance();

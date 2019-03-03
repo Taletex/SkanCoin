@@ -116,6 +116,7 @@ Transaction getTransactionFromId(list<Block> blockchain, string id){
 crow::response createResponse(string data, int code) {
   crow::response resp(data);
   resp.code = code;
+  resp.add_header("Content-Type", "application/json");
   resp.add_header("Access-Control-Allow-Origin", "*");
   return resp;
 }
@@ -123,35 +124,35 @@ crow::response createResponse(string data, int code) {
 void initHttpServer(int port){
   crow::SimpleApp app;
 
+  // Ritorna la chiave pubblica del wallet dell'utente corrente
+  CROW_ROUTE(app, "/webresources/pubblickey")([]() {
+      return createResponse("{\"success\" :true, \"pubblickey\": \"" + getPublicFromWallet() + "\"}", 200);
+  });
+
   // Ritorna una stringa contenente la blockchain
   CROW_ROUTE(app, "/webresources/blocks")([]() {
       return createResponse("{\"success\" :true, \"blockchain\": " + BlockChain::getInstance().toString() + "}", 200);
   });
 
   // Ritorna un blocco della blockchain dato il suo hash
-  CROW_ROUTE(app,"/webresources/block/<string>")([](string hash){
+  CROW_ROUTE(app,"/webresources/blocks/<string>")([](string hash){
     try{
       return createResponse("{\"success\" :true, \"block\": " + getBlockFromHash(BlockChain::getInstance().getBlockchain(), hash).toString() + "}", 200);
     }catch(const char* msg){
       CROW_LOG_INFO << msg << "\n";
-      return createResponse("{\"success\": false, \"message\": \"Block not found\" }", 200);
+      return createResponse("{\"success\": false, \"message\": \"Error: block not found!\" }", 200);
     }
   });
 
   // Ritorna una transazione della blockchain dato il suo id
-  CROW_ROUTE(app, "/webresources/transaction/<string>")([](string id){
+  CROW_ROUTE(app, "/webresources/transactions/<string>")([](string id){
     list<Block> blockchain = BlockChain::getInstance().getBlockchain();
     try{
       return createResponse("{\"success\": true, \"transaction\": " + getTransactionFromId(blockchain, id).toString() + "}", 200);
     }catch(const char* msg){
       CROW_LOG_INFO << msg << "\n";
-      return createResponse("{\"success\": false, \"message\": \"Transaction not found in the blockchain!\" }", 200);
+      return createResponse("{\"success\": false, \"message\": \"Error: transaction not found!\" }", 200);
     }
-  });
-
-  // Ritorna la lista degli output non spesi appartenenti ad un certo indirizzo (wallet)
-  CROW_ROUTE(app, "/webresources/address/<string>")([](string address){
-      return createResponse("{\"success\": true, \"unspentTxOuts\":" + printUnspentTxOuts(findUnspentTxOutsOfAddress(address, BlockChain::getInstance().getUnspentTxOuts())) + "}", 200);
   });
 
   // Ritorna la lista degli output non spesi dell'intera blockchain
@@ -159,37 +160,38 @@ void initHttpServer(int port){
       return createResponse("{\"success\" :true, \"unspentTxOuts\": " + printUnspentTxOuts(BlockChain::getInstance().getUnspentTxOuts()) + "}", 200);
   });
 
+  // Ritorna la lista degli output non spesi appartenenti ad un certo indirizzo (wallet)
+  CROW_ROUTE(app, "/webresources/unspentTransactionOutputs/<string>")([](string address){
+      return createResponse("{\"success\": true, \"unspentTxOuts\":" + printUnspentTxOuts(findUnspentTxOutsOfAddress(address, BlockChain::getInstance().getUnspentTxOuts())) + "}", 200);
+  });
+
   // Ritorna la lista degli output non spesi relativi al wallet dell'utente
   CROW_ROUTE(app, "/webresources/myUnspentTransactionOutputs")([]() {
       return createResponse("{\"success\" :true, \"myUnspentTxOuts\": " + printUnspentTxOuts(BlockChain::getInstance().getMyUnspentTransactionOutputs()) + "}", 200);
   });
 
-  // Effettua il mine di un raw block (TODO: Controllare bene cosa bisogna passargli)
-  CROW_ROUTE(app, "/webresources/mineRawBlock").methods("POST"_method)([](const crow::request& req){
+  // Effettua il mining di un nuovo blocco utilizzando le transazioni passate come argomento (no coinbase transaction)
+  CROW_ROUTE(app, "/webresources/blocks/transactions").methods("POST"_method)([](const crow::request& req){
+    vector<Transaction> transactions;
     rapidjson::Document document;
     document.Parse(req.body.c_str());
     const rapidjson::Value& data = document["data"];
+
     if(!data.IsArray() || data.IsNull()){
       return createResponse("{\"success\": false, \"message\": \"Error parsing request: Block data not present\" }", 200);
     }
-    vector<Transaction> transactions;
     try{
       transactions = parseTransactionVector(data);
-    }catch(const char* msg){
-      CROW_LOG_INFO << msg << "\n";
-      return createResponse("{\"success\": false, \"message\": \"Error parsing request: <Transaction vector>\" }", 200);
-    }
-    try{
       Block newBlock = BlockChain::getInstance().generateRawNextBlock(transactions);
       return createResponse("{\"success\" :true, \"newBlock\": " + newBlock.toString() + "}", 200);
     }catch(const char* msg){
       CROW_LOG_INFO << msg << "\n";
-      return createResponse("{\"success\": false, \"message\": \"Errore durante la generazione del nuovo blocco\" }", 200);
+      return createResponse("{\"success\": false, \"message\": \"Error: an error occurs during the generation of the new block\" }", 200);
     }
   });
 
-  // Effettua il mine di un blocco normale (senza transazioni)
-  CROW_ROUTE(app, "/webresources/mineBlock").methods("POST"_method)([](){
+  // Effettua il mining di un nuovo blocco utilizzando le transazioni del transaction pool (più la coinbase transaction)
+  CROW_ROUTE(app, "/webresources/blocks/pool").methods("POST"_method)([](){
     try{
       Block newBlock = BlockChain::getInstance().generateNextBlock();
       return createResponse("{\"success\" :true, \"newBlock\": " + newBlock.toString() + "}", 200);
@@ -199,22 +201,15 @@ void initHttpServer(int port){
     }
   });
 
-  // Ritorna il balance del wallet
-  CROW_ROUTE(app, "/webresources/balance")([]() {
-    return createResponse("{\"success\" :true, \"balance\": " + to_string(BlockChain::getInstance().getAccountBalance()) + "}", 200);
-  });
-
-  // Effettua il mine di una transazione (TODO: Controllare bene cosa bisogna passargli)
-  CROW_ROUTE(app, "/webresources/mineTransaction").methods("POST"_method)([](const crow::request& req){
+  // Effettua il mining di un nuovo blocco utilizzando una nuova transazione creata a partire dall'amount e address passati (più la coinbase transaction)
+  CROW_ROUTE(app, "/webresources/blocks/transaction").methods("POST"_method)([](const crow::request& req){
     rapidjson::Document document;
     document.Parse(req.body.c_str());
     if(document["amount"].IsNull() || document["address"].IsNull()){
       return createResponse("{\"success\": false, \"message\": \"Error parsing request: invalid address or amount\" }", 200);
     }
-    string address = document["address"].GetString();
-    float amount = document["amount"].GetFloat();
     try {
-      Block newBlock = BlockChain::getInstance().generatenextBlockWithTransaction(address, amount);
+      Block newBlock = BlockChain::getInstance().generateNextBlockWithTransaction(document["address"].GetString(), document["amount"].GetFloat());
       return createResponse("{\"success\" :true, \"newBlock\": " + newBlock.toString() + "}", 200);
     } catch (const char* msg) {
       CROW_LOG_INFO << msg << "\n";
@@ -222,17 +217,15 @@ void initHttpServer(int port){
     }
   });
 
-  // Invia una transazione (TODO: Controllare bene cosa bisogna passargli)
-  CROW_ROUTE(app, "/webresources/sendTransaction").methods("POST"_method)([](const crow::request& req){
+  // Crea una nuova transazione e la inserisce nel transaction pool
+  CROW_ROUTE(app, "/webresources/transactions").methods("POST"_method)([](const crow::request& req){
     rapidjson::Document document;
     document.Parse(req.body.c_str());
     if(document["amount"].IsNull() || document["address"].IsNull()){
       return createResponse("{\"success\": false, \"message\": \"Error parsing request: invalid address or amount\" }", 200);
     }
-    string address = document["address"].GetString();
-    float amount = document["amount"].GetFloat();
     try {
-      Transaction tx = BlockChain::getInstance().sendTransaction(address, amount);
+      Transaction tx = BlockChain::getInstance().sendTransaction(document["address"].GetString(), document["amount"].GetFloat());
       return createResponse("{\"success\" :true, \"Transaction\": " + tx.toString() + "}", 200);
     } catch (const char* msg) {
       CROW_LOG_INFO << msg << "\n";
@@ -240,13 +233,18 @@ void initHttpServer(int port){
     }
   });
 
+  // Ritorna il balance del wallet
+  CROW_ROUTE(app, "/webresources/balance")([]() {
+    return createResponse("{\"success\" :true, \"balance\": " + to_string(BlockChain::getInstance().getAccountBalance()) + "}", 200);
+  });
+
   // Ritorna la transaction pool del nodo
   CROW_ROUTE(app, "/webresources/transactionPool")([]() {
       return createResponse("{\"success\" :true, \"transactionPool\": " + printTransactions(TransactionPool::getInstance().getTransactionPool()) + "}", 200);
   });
 
-  // Aggiunge un peer alla lista di peer
-  CROW_ROUTE(app, "/webresources/addPeer").methods("POST"_method)([](const crow::request& req){
+  // Aggiunge un peer alla lista di peer (dato il suo indirizzo IP)
+  CROW_ROUTE(app, "/webresources/peers").methods("POST"_method)([](const crow::request& req){
     rapidjson::Document document;
     document.Parse(req.body.c_str());
     if(document["peer"].IsNull()){
@@ -262,12 +260,11 @@ void initHttpServer(int port){
     }
   });
 
-  // Ritorna i peer del nodo
+  // Ritorna il numero di peer cui è connesso il nodo
   CROW_ROUTE(app, "/webresources/peers")([]() {
     return createResponse("{\"success\" :true, \"peers\": " + to_string(Peer::getInstance().countPeers() + 1) + "}", 200);
   });
 
-  // TODO: testare
   // Rest che consente di leggere le righe di un file, ritornate in un array. Questa rest serve ai fini delle statistiche del client rf
   // Param: blockchainStats -> statistiche sulla blockchain, blocksminingtime -> statistiche sul tempo di mining dei blocchi, transactionWaitingTime -> statistiche sul tempo di attesa delle transazioni
   CROW_ROUTE(app, "/webresources/stats/<string>")([](string filename){

@@ -233,7 +233,7 @@ Block BlockChain::generateNextBlock(){
 }
 
 //Genera un nuovo blocco con una sola transazion (oltre alla coinbase) e lo inserisce nella BlockChain::blockchain
-Block BlockChain::generatenextBlockWithTransaction(string receiverAddress, float amount){
+Block BlockChain::generateNextBlockWithTransaction(string receiverAddress, float amount){
     if (typeid(amount) != typeid(float)) {
         cout << endl;
         throw "EXCEPTION: Unvalid amount!";
