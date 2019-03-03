@@ -118,8 +118,12 @@ server <- function(input, output) {
     if(typeof(obj$data) == "list" && length(obj$data) > 0) {
       obj <- obj$data
     } else {
-      v$title <- obj$message
-      print(v$title)
+      if(typeof(obj$data) == "list" && length(obj$data) == 0) {
+        v$title <- "Nessun dato disponibile"
+      } else {
+        v$title <- obj$message
+        print(v$title)
+      }
       obj <- getEmptyDataFrame(v$query)
     }
   }
