@@ -15,6 +15,7 @@ string loadKey(bool isPrivate){
   inFile.open(location);
   if(inFile.is_open()) {
     getline(inFile, key);
+    inFile.close();
     return key;
   } else {
     throw "EXCEPTION (loadKey): non è stato possibile aprire il file per leggere la chiave!";

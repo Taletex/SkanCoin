@@ -38,114 +38,118 @@ class BlockChain {
 
     std::string toString();
 
-    //ritorna la blockchain
+    /*Ritorna la BlockChain*/
     std::list<Block> getBlockchain();
 
-    //ritorna il vettore di output non spesi
+    /*Ritorna il vettore di output non spesi*/
     std::vector<UnspentTxOut> getUnspentTxOuts();
 
-    //ritorna l'ultimo blocco della blockchain
+    /*Ritorna l'ultimo blocco della BlockChain*/
     Block getLatestBlock();
 
-    // Ritorna un blocco dato il suo hash
+    /*Ritorna un blocco dato il suo hash*/
     Block getBlockFromHash(std::string hash);
 
-    //Data la lista di transazioni da inserire nel blocco si esegue il mining
-    //del blocco e si inserisce nella blockchain
+    /*Data la lista di transazioni da inserire nel blocco si esegue il mining del
+    blocco e si inserisce nella BlockChain*/
     Block generateRawNextBlock(std::vector<Transaction> blockData);
 
-    // Ritorna la lista degli output non spesi appartenenti al nodo
+    /*Ritorna la lista degli output non spesi appartenenti al nodo*/
     std::vector<UnspentTxOut> getMyUnspentTransactionOutputs();
 
-    //Colleziona le transazioni dal transaction pool, inizializza la coinbase
-    //transaction ed avvia la procedura di mining ed inserimento del blocco
+    /*Colleziona le transazioni dal transaction pool, inizializza la coinbase
+    transaction ed avvia la procedura di mining ed inserimento del blocco*/
     Block generateNextBlock();
 
-    //Genera un nuovo blocco con una sola transazione (oltre alla coinbase)
-    //e lo inserisce nella blockchain
+    /*Genera un nuovo blocco con una sola transazion (oltre alla coinbase)
+    e lo inserisce nella BlockChain*/
     Block generateNextBlockWithTransaction(std::string receiverAddress, float amount);
 
-    //ritorna il totale degli output non spesi nel wallet del nodo
+    /*Ritorna il totale degli output non spesi nel wallet del nodo*/
     float getAccountBalance();
 
-    //Crea una nuova transazione e la inserisce nel transaction pool
+    /*Crea una nuova transazione e la inserisce nel transaction pool*/
     Transaction sendTransaction(std::string address, float amount);
 
-    // Ritorna una transazione della blockchain noto il suo id
+    /*Ritorna una transazione della blockchain dato il suo id*/
     Transaction getTransactionFromId(std::string id);
 
-    //Validazione della struttura del blocco (type checking)
+    /*Validazione della struttura (type checking) del blocco*/
     bool isValidBlockStructure(Block block);
 
-    //Aggiunta di un nuovo blocco alla blockchain
+    /*Aggiunta di un blocco alla blockchain*/
     bool addBlockToChain(Block newBlock);
 
-    //Validazione della blockchain riceevuta ed eventuale sostituzione con quella
-    //attuale (si sceglie quella con la difficolta cumulativa maggiore)
+    /*Sostituzione blockchain con i blocchi ricevuti (se questa è
+    valida ed ha una difficoltà complessiva maggiore) si ricorda infatti che non
+    è valida la chain più lunga ma quella con la difficoltà cumulativa maggiore*/
     void replaceChain(std::list<Block> newBlocks);
 
-    //Gestione della ricezione di una transazione, questa va inserita
-    //nel transaction pool
+    /*Gestione per la ricezione di una nuova transazione, questa deve essere
+    aggiunta al transaction pool*/
     void handleReceivedTransaction(Transaction transaction);
   private:
-    //Il pattern singleton viene implementato rendendo il costruttore di default privato
-    // ed eliminando il costruttore dicopia e l'operazione di assegnamento
+    /*Il pattern singleton viene implementato rendendo il costruttore di default privato
+    ed eliminando il costruttore di copia e l'operazione di assegnamento*/
     BlockChain();
     BlockChain(const BlockChain&) = delete;
     BlockChain& operator=(const BlockChain&) = delete;
 
-    //Tabella di conversione dei caratteri esadecimali in byte
+    /*Tabella di conversione dei caratteri esadecimali in byte,
+    usata per verificare la correttezza (difficoltà) degli hash*/
     std::string hexToBinaryLookup(char c);
 
-    //Genera il blocco di genesi (il primo blocco della blockchain)
+    /*Generazione blocco di genesi (il primo blocco della blockchain)*/
     Block getGenesisBlock();
 
-    //Converte una stringa esadecimale in una sequenza binaria
+    /*Converte una stringa esadecimale in una sequenza binaria, in modo da poter
+     verificare il numero di zeri iniziali (difficoltà) durante la validazione del blocco*/
     std::string hexToBinary(std::string s);
 
-    //Reimposta il vettore di output non spesi
+    /*Reimposta il vettore di output non spesi*/
     void setUnspentTxOuts(std::vector<UnspentTxOut> newUnspentTxOuts);
 
-    //Calcola la nuova difficoltà per i blocchi
+    /*Calcola la nuova difficoltà per i blocchi*/
     int getAdjustedDifficulty(Block latestBlock, std::list<Block> aBlockchain);
 
-    //Ritorna la difficoltà per il prossimo blocco
+    /*Ritorna la difficoltà per il prossimo blocco*/
     int getDifficulty(std::list<Block> aBlockchain);
 
-    //Calcolo dell'hash del blocco
+    /*Calcolo dell'hash per un blocco*/
     std::string calculateHash(int index, std::string previousHash, time_t timestamp, std::vector<Transaction> data, int difficulty, int nonce);
 
-    //Questo metodo effettua il mining di un nuovo blocco, viengono generati
-    // (e scartati) nuovi blocchi finche l'hash ottenuto non rispetta la difficoltà richiesta
+    /*Questo metodo effettua il mining di un nuovo blocco, viengono generati
+    (e scartati) nuovi blocchi finche l'hash ottenuto non rispetta la difficoltà richiesta*/
     Block findBlock(int index, std::string previousHash, time_t timestamp, std::vector<Transaction> data, int difficulty);
 
-    //Calcolo dell'hash del blocco
-    std::string calculateHashForBlock(Block block);
-
-    //Calcolo della complessità del mining del prossimo blocco per la blockchain data
+    /*Calcolo della complessità del mining del prossimo blocco (numero di
+    zeri iniziali necessari nell'hash) della blockchain data*/
     int getAccumulatedDifficulty(std::vector<Block> aBlockchain);
 
-    //Validazione del timestamp del blocco, per evitare manipolazioni (attacchi
-    // volontari sul timestamp) vedi spiegazione nell'implementazione del metodo
+    /*Validazione del timestamp, per evitare che venga introdotto un timestamp falso in modo da
+    rendere valido un blocco con difficoltà inferiore a quella attuale vengono accettati solo i blocchi per
+    cui il mining è iniziato al massimo un minuto prima del mining dell'ultimo blocco ed al
+    massimo un minuto prima del tempo percepito dal nodo che effettua la validazione*/
     bool isValidTimestamp(Block newBlock, Block previousBlock);
 
-    //Ricalcola l'hash del blocco e lo confronta con quello proposto (per rilevare modifiche)
+    /*Ricalcola l'hash del blocco e lo confronta con quello proposto (per rilevare modifiche)*/
     bool hashMatchesBlockContent(Block block);
 
-    //Controlla se l'hash rispetta la difficoltà minima (deve iniziare con un certo numero di zeri)
+    /*Controlla se l'hash rispetta la difficoltà minima (deve iniziare con un certo numero di zeri)*/
     bool hashMatchesDifficulty(std::string hash, int difficulty);
 
-    //Controllo della validità dell'hash e del rispetto della difficoltà minima (proof of work)
+    /*Controllo della validità dell'hash e del rispetto della difficoltà minima (proof of work)*/
     bool hasValidHash(Block block);
 
-    //Validazione della struttura e della correttezza del blocco
+    /*Validazione della struttura e della correttezza logica del blocco*/
     bool isValidNewBlock(Block newBlock, Block previousBlock);
 
-    //Controllo validità della blockchain data, eventualmente ritorna la lista
-    // di output non spesi aggiornata per la nuova blockchain
+    /*Verifica la validità della blockchain ricevutaa, ritorna la lista aggiornata degli
+    output non spesi se questa è valida*/
     std::vector<UnspentTxOut> isValidChain(std::list<Block> blockchainToValidate);
 
-    //Salva in un file le statistiche della blockchain (numero di blocchi, di transazioni e di coin)
+    /*Salva in un file le statistiche della blockchain (numero di blocchi,
+    di transazioni e di coin)*/
     void saveBlockchainStats();
 };
 #endif

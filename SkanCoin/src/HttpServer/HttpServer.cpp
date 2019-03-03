@@ -182,7 +182,7 @@ void initHttpServer(int port){
     try{
       ifstream inFile;
       inFile.open(filename + ".txt", ios::in);  // blockchainstats, blocksminingtime, transactionwaitingtime
-      if(inFile) {
+      if(inFile.is_open()) {
         while (getline(inFile, line)) {
           if(isFirst) {
             data += line;
@@ -191,6 +191,7 @@ void initHttpServer(int port){
             data = data + ", " + line;
           }
         }
+        inFile.close();
         ret = "{\"success\": true, \"data\": " + data + "}";
       } else {
         throw "Errore: non è stato possibile aprire il file per leggere il tempo di mining del blocco!";

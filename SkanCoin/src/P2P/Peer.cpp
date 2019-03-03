@@ -54,7 +54,7 @@ void handleClientMessage(const string & data){
       if(!document["stat"].IsNull()){
         ofstream myfile;
         myfile.open ("blocksminingtime.txt", ios::out | ios::app);
-        if(myfile) {
+        if(myfile.is_open()) {
           myfile << document["stat"].GetString();
         } else {
           throw "Errore: non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
@@ -97,7 +97,7 @@ void handleClientMessage(const string & data){
         if(!document["data"].IsNull()){
           try{
             myfile.open ("transactionwaitingtime.txt", ios::out | ios::app);
-            if(myfile) {
+            if(myfile.is_open()) {
               myfile << document["data"].GetString();
             } else {
               throw "EXCEPTION: non è stato possibile aprire il file per salvare le statistiche di attesa delle transazioni!";
@@ -288,7 +288,7 @@ void Peer::messageHandler(crow::websocket::connection& connection, const string&
       if(!document["stat"].IsNull()){
         ofstream myfile;
         myfile.open ("blocksminingtime.txt", ios::out | ios::app);
-        if(myfile) {
+        if(myfile.is_open()) {
           myfile << document["stat"].GetString();
         } else {
           throw "Errore: non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
@@ -325,7 +325,7 @@ void Peer::messageHandler(crow::websocket::connection& connection, const string&
       if(!document["data"].IsNull()){
         try{
           myfile.open("transactionwaitingtime.txt", ios::out | ios::app);
-          if(myfile) {
+          if(myfile.is_open()) {
             myfile << document["data"].GetString();
           } else {
             throw "EXCEPTION: non è stato possibile aprire il file per salvare le statistiche di attesa delle transazioni!";
