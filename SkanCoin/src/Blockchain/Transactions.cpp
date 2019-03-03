@@ -124,8 +124,7 @@ bool hasDuplicates(vector<TxIn> txIns){
 }
 
 string getPublicKey(){
-
-    return "ciao";
+  return getPublicFromWallet();
 }
 
 //validazione della struttura dell'input (type check)
@@ -204,15 +203,20 @@ bool validateTxIn(TxIn txIn, Transaction transaction, vector<UnspentTxOut> aUnsp
         return false;
     }
 
-    //Verifica della firma
+    //Verifica della firma, effettuo le conversioni ad array di byte implementate
+    // in Wallet, per ottenere un formato compatibile con l'interfaccia della
+    //libreria per ECDSA
 
     //Chiave pubblica del proprietario dell'output non speso
     uint8_t p_public[ECC_BYTES+1];
     byteArrayFromString(referencedUTxOut.address, p_public);
 
-    //Id della transazione (hash su cui è stata fatta la firma)
+    //Id della transazione (hash su cui è stata fatta la firma). Su questo elemento
+    //non applichiamo la conversione implementata in wallet, poiche questo hash
+    //è una normale stringa che non rispetta la notazione puntata utilizzata nelle
+    //nostre conversioni, dunque si converte semplicemente ogni carattere in un byte
     uint8_t p_hash[ECC_BYTES];
-    byteArrayFromString(transaction.id, p_hash);
+    memcpy (p_hash, transaction.id.c_str(), ECC_BYTES);
 
     //Signature creata con la chiave privata del proprietario dell'output non speso
     uint8_t p_signature[ECC_BYTES*2];
@@ -392,7 +396,7 @@ string signTxIn(Transaction transaction, int txInIndex, string privateKey, vecto
       throw "EXCEPTION: Firma dell'input di transazione abortita, output non speso referenziato non trovato!";
     }
 
-    if (getPublicKey() != referencedAddress) {
+    if (getPublicKey().compare(referencedAddress) != 0) {
         throw "EXCEPTION: Firma dell'input di transazione abortita, tentativo di firmare con una chiave privata che non corrisponde all'indirizzo referenziato";
     }
 
@@ -407,6 +411,7 @@ string signTxIn(Transaction transaction, int txInIndex, string privateKey, vecto
       throw "EXCEPTION: operazione di firma dell'input di transazione fallita!";
     }
 
+    //Ritorno della signature prodotto, ne formato stringa in notazione puntata
     return stringFromByteArray(p_signature, ECC_BYTES*2);
 }
 

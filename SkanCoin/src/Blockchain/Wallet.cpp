@@ -3,8 +3,9 @@
 using namespace std;
 
 //Carica la chiave (pubblica o privata) dall'apposito file
-void loadKey(bool isPrivate, uint8_t *dest){
+string loadKey(bool isPrivate){
   string location;
+  string key;
   if(isPrivate == false){
     location = publicKeyLocation;
   }else{
@@ -13,44 +14,41 @@ void loadKey(bool isPrivate, uint8_t *dest){
   ifstream inFile;
   inFile.open(location);
   if(inFile.is_open()) {
-    int i = 0;
-      while (!inFile.eof()) {
-          inFile >> dest[i];
-          i++;
-      }
+    getline(inFile, key);
+    return key;
   } else {
     throw "EXCEPTION: non è stato possibile aprire il file per leggere la chiave!";
   }
 }
 
 //Salvataggio della chiave (pubblica o privata) nell'apposito file
-void saveKey(uint8_t *key, bool isPrivate){
-  int len;
+void saveKey(string key, bool isPrivate){
   string location;
   if(isPrivate == false){
-    len = ECC_BYTES+1;
     location = publicKeyLocation;
   }else{
-    len = ECC_BYTES;
     location = privateKeyLocation;
   }
   ofstream myfile;
   myfile.open (location, ios::out | ios::trunc);
   if(myfile.is_open()) {
-    for(int i = 0; i < len; i++){
-      myfile << key[i] << endl;
-    }
+    myfile << key;
   } else {
     throw "EXCEPTION: non è stato possibile aprire il file per salvare la chiave!";
   }
 }
 
-//Effettuiamo una conversione a stringa sulle chiavi che sia reversibile
-//per semplificare la gestione delle chiavi nelle classi esterne
-
-//Una conversione analoga viene applicata alle signature, per avere un formato
+//La libreria utilizzata per la firma digitale basata su curve ellittiche utilizza
+//chiavi (e produce signature) in forma di array di byte (uint8_t), tuttavia
+//effettuiamo una conversione (reversibile) a stringa sulle chiavi e sulle signature
+//per semplificarne la gestione nelle classi esterne.
+//In particolare questo ci permette di avere un formato
 //stampabile e più facilmente interpretabile nelle interazioni tra i peer e
 //e nei payload delle richieste/risposte HTTP
+//Il formato usato per le stringhe prevede di stampare il valore numerico di ogni byteArrayFromString
+//dell'array, utilizzando il punto come separatore (es: 33.243.453.334. ....)
+
+//Array di byte -> stringa
 string stringFromByteArray(uint8_t *array, int len){
   string ret = "";
   for (int a = 0; a < len; a++) {
@@ -62,12 +60,11 @@ string stringFromByteArray(uint8_t *array, int len){
   return ret;
 }
 
+//Stringa -> array di byte
 void byteArrayFromString(string str, uint8_t *dest){
   stringstream tempstream(str);
   string segment;
   int x;
-
-  //Conversione all'indietro da stringa ad array di uint8_t della chiave pubblica
   int i = 0;
   while(std::getline(tempstream, segment, '.')){
     x = stoi(segment);
@@ -81,11 +78,7 @@ void byteArrayFromString(string str, uint8_t *dest){
 //Legge la chiave privata del nodo dal file
 string getPrivateFromWallet(){
   try{
-    uint8_t privateKey[ECC_BYTES];
-    loadKey(true, privateKey);
-    //Effettuiamo una conversione a stringa che sia reversibile per semplificare
-    // la gestione delle chiavi nelle classi esterne
-    return stringFromByteArray(privateKey, ECC_BYTES);
+    return loadKey(true);
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;
@@ -96,11 +89,7 @@ string getPrivateFromWallet(){
 //Legge la chiave pubblica del nodo dal file
 string getPublicFromWallet(){
   try{
-    uint8_t publicKey[ECC_BYTES+1];
-    loadKey(false, publicKey);
-    //Effettuiamo una conversione a stringa che sia reversibile per semplificare
-    // la gestione delle chiavi nelle classi esterne
-    return stringFromByteArray(publicKey, ECC_BYTES+1);
+    return loadKey(false);
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;
@@ -108,73 +97,32 @@ string getPublicFromWallet(){
   }
 }
 
-//Controllo per eventuali chiavi già esistenti, in caso non esistano già si effettua
-//la generazione di una nuova coppia di chiavi e il salvataggio negi appositi file
+//Generazione di una nuova coppia di chiavi e salvataggio negi appositi file
 void generateKeys(){
   uint8_t p_publicKey[ECC_BYTES+1];
   uint8_t p_privateKey[ECC_BYTES];
-  bool valid = false;
+  int count = 0;
+  //Generazione nuova coppia di chiavi
+  int createdKeys = ecc_make_key(p_publicKey, p_privateKey);
 
-  while(valid == false){
-    //Generazione nuova coppia di chiavi
-    int createdKeys = ecc_make_key(p_publicKey, p_privateKey);
-
-    //La generazione non è andata a buon fine
-    if(createdKeys != 1){
-      continue;
+  //La generazione non è andata a buon fine
+  while(createdKeys != 1){
+    if(count > 5){
+      throw "EXCEPTION: Errore durante la generazione delle chiavi, troppi tentativi falliti!";
     }
-
-    //Salvataggio delle chiavi negli appositi files
-    try{
-      saveKey(p_publicKey, false);
-      saveKey(p_privateKey, true);
-    }catch(const char* msg){
-      cout << msg << endl;
-      cout << endl;
-      throw "EXCEPTION: Errore durante il salvataggio delle chiavi";
-    }
-
-    //Vogliamo ottenere una conversione a stringa che sia reversibile
-    //In modo da semplificare la gestione all'esterno, in particolare utilizziamo
-    //una notazione puntata in cui ogni byte viene convertito in un intero e successivamente
-    //tutti gli interi vengono concatenati, usando come carattere di separazione un punto.
-    string tempPublic = stringFromByteArray(p_publicKey, ECC_BYTES+1);
-    string tempPrivate = stringFromByteArray(p_privateKey, ECC_BYTES);
-
-    //Effettuo una conversione all'indietro per poi verificare che sulla la coppia di
-    //chiavi generate la conversione sia fattibile senza perdite di informazioni.
-    //Per evitare errori di conversione accetto solo chiavi che non contengono
-    //caratteri senza una corrispondenza biunivoca con i valori stampabili su file
-    //NOTA: ovviamente ogni possibile valore di uint8_t ha una corrispondenza biunivoca
-    //con un intero, tuttavia la presenza di un salvataggio/recupero da file restringe
-    //il set di valori accettabili a quelli stampabili su file
-    byteArrayFromString(tempPublic, p_publicKey);
-    byteArrayFromString(tempPrivate, p_privateKey);
-
-    //Recupero delle chiavi da file per la verifica di reversibilità della conversione
-    try{
-      uint8_t new_private[ECC_BYTES];
-      loadKey(true, new_private);
-      uint8_t new_public[ECC_BYTES+1];
-      loadKey(false, new_public);
-      //Verifica della correttezza della conversione effettuata
-      valid = true;
-      if(p_publicKey[0] != new_public[0]){
-        valid = false;
-        continue;
-      }
-      for(int i = 0; i < ECC_BYTES; i++){
-        if(p_publicKey[i+1] != new_public[i+1] || p_privateKey[i] != new_private[i]){
-          valid = false;
-          continue;
-        }
-      }
-    }catch(const char* msg){
-      cout << msg << endl;
-      cout << endl;
-      throw "EXCEPTION: Errore durante il caricamento delle chiavi!";
-    }
+    cout << "Errore durante la generazione delle chiavi, nuovo tentativo in corso (" << count << ")..." << endl;
+    createdKeys = ecc_make_key(p_publicKey, p_privateKey);
   }
+
+  //Salvataggio delle chiavi negli appositi files
+  try{
+    saveKey(stringFromByteArray(p_publicKey,ECC_BYTES+1), false);
+    saveKey(stringFromByteArray(p_privateKey,ECC_BYTES), true);
+  }catch(const char* msg){
+    cout << msg << endl;
+    cout << endl;
+    throw "EXCEPTION: Errore durante il salvataggio delle chiavi";
+    }
 }
 
 

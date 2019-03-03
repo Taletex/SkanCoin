@@ -19,7 +19,7 @@ std::string stringFromByteArray(uint8_t *array, int len);
 void byteArrayFromString(std::string str, uint8_t *dest);
 
 //Carica la chiave (pubblica o privata) dall'apposito file
-void loadKey(bool isPrivate, uint8_t *dest);
+std::string loadKey(bool isPrivate);
 
 //Salva la chiave (pubblica o privata) nell'apposito file
 void saveKey(bool isPrivate);
