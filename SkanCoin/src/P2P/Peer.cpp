@@ -88,7 +88,7 @@ void handleClientMessage(const string & data){
         receivedTransactions = parseTransactionVector(document["data"]);
       }catch(const char* msg){
         cout << msg << endl;
-        cout << "ERRORE (handleClientMessage - RESPONSE_TRANSACTION_POOL): errore durante ilparsing del messaggio!" << endl;
+        cout << "ERRORE (handleClientMessage - RESPONSE_TRANSACTION_POOL): errore durante il parsing del messaggio!" << endl;
         return;
       }
       /*Per ogni transazione questa viene elaborata e successivamente si
@@ -204,7 +204,9 @@ void Peer::connectToPeers(std::string peer){
   cout << "Client Peer: Aggiunta di { " << peer << " } alla lista dei peer..." << endl;
   WebSocket::pointer ws;
   ws = WebSocket::from_url(peer);
-  assert(ws);
+
+  if(!ws) throw "EXCEPTION (ConnectToPeers): Errore durante la connessione al peer!";
+
   //Lock del mutex sulle liste di connessioni per l'inserimento della nuova connessione
   std::lock_guard<std::mutex> _(ConnectionsMtx);
   ws->send(queryChainLengthMsg());
@@ -312,7 +314,7 @@ cout << "ERRORE (handleServerMessage): il tipo di messaggio ricevuto non è vali
 
   //Mapping dell'oggetto in una nuova istanza di Message
   Message message = Message(static_cast<MessageType>(document["type"].GetInt()), document["data"].GetString());
-  cout << "Client Peer: Messaggio ricevuto: " << message.toString() << endl;
+  cout << "Server Peer: Messaggio ricevuto: " << message.toString() << endl;
 
   /*Liste usade per la gestione di alcuni tipi di messaggi (non è possibile inizializzare
    nuove variabili all'interno dei singoli case, se non si usano le parentesi graffe)*/

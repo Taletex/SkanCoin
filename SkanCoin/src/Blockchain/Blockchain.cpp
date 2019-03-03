@@ -35,6 +35,7 @@ BlockChain::BlockChain(){
   try{
     this->unspentTxOuts = processTransactions(blockchain.front().data, unspentTxOuts, 0);
     saveBlockchainStats();
+    initStatFiles();
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;
@@ -609,4 +610,20 @@ void BlockChain::saveBlockchainStats() {
     cout << "ERRORE (saveBlockchainStats): non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
   }
   myfile.close();
+}
+
+/*Elimina i file delle statistiche se esistono */
+void BlockChain::initStatFiles() {
+  if (FILE* file = fopen("blockchainstats.txt", "r")) {
+    fclose(file);
+    remove("blockchainstats.txt");
+  }
+  if (FILE* file = fopen("blocksminingtime.txt", "r")) {
+    fclose(file);
+    remove("blocksminingtime.txt");
+  }
+  if (FILE* file = fopen("transactionwaitingtime.txt", "r")) {
+    fclose(file);
+    remove("transactionwaitingtime.txt");
+  }
 }

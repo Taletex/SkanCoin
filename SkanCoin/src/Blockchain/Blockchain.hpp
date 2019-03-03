@@ -152,5 +152,8 @@ class BlockChain {
     /*Salva in un file le statistiche della blockchain (numero di blocchi,
     di transazioni e di coin)*/
     void saveBlockchainStats();
+
+    /*Elimina i file delle statistiche se esistono */
+    void initStatFiles();
 };
 #endif
