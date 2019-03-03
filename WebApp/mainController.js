@@ -3,7 +3,7 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
 
   $scope.baseUrl = "http://localhost:3001/webresources/";
   $scope.bLoading = false;
-  $scope.inputs = {};
+  $scope.inputs = {transactions: []};
   $scope.queryOutput = null;
   $scope.publicKey = "";
 
@@ -160,7 +160,7 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
   $scope.mineBlockWithTransactions = function(transactions) {
     if(transactions != null) {
       $scope.bLoading = true;
-      $http.post($scope.baseUrl + "blocks/transactions", {data: transactions}, {headers:{'Content-Type': 'application/json'}}).then(function(resp) {
+      $http.post($scope.baseUrl + "blocks/transactions",{data: transactions}, {headers:{'Content-Type': 'application/json'}}).then(function(resp) {
         document.getElementById("output").innerHTML = syntaxHighlight(JSON.stringify(resp.data, undefined, 4));
         $scope.queryOutput = resp.data;
         console.log(resp);
@@ -215,6 +215,11 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
           }
           return '<span class="' + cls + '">' + match + '</span>';
       });
+  }
+
+  // Aggiunge una transazione all'array di transazioni di inputs
+  $scope.addTransactionToInput = function() {
+    $scope.inputs.transactions.push({amount: 1, address: ""});
   }
 
   $scope.getPublicKey();
