@@ -7,6 +7,9 @@ using namespace std;
  * application/json o text/plain (raw data). Non è possibile inviare dati in
  * formato application/www-x-form-urlencoded o multipart/form-data            */
 void initHttpServer(int port){
+  if(debug == 1){
+    cout << endl << "HttpServer - initHttpServer" << endl;
+  }
   crow::SimpleApp app;
 
   /* REST: Ritorna la chiave pubblica del wallet dell'utente corrente */
@@ -213,6 +216,9 @@ void initHttpServer(int port){
 /* ==== FUNZIONI PER LA GESTIONE DELLE RESPONSE CROW ==== */
 /* Ritorna una response crow per le richiste di tipo OPTIONS (per gestire il CORS) */
 crow::response optionsResponse() {
+  if(debug == 1){
+    cout << endl << "HttpServer - optionsResponse" << endl;
+  }
   crow::response resp;
   resp.code = 200;
   resp.add_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
@@ -223,6 +229,9 @@ crow::response optionsResponse() {
 
 /* Ritorna una response crow con un body contenente data e un codice code */
 crow::response createResponse(string data, int code) {
+  if(debug == 1){
+    cout << endl << "HttpServer - createResponse" << endl;
+  }
   crow::response resp(data);
   resp.code = code;
   resp.add_header("Content-Type", "application/json");
@@ -237,6 +246,9 @@ crow::response createResponse(string data, int code) {
 
 /* Effettua il parsing di un vettore di transaction input: JSON (rapidjson) -> vector<TxIn> */
 vector<TxIn> parseTxInVector(const rapidjson::Value &txIns){
+  if(debug == 1){
+    cout << endl << "HttpServer - parseTxInVector" << endl;
+  }
   if(!txIns.IsArray() || txIns.IsNull()){
     cout << endl;
     throw "Error parsing request: <TxIns Array>";
@@ -250,6 +262,9 @@ vector<TxIn> parseTxInVector(const rapidjson::Value &txIns){
 
 /* Effettua il parsing di un vettore di transaction output: JSON (rapidjson) -> vector<TxOut> */
 vector<TxOut> parseTxOutVector(const rapidjson::Value &txOuts){
+  if(debug == 1){
+    cout << endl << "HttpServer - parseTxOutVector" << endl;
+  }
   if(!txOuts.IsArray() || txOuts.IsNull()){
     cout << endl;
     throw "Error parsing request: <TxOuts Array>";
@@ -263,6 +278,9 @@ vector<TxOut> parseTxOutVector(const rapidjson::Value &txOuts){
 
 /* Effettua il parsing di un vettore di transazioni: JSON (rapidjson) -> vector<Transaction> */
 vector<Transaction> parseTransactionVector(const rapidjson::Value &transactions){
+  if(debug == 1){
+    cout << endl << "HttpServer - parseTransactionVector" << endl;
+  }
   if(!transactions.IsArray() || transactions.IsNull()){
     cout << endl;
     throw "Error parsing request: <Transactions Array>";
@@ -282,6 +300,9 @@ vector<Transaction> parseTransactionVector(const rapidjson::Value &transactions)
 
 /* Effettua il parsing di una lista di blocchi: JSON (rapidjson) -> list<Block> */
 list<Block> parseBlockList(const rapidjson::Value &blocks){
+  if(debug == 1){
+    cout << endl << "HttpServer - parseBlockList" << endl;
+  }
   if(!blocks.IsArray() || blocks.IsNull()){
     cout << endl;
     throw "Error parsing request: <Block List>";
@@ -300,6 +321,9 @@ list<Block> parseBlockList(const rapidjson::Value &blocks){
 
 /* Stampa un vector di unspentTxOuts: vector<UnspentTxOut> -> String (da inserire in un JSON) */
 string printUnspentTxOuts(vector<UnspentTxOut> unspentTxOuts){
+  if(debug == 1){
+    cout << endl << "HttpServer - printUnspentTxOuts" << endl;
+  }
   string ret = "[";
   vector<UnspentTxOut>::iterator it;
   for(it = unspentTxOuts.begin(); it != unspentTxOuts.end(); ++it){
@@ -314,6 +338,9 @@ string printUnspentTxOuts(vector<UnspentTxOut> unspentTxOuts){
 
 /* Stampa un vector di transazioni: vector<Transaction> -> String (da inserire in un JSON) */
 string printTransactions(vector<Transaction> transactions){
+  if(debug == 1){
+    cout << endl << "HttpServer - printTransactions" << endl;
+  }
   string ret = "[";
   vector<Transaction>::iterator it;
   for(it = transactions.begin(); it != transactions.end(); ++it){

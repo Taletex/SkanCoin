@@ -12,6 +12,8 @@
 #include "easywsclient.cpp"
 #include "ecc.h"
 
+int debug = 1;
+
 //source files//
 #include "Blockchain/TransactionPool.cpp"
 #include "Blockchain/Transactions.cpp"
