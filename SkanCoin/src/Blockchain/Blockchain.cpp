@@ -327,8 +327,7 @@ Block BlockChain::generateNextBlock(){
   }
 }
 
-/*Genera un nuovo blocco con una sola transazion (oltre alla coinbase)
-e lo inserisce nella BlockChain*/
+//TODO:RIMUOVI
 Block BlockChain::generateNextBlockWithTransactionAndCoinbase(string receiverAddress, float amount){
   if(debug == 1){
     cout << endl << "BlockChain::generateNextBlockWithTransactionAndCoinbase" << endl;
@@ -357,8 +356,7 @@ Block BlockChain::generateNextBlockWithTransactionAndCoinbase(string receiverAdd
 }
 
 /*Genera un nuovo blocco con la coinbase e delle transazioni create da un
-vettore di indirizzi e amount e lo inserisce nella BlockChain */
-// TODO: Verificare perchè non funziona se gli passo 2 transazioni. Se non si può fare eliminare sia qui che dalla webapp e dall'httpserver
+vettore di coppie [indirizzo destinazione, amount] e lo inserisce nella BlockChain */
 Block BlockChain::generateNextBlockWithTransactions(vector<TxOut> txOuts){
   vector<Transaction> blockData;
   vector<TxOut>::iterator it;
@@ -369,19 +367,17 @@ Block BlockChain::generateNextBlockWithTransactions(vector<TxOut> txOuts){
   }
 
   for(it = txOuts.begin(); it != txOuts.end(); ++it) {
-    Transaction tx;
-
     if(typeid(it->amount) != typeid(float)) {
       cout << endl;
       throw "EXCEPTION (generateNextBlockWithTransactions): Importo non valido!";
     }
-    try{
-      tx = createTransaction(it->address, it->amount, getPrivateFromWallet(), getUnspentTxOuts(), TransactionPool::getInstance().getTransactionPool());
-      blockData.push_back(tx);
-    }catch(const char* msg){
-      cout << msg << endl << endl;
-      throw "EXCEPTION (generateNextBlockWithTransactions): Creazione della transazione fallita";
-    }
+  }
+  try{
+    Transaction tx = createTransactionWithMultipleOutputs (txOuts, getPrivateFromWallet(), getUnspentTxOuts(), TransactionPool::getInstance().getTransactionPool());
+    blockData.push_back(tx);
+  }catch(const char* msg){
+    cout << msg << endl << endl;
+    throw "EXCEPTION (generateNextBlockWithTransactions): Creazione della transazione fallita";
   }
   try{
     return generateRawNextBlock(blockData);

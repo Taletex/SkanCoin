@@ -83,4 +83,9 @@ TxIn toUnsignedTxIn(UnspentTxOut unspentTxOut);
 /*Generazione di una nuova transazione*/
 Transaction createTransaction(std::string receiverAddress, float amount, std::string privateKey, std::vector<UnspentTxOut> unspentTxOuts, std::vector<Transaction> txPool);
 
+/*Generazione di una nuova transazione, a partire da un array di output, per
+permettere di esporre la rest per effettuare più movimenti dallo stesso wallet
+in un solo blocco senza passare dal transaction pool*/
+Transaction createTransactionWithMultipleOutputs (std::vector<TxOut> txOuts, std::string privateKey, std::vector<UnspentTxOut> unspentTxOuts, std::vector<Transaction> txPool);
+
 #endif

@@ -385,3 +385,69 @@ Transaction createTransaction(string receiverAddress, float amount, string priva
   }
   return tx;
 }
+
+/*Generazione di una nuova transazione, a partire da un array di output, per
+permettere di esporre la rest per effettuare più movimenti dallo stesso wallet
+in un solo blocco senza passare dal transaction pool*/
+Transaction createTransactionWithMultipleOutputs (std::vector<TxOut> txOuts, std::string privateKey, std::vector<UnspentTxOut> unspentTxOuts, std::vector<Transaction> txPool){
+  if(debug == 1){
+    cout << endl << "Wallet - createTransactionWithMultipleOutputs" << endl;
+  }
+  //Ottengo la lista degli output non spesi per il mio wallet
+  string myAddress = getPublicFromWallet();
+  vector<UnspentTxOut> myUnspentTxOutsA = findUnspentTxOutsOfAddress(myAddress, unspentTxOuts);
+
+  /*Ottengo la lista dei miei output non spesi a cui sono stati togli gli output
+   che vengono usati come input in una delle transazioni nel pool*/
+  vector<UnspentTxOut> myUnspentTxOuts = filterTxPoolTxs(myUnspentTxOutsA, txPool);
+  float leftOverAmount;
+
+  /*Cerco tra gli output non spesi quelli necessari per il nuovo input
+  (devo "raccogliere" un ammontare pari ad amount),
+  gli output che sto usando saranno nel nuovo vettore includedUnspentTxOuts*/
+  vector<UnspentTxOut> includedUnspentTxOuts;
+
+  //Calcolo il totale degli output
+  float amount = 0;
+  vector<TxOut>::iterator it;
+  for(it = txOuts.begin(); it != txOuts.end(); ++it){
+    amount += it->amount;
+  }
+  try{
+    includedUnspentTxOuts= findTxOutsForAmount(amount, myUnspentTxOuts, &leftOverAmount);
+  }catch(const char* msg){
+    cout << msg << endl;
+    cout << endl;
+    throw "EXCEPTION (createTransaction): Impossibile creare la transazione, il mittente non possiede abbastanza skanCoin!";
+  }
+  /*Raccolti gli output non spesi da usare di creano i rispettivi input per la nuova transazione
+   (che faranno riferimento ad essi), questi devono ancora essere firmati!*/
+  vector<TxIn> unsignedTxIns;
+  vector<UnspentTxOut>::iterator it2;
+  for(it2 = includedUnspentTxOuts.begin(); it2 != includedUnspentTxOuts.end(); ++it2){
+    unsignedTxIns.push_back(toUnsignedTxIn(*it2));
+  }
+  //Creo la transazione, gli input non sono ancora firmati
+  Transaction tx = Transaction();
+  tx.txIns = unsignedTxIns;
+  tx.txOuts = txOuts;
+  if (leftOverAmount != 0) {
+      TxOut leftOverTx = TxOut(myAddress, leftOverAmount);
+      tx.txOuts.push_back(leftOverTx);
+  }
+  tx.id = getTransactionId(tx);
+  int index = 0;
+  try{
+    //firma di tutti gli input della nuova transazione
+    vector<TxIn>::iterator it3;
+    for(it3 = tx.txIns.begin(); it3 != tx.txIns.end(); ++it3){
+      it3->signature = signTxIn(tx, index, privateKey, unspentTxOuts);
+      index++;
+    }
+  }catch(const char* msg){
+    cout << msg << endl;
+    cout << endl;
+    throw "EXCEPTION (createTransaction): Creazione della transazione fallita, alcuni input di transazione non sono stati firmati correttamente";
+  }
+  return tx;
+}
