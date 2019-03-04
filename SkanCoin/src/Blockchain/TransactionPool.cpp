@@ -53,23 +53,26 @@ bool TransactionPool::addToTransactionPool(Transaction tx, vector<UnspentTxOut> 
 }
 
 /* Aggiorna la transaction pool eliminando le transazioni non valide*/
+// TODO: ho cambiato la logica. E' da controllare se non si spascia niente (anche se sembra funzionare tutto!)
 void TransactionPool::updateTransactionPool(vector<UnspentTxOut> unspentTxOuts) {
   if(debug == 1){
   cout << endl << "TransactionPool::updateTransactionPool" << endl;
   }
+  list<Transaction> aux;
   list<Transaction>::iterator it1;
   vector<TxIn>::iterator it2;
 
   for(it1 = unconfirmedTransactions.begin(); it1 != unconfirmedTransactions.end(); ++it1) {
     for(it2 = it1->txIns.begin(); it2 != it1->txIns.end(); ++it2) {
       if(!hasTxIn(*it2, unspentTxOuts)) {
-        cout << "Rimozione dalla transaction pool della transazione: " << it1->toString() << endl;
         deleteStat(it1->id);
-        unconfirmedTransactions.erase(it1);
         break;
       }
+      aux.push_back(*it1);
     }
   }
+  cout << "Aggiornamento della transaction pool" << endl;
+  unconfirmedTransactions = aux;    // Aggiornamento della transaction pool con un vettore privo delle transazioni che andavano eliminate (perchè già minate)
 }
 
 /*Rimuove dal vettore di TransactionStat l'elemento corrispondente all'id di transazione indicato*/
@@ -79,7 +82,9 @@ void TransactionPool::deleteStat(string transactionId) {
   }
   list<TransactionStat>::iterator it;
   for(it = stats.begin(); it != stats.end(); ++it) {
-    if (it->transactionId.compare(transactionId)==0){
+    cout << "IN CICLO";
+    if((it->transactionId.compare(transactionId))==0){
+      cout << "CIAOOOCIAOOOCIAOOOCIAOOOCIAOOOCIAOOOCIAOOOCIAOOOCIAOOOCIAOOOCIAOOOCIAOOO";
       stats.erase(it);
       return;
     }

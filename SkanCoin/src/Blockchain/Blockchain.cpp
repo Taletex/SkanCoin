@@ -329,13 +329,13 @@ Block BlockChain::generateNextBlock(){
 
 /*Genera un nuovo blocco con una sola transazion (oltre alla coinbase)
 e lo inserisce nella BlockChain*/
-Block BlockChain::generateNextBlockWithTransaction(string receiverAddress, float amount){
+Block BlockChain::generateNextBlockWithTransactionAndCoinbase(string receiverAddress, float amount){
   if(debug == 1){
-    cout << endl << "BlockChain::generateNextBlockWithTransaction" << endl;
+    cout << endl << "BlockChain::generateNextBlockWithTransactionAndCoinbase" << endl;
   }
   if (typeid(amount) != typeid(float)) {
       cout << endl;
-      throw "EXCEPTION (generateNextBlockWithTransaction): Importo non valido!";
+      throw "EXCEPTION (generateNextBlockWithTransactionAndCoinbase): Importo non valido!";
   }
   Transaction coinbaseTx = getCoinbaseTransaction(getPublicFromWallet(), getLatestBlock().index + 1);
   Transaction tx;
@@ -344,7 +344,7 @@ Block BlockChain::generateNextBlockWithTransaction(string receiverAddress, float
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;
-    throw "EXCEPTION (generateNextBlockWithTransaction): Creazione della transazione fallita";
+    throw "EXCEPTION (generateNextBlockWithTransactionAndCoinbase): Creazione della transazione fallita";
   }
   vector<Transaction> blockData = {coinbaseTx, tx};
   try{
@@ -352,7 +352,42 @@ Block BlockChain::generateNextBlockWithTransaction(string receiverAddress, float
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;
-    throw "EXCEPTION (generateNextBlockWithTransaction): Errore durante la generazione del nuovo blocco";
+    throw "EXCEPTION (generateNextBlockWithTransactionAndCoinbase): Errore durante la generazione del nuovo blocco";
+  }
+}
+
+/*Genera un nuovo blocco con la coinbase e delle transazioni create da un
+vettore di indirizzi e amount e lo inserisce nella BlockChain */
+// TODO: Verificare perchè non funziona se gli passo 2 transazioni. Se non si può fare eliminare sia qui che dalla webapp e dall'httpserver
+Block BlockChain::generateNextBlockWithTransactions(vector<TxOut> txOuts){
+  vector<Transaction> blockData;
+  vector<TxOut>::iterator it;
+  blockData.push_back(getCoinbaseTransaction(getPublicFromWallet(), getLatestBlock().index + 1));
+
+  if(debug == 1){
+    cout << endl << "BlockChain::generateNextBlockWithTransactions" << endl;
+  }
+
+  for(it = txOuts.begin(); it != txOuts.end(); ++it) {
+    Transaction tx;
+
+    if(typeid(it->amount) != typeid(float)) {
+      cout << endl;
+      throw "EXCEPTION (generateNextBlockWithTransactions): Importo non valido!";
+    }
+    try{
+      tx = createTransaction(it->address, it->amount, getPrivateFromWallet(), getUnspentTxOuts(), TransactionPool::getInstance().getTransactionPool());
+      blockData.push_back(tx);
+    }catch(const char* msg){
+      cout << msg << endl << endl;
+      throw "EXCEPTION (generateNextBlockWithTransactions): Creazione della transazione fallita";
+    }
+  }
+  try{
+    return generateRawNextBlock(blockData);
+  }catch(const char* msg){
+    cout << msg << endl << endl;
+    throw "EXCEPTION (generateNextBlockWithTransactions): Errore durante la generazione del nuovo blocco";
   }
 }
 

@@ -164,9 +164,9 @@ string Message::toString(){
 /* Questa funzione esegue il polling sulla lista delle connessioni aperte dal
 thread client, se ci sono nuovi messaggi ricevuti viene eseguito l'handler adatto*/
 void Peer::checkReceivedMessage(){
-  if(debug == 1){
-  cout << endl << "Peer::checkReceivedMessage" << endl;
-  }
+  // if(debug == 1){
+  // cout << endl << "Peer::checkReceivedMessage" << endl;
+  // }
   /*Flag per segnalare che ci sono socket che sono state chiuse, questo viene conservato
   perchè non è possibile rimuovere la socket nello stesso loop del polling, infatti
   abbiamo bisogno di un riferimento diretto in tale loop, mentre è necessario utilizzare

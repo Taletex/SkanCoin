@@ -113,7 +113,7 @@ void initHttpServer(int port){
         return createResponse("{\"success\": false, \"message\": \"Error parsing request: invalid address or amount\" }", 200);
       }
       try {
-        Block newBlock = BlockChain::getInstance().generateNextBlockWithTransaction(document["address"].GetString(), document["amount"].GetFloat());
+        Block newBlock = BlockChain::getInstance().generateNextBlockWithTransactionAndCoinbase(document["address"].GetString(), document["amount"].GetFloat());
         return createResponse("{\"success\" :true, \"newBlock\": " + newBlock.toString() + "}", 200);
       } catch (const char* msg) {
         CROW_LOG_INFO << msg << "\n";
@@ -127,7 +127,7 @@ void initHttpServer(int port){
     if(req.method == "OPTIONS"_method) {
       return optionsResponse();           // Per gestire il CORS
     } else {
-      vector<Transaction> transactions;
+      vector<TxOut> transactions;
       rapidjson::Document document;
       document.Parse(req.body.c_str());
       const rapidjson::Value& data = document["data"];
@@ -136,8 +136,8 @@ void initHttpServer(int port){
         return createResponse("{\"success\": false, \"message\": \"Error parsing request: Block data not present\" }", 200);
       }
       try{
-        transactions = parseTransactionVector(data);
-        Block newBlock = BlockChain::getInstance().generateRawNextBlock(transactions);
+        transactions = parseTxOutVector(data);
+        Block newBlock = BlockChain::getInstance().generateNextBlockWithTransactions(transactions);
         return createResponse("{\"success\" :true, \"newBlock\": " + newBlock.toString() + "}", 200);
       }catch(const char* msg){
         CROW_LOG_INFO << msg << "\n";
