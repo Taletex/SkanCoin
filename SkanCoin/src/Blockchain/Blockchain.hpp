@@ -62,12 +62,10 @@ class BlockChain {
     transaction ed avvia la procedura di mining ed inserimento del blocco*/
     Block generateNextBlock();
 
-    //TODO:RIMUOVI
-    Block generateNextBlockWithTransactionAndCoinbase(std::string receiverAddress, float amount);
-
-    /*Genera un nuovo blocco con la coinbase e delle transazioni create da un
-    vettore di coppie [indirizzo destinazione, amount] e lo inserisce nella BlockChain */
-    Block generateNextBlockWithTransactions(std::vector<TxOut> txOuts);
+    /*Genera un nuovo blocco con la coinbase e una transazione avente txOuts creato a
+    partire da un vettore di coppie [indirizzo destinazione, amount] e lo inserisce
+    nella BlockChain (transazion con multipli output) */
+    Block generateNextBlockWithTransaction(std::vector<TxOut> txOuts);
 
     /*Ritorna il totale degli output non spesi nel wallet del nodo*/
     float getAccountBalance();

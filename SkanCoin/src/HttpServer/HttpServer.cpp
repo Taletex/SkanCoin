@@ -102,28 +102,9 @@ void initHttpServer(int port){
     }
   });
 
-  /* REST: Effettua il mining di un nuovo blocco utilizzando una nuova transazione creata a partire dall'amount e address passati (più la coinbase transaction) */
+  /* REST: Effettua il mining di un nuovo blocco contente la coinbase transaction
+  e una transazione con uno o più output destinazione */
   CROW_ROUTE(app, "/webresources/blocks/transaction").methods("POST"_method, "OPTIONS"_method)([](const crow::request& req){
-    if(req.method == "OPTIONS"_method) {
-      return optionsResponse();           // Per gestire il CORS
-    } else {
-      rapidjson::Document document;
-      document.Parse(req.body.c_str());
-      if(document["amount"].IsNull() || document["address"].IsNull()){
-        return createResponse("{\"success\": false, \"message\": \"Error parsing request: invalid address or amount\" }", 200);
-      }
-      try {
-        Block newBlock = BlockChain::getInstance().generateNextBlockWithTransactionAndCoinbase(document["address"].GetString(), document["amount"].GetFloat());
-        return createResponse("{\"success\" :true, \"newBlock\": " + newBlock.toString() + "}", 200);
-      } catch (const char* msg) {
-        CROW_LOG_INFO << msg << "\n";
-        return createResponse("{\"success\": false, \"message\": \"Error generating new block\" }", 200);
-      }
-    }
-  });
-
-  /* Effettua il mining di un nuovo blocco utilizzando le transazioni passate come argomento (no coinbase transaction) */
-  CROW_ROUTE(app, "/webresources/blocks/transactions").methods("POST"_method, "OPTIONS"_method)([](const crow::request& req){
     if(req.method == "OPTIONS"_method) {
       return optionsResponse();           // Per gestire il CORS
     } else {
@@ -137,7 +118,7 @@ void initHttpServer(int port){
       }
       try{
         transactions = parseTxOutVector(data);
-        Block newBlock = BlockChain::getInstance().generateNextBlockWithTransactions(transactions);
+        Block newBlock = BlockChain::getInstance().generateNextBlockWithTransaction(transactions);
         return createResponse("{\"success\" :true, \"newBlock\": " + newBlock.toString() + "}", 200);
       }catch(const char* msg){
         CROW_LOG_INFO << msg << "\n";

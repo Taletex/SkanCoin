@@ -327,49 +327,22 @@ Block BlockChain::generateNextBlock(){
   }
 }
 
-//TODO:RIMUOVI
-Block BlockChain::generateNextBlockWithTransactionAndCoinbase(string receiverAddress, float amount){
-  if(debug == 1){
-    cout << endl << "BlockChain::generateNextBlockWithTransactionAndCoinbase" << endl;
-  }
-  if (typeid(amount) != typeid(float)) {
-      cout << endl;
-      throw "EXCEPTION (generateNextBlockWithTransactionAndCoinbase): Importo non valido!";
-  }
-  Transaction coinbaseTx = getCoinbaseTransaction(getPublicFromWallet(), getLatestBlock().index + 1);
-  Transaction tx;
-  try{
-    tx = createTransaction(receiverAddress, amount, getPrivateFromWallet(), getUnspentTxOuts(), TransactionPool::getInstance().getTransactionPool());
-  }catch(const char* msg){
-    cout << msg << endl;
-    cout << endl;
-    throw "EXCEPTION (generateNextBlockWithTransactionAndCoinbase): Creazione della transazione fallita";
-  }
-  vector<Transaction> blockData = {coinbaseTx, tx};
-  try{
-    return generateRawNextBlock(blockData);
-  }catch(const char* msg){
-    cout << msg << endl;
-    cout << endl;
-    throw "EXCEPTION (generateNextBlockWithTransactionAndCoinbase): Errore durante la generazione del nuovo blocco";
-  }
-}
-
-/*Genera un nuovo blocco con la coinbase e delle transazioni create da un
-vettore di coppie [indirizzo destinazione, amount] e lo inserisce nella BlockChain */
-Block BlockChain::generateNextBlockWithTransactions(vector<TxOut> txOuts){
+/*Genera un nuovo blocco con la coinbase e una transazione avente txOuts creato a
+partire da un vettore di coppie [indirizzo destinazione, amount] e lo inserisce
+nella BlockChain (transazion con multipli output) */
+Block BlockChain::generateNextBlockWithTransaction(vector<TxOut> txOuts){
   vector<Transaction> blockData;
   vector<TxOut>::iterator it;
   blockData.push_back(getCoinbaseTransaction(getPublicFromWallet(), getLatestBlock().index + 1));
 
   if(debug == 1){
-    cout << endl << "BlockChain::generateNextBlockWithTransactions" << endl;
+    cout << endl << "BlockChain::generateNextBlockWithTransaction" << endl;
   }
 
   for(it = txOuts.begin(); it != txOuts.end(); ++it) {
     if(typeid(it->amount) != typeid(float)) {
       cout << endl;
-      throw "EXCEPTION (generateNextBlockWithTransactions): Importo non valido!";
+      throw "EXCEPTION (generateNextBlockWithTransaction): Importo non valido!";
     }
   }
   try{
@@ -377,13 +350,13 @@ Block BlockChain::generateNextBlockWithTransactions(vector<TxOut> txOuts){
     blockData.push_back(tx);
   }catch(const char* msg){
     cout << msg << endl << endl;
-    throw "EXCEPTION (generateNextBlockWithTransactions): Creazione della transazione fallita";
+    throw "EXCEPTION (generateNextBlockWithTransaction): Creazione della transazione fallita";
   }
   try{
     return generateRawNextBlock(blockData);
   }catch(const char* msg){
     cout << msg << endl << endl;
-    throw "EXCEPTION (generateNextBlockWithTransactions): Errore durante la generazione del nuovo blocco";
+    throw "EXCEPTION (generateNextBlockWithTransaction): Errore durante la generazione del nuovo blocco";
   }
 }
 

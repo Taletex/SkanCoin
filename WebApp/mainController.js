@@ -3,7 +3,7 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
 
   $scope.baseUrl = "http://localhost:3001/webresources/";
   $scope.bLoading = false;
-  $scope.inputs = {transactions: []};
+  $scope.inputs = {txOuts: []};
   $scope.queryOutput = null;
   $scope.publicKey = "";
 
@@ -142,25 +142,12 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
     });
   };
 
-  // Richiama una REST per effettuare il mining di un nuovo blocco utilizzando una nuova transazione creata a partire dall'amount e address passati (più la coinbase transaction)
-  $scope.mineBlockWithTransaction = function(address, amount) {
-    if(address != null && amount != null) {
+  // Richiama una REST per effettuare il mining di un nuovo blocco contente la
+  // coinbase transaction e una transazione con uno o più output destinazione
+  $scope.mineBlockWithTransaction = function(txOuts) {
+    if(txOuts != null) {
       $scope.bLoading = true;
-      $http.post($scope.baseUrl + "blocks/transaction", {address: address, amount: amount}, {headers:{'Content-Type': 'application/json'}}).then(function(resp) {
-        document.getElementById("output").innerHTML = syntaxHighlight(JSON.stringify(resp.data, undefined, 4));
-        $scope.queryOutput = resp.data;
-        console.log(resp);
-      }).finally (function(){
-        $scope.bLoading = false;
-      });
-    }
-  };
-
-  // Richiama una REST per effettuare il mining di un nuovo blocco utilizzando le transazioni passate come argomento (no coinbase transaction)
-  $scope.mineBlockWithTransactions = function(transactions) {
-    if(transactions != null) {
-      $scope.bLoading = true;
-      $http.post($scope.baseUrl + "blocks/transactions",{data: transactions}, {headers:{'Content-Type': 'application/json'}}).then(function(resp) {
+      $http.post($scope.baseUrl + "blocks/transaction",{data: txOuts}, {headers:{'Content-Type': 'application/json'}}).then(function(resp) {
         document.getElementById("output").innerHTML = syntaxHighlight(JSON.stringify(resp.data, undefined, 4));
         $scope.queryOutput = resp.data;
         console.log(resp);
@@ -218,8 +205,8 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
   }
 
   // Aggiunge una transazione all'array di transazioni di inputs
-  $scope.addTransactionToInput = function() {
-    $scope.inputs.transactions.push({amount: 1, address: ""});
+  $scope.addOutputToInput = function() {
+    $scope.inputs.txOuts.push({amount: 1, address: ""});
   }
 
   $scope.getPublicKey();
