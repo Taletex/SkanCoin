@@ -7,9 +7,10 @@ const int COINBASE_AMOUNT = 10;
 UnspentTxOut::UnspentTxOut() {}
 
 UnspentTxOut::UnspentTxOut(string txOutId, int txOutIndex, string address, float amount) {
-  if(debug == 1){
-    cout << endl << "UnspentTxOut::UnspentTxOut" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   this->txOutId = txOutId;
   this->txOutIndex = txOutIndex;
   this->address = address;
@@ -17,75 +18,84 @@ UnspentTxOut::UnspentTxOut(string txOutId, int txOutIndex, string address, float
 }
 
 string UnspentTxOut::toString(){
-  if(debug == 1){
-    cout << endl << "UnspentTxOut::toString" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   return "{\"txOutId\": \"" + this->txOutId + "\", \"address\": \"" + this->address + "\", \"txOutIndex\": " + to_string(this->txOutIndex) + ", \"amount\": " + to_string(this->amount) + "}";
 }
 
 bool UnspentTxOut::isEqual(UnspentTxOut other){
-  if(debug == 1){
-    cout << endl << "UnspentTxOut::isEqual" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   return (this->txOutId == other.txOutId && this->txOutIndex == other.txOutIndex);
 }
 
 TxIn::TxIn() {}
 
 TxIn::TxIn(string txOutId, string signature, int txOutIndex) {
-  if(debug == 1){
-    cout << endl << "TxIn::TxIn" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   this->txOutId = txOutId;
   this->signature = signature;
   this->txOutIndex = txOutIndex;
 }
 
 bool TxIn::isEqual(TxIn other){
-  if(debug == 1){
-    cout << endl << "TxIn::isEqual" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   return (this->txOutId == other.txOutId && this->txOutIndex == other.txOutIndex);
 }
 
 string TxIn::toString(){
-  if(debug == 1){
-    cout << endl << "TxIn::toString" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   return "{\"txOutId\": \"" + txOutId + "\", \"signature\": \"" + signature + "\", \"txOutIndex\": " + to_string(txOutIndex) + "}";
 }
 
 TxOut::TxOut(){}
 
 TxOut::TxOut(string address, float amount) {
-  if(debug == 1){
-    cout << endl << "TxOut::TxOut" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   this->address = address;
   this->amount = amount;
 }
 
 string TxOut::toString(){
-  if(debug == 1){
-    cout << endl << "TxOut::toString" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   return "{\"address\": \"" + address + "\", \"amount\": " + to_string(amount) + "}";
 }
 
 Transaction::Transaction(){}
 Transaction::Transaction(string id, vector<TxIn> txIns, vector<TxOut> txOuts){
-  if(debug == 1){
-    cout << endl << "Transaction::Transaction" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   this->id = id;
   this->txIns.swap(txIns);
   this->txOuts.swap(txOuts);
 }
 
 string Transaction::toString(){
-  if(debug == 1){
-    cout << endl << "Transaction::toString" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   string ret = "{\"id\": \"" + this->id + "\",\"txIns\": [";
   vector<TxIn>::iterator it;
   for(it = txIns.begin(); it != txIns.end(); ++it){
@@ -110,9 +120,10 @@ string Transaction::toString(){
 
 /*Verifica se l'UnspentTxOut passato come primo parametro è presente nell'array passato come secondo*/
 bool isPresentUnspentTxOut(UnspentTxOut find, vector<UnspentTxOut> TxOuts){
-  if(debug == 1){
-    cout << endl << "Transactions - isPresentUnspentTxOut" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   vector<UnspentTxOut>::iterator it;
   for(it = TxOuts.begin(); it != TxOuts.end(); ++it){
     if(it->isEqual(find)){
@@ -125,9 +136,10 @@ bool isPresentUnspentTxOut(UnspentTxOut find, vector<UnspentTxOut> TxOuts){
 /*Ritorna l'id (hash) della transazione passata come parametro,
 esso verrà firmato da chi invia i coin*/
 string getTransactionId (Transaction transaction){
-  if(debug == 1){
-    cout << endl << "Transactions - getTransactionId" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   string txInContent = "";
   string txOutContent = "";
   vector<TxIn>::iterator it;
@@ -143,9 +155,10 @@ string getTransactionId (Transaction transaction){
 
 /*Controlla se il vettore di input contiene dei duplicati*/
 bool hasDuplicates(vector<TxIn> txIns){
-  if(debug == 1){
-    cout << endl << "Transactions - hasDuplicates" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   /*Creiamo una mappa per salvare il numero di ricorrenze di ogni valore
   all'interno del vettore di txIn*/
   map<string, int> countMap;
@@ -168,9 +181,10 @@ bool hasDuplicates(vector<TxIn> txIns){
 
 /*Validazione della struttura (type checking) dell'input di transazione*/
 bool isValidTxInStructure(TxIn txIn){
-  if(debug == 1){
-    cout << endl << "Transactions - isValidTxInStructure" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   if (typeid(txIn.signature) != typeid(string)) {
     cout << "Errore (isValidTxInStructure): tipo della signature non valido: " << txIn.signature << endl;
     return false;
@@ -187,9 +201,10 @@ bool isValidTxInStructure(TxIn txIn){
 
 /*Validazione struttura (type checking) dell'output di transazione*/
 bool isValidTxOutStructure(TxOut txOut){
-  if(debug == 1){
-    cout << endl << "Transactions - isValidTxOutStructure" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   if (typeid(txOut.address) != typeid(string)) {
     cout << "ERRORE (isValidTxOutStructure): tipo dell'indirizzo non valido nell'output di transazione: " << txOut.address << endl;
     return false;
@@ -203,9 +218,10 @@ bool isValidTxOutStructure(TxOut txOut){
 
 /*Validazione della struttura (type checking) della transazione e di tutti i suoi input e output*/
 bool isValidTransactionStructure(Transaction transaction){
-  if(debug == 1){
-    cout << endl << "Transactions - isValidTransactionStructure" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   if (typeid(transaction.id) != typeid(string)) {
     cout << "ERRORE: tipo dell'id della transazione non vaido: " << transaction.id << endl;
     return false;
@@ -238,9 +254,10 @@ Controlla se l'input fa riferimento ad un output non speso,
 verifica la firma applicata all'input di transazione, essa deve corrispondere alla
 chiave pubblica che è la destinazione dell'output non speso a cui questo fa riferimento*/
 bool validateTxIn(TxIn txIn, Transaction transaction, vector<UnspentTxOut> aUnspentTxOuts){
-  if(debug == 1){
-    cout << endl << "Transactions - validateTxIn" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   UnspentTxOut referencedUTxOut;
   bool found = false;
   vector<UnspentTxOut>::iterator it;
@@ -287,9 +304,10 @@ bool validateTxIn(TxIn txIn, Transaction transaction, vector<UnspentTxOut> aUnsp
 /*Dato l'input controlla il valore dell'output non speso a cui questo fa
 riferimento (la sua esistenza è gia stata verificata in validateTxIn)*/
 float getTxInAmount(TxIn txIn, vector<UnspentTxOut> aUnspentTxOuts){
-  if(debug == 1){
-    cout << endl << "Transactions - getTxInAmount" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   vector<UnspentTxOut>::iterator it;
   for(it = aUnspentTxOuts.begin(); it != aUnspentTxOuts.end(); ++it){
     if(it->txOutId == txIn.txOutId && it->txOutIndex == txIn.txOutIndex){
@@ -302,9 +320,10 @@ float getTxInAmount(TxIn txIn, vector<UnspentTxOut> aUnspentTxOuts){
 
 /*Validazione della transazione (tipi di dati e procedure di sicurezza)*/
 bool validateTransaction(Transaction transaction, vector<UnspentTxOut> aUnspentTxOuts){
-  if(debug == 1){
-    cout << endl << "Transactions - validateTransaction" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   //validazione struttura
   if (!isValidTransactionStructure(transaction)) {
       return false;
@@ -349,9 +368,10 @@ bool validateTransaction(Transaction transaction, vector<UnspentTxOut> aUnspentT
 
 /*Validazione della transazione di Coinbase*/
 bool validateCoinbaseTx(Transaction transaction, int blockIndex){
-  if(debug == 1){
-    cout << endl << "Transactions - validateCoinbaseTx" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   //Controllo che non ci siano modifiche controllando la validità dell'id (hash)
   if (getTransactionId(transaction) != transaction.id) {
       cout << "ERRORE (validateCoinbaseTx): id della transazione coinbase non valido: " << transaction.id << endl;
@@ -382,9 +402,10 @@ bool validateCoinbaseTx(Transaction transaction, int blockIndex){
 
 /*Validazione di tutte le transazioni del blocco*/
 bool validateBlockTransactions(vector<Transaction> aTransactions, vector<UnspentTxOut> aUnspentTxOuts, int blockIndex){
-  if(debug == 1){
-    cout << endl << "Transactions - validateBlockTransactions" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   Transaction coinbaseTx = aTransactions[0];
   if (!validateCoinbaseTx(coinbaseTx, blockIndex)) {
       cout << "ERRORE (validateBlockTransactions): transazione coinbase non valida: " << coinbaseTx.toString() << endl;
@@ -416,9 +437,10 @@ bool validateBlockTransactions(vector<Transaction> aTransactions, vector<Unspent
 
 /*Cerca un UnspentTxOut dati i suoi campi*/
 UnspentTxOut findUnspentTxOut(string outId, int index, vector<UnspentTxOut> aUnspentTxOuts){
-  if(debug == 1){
-    cout << endl << "Transactions - findUnspentTxOut" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   UnspentTxOut ret = UnspentTxOut("", -1, "", 0);
   bool found = false;
   vector<UnspentTxOut>::iterator it;
@@ -437,9 +459,10 @@ UnspentTxOut findUnspentTxOut(string outId, int index, vector<UnspentTxOut> aUns
 
 /*Genera coinbase transaction per il nuovo blocco*/
 Transaction getCoinbaseTransaction(string address,int blockIndex){
-  if(debug == 1){
-    cout << endl << "Transactions - getCoinbaseTransaction" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   Transaction t;
   TxIn txIn;
   txIn.signature = "";
@@ -455,9 +478,10 @@ Transaction getCoinbaseTransaction(string address,int blockIndex){
 /*Applica la firma digitale ad un input della transazione,
 esso preventivamente controllato in termini di validità strutturale e logica*/
 string signTxIn(Transaction transaction, int txInIndex, string privateKey, vector<UnspentTxOut> aUnspentTxOuts){
-  if(debug == 1){
-    cout << endl << "Transactions - signTxIn" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   TxIn txIn = transaction.txIns[txInIndex];
   string dataToSign = transaction.id;
   string referencedAddress;
@@ -491,9 +515,10 @@ string signTxIn(Transaction transaction, int txInIndex, string privateKey, vecto
 
 /*Aggiornamento della lista di output non spesi dopo un nuovo blocco di transazioni*/
 vector<UnspentTxOut> updateUnspentTxOuts(vector<Transaction> aTransactions, vector<UnspentTxOut> aUnspentTxOuts){
-  if(debug == 1){
-    cout << endl << "Transactions - updateUnspentTxOuts" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   vector<UnspentTxOut> newUnspentTxOuts;
   vector<UnspentTxOut> consumedTxOuts;
   vector<Transaction>::iterator it;
@@ -534,9 +559,10 @@ vector<UnspentTxOut> updateUnspentTxOuts(vector<Transaction> aTransactions, vect
 
 /*Validazione del blocco di transazioni e aggiornamento della lista di output non spesi*/
 vector <UnspentTxOut> processTransactions(vector<Transaction> aTransactions, vector<UnspentTxOut> aUnspentTxOuts, int blockIndex){
-  if(debug == 1){
-    cout << endl << "Transactions - processTransactions" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   if (!validateBlockTransactions(aTransactions, aUnspentTxOuts, blockIndex)) {
       cout << endl;
       throw "EXCEPTION (processTransactions): il blocco contiene transazioni non valide";

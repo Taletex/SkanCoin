@@ -2,6 +2,7 @@
 #define __TRANSACTIONPOOL_DEFINITION__
 
 #include "Transactions.hpp"
+#include "../debug.hpp"
 #include <list>
 
 class TransactionStat {

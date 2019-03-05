@@ -7,9 +7,10 @@ using easywsclient::WebSocket;
 Questo metodo deve avere un solo parametro (const string & data), questo è il motivo per cui
  abbiamo bisogno di una variabile esterna di supporto (tempWs) che sia un riferimento alla socket corrente*/
 void handleClientMessage(const string & data){
-  if(debug == 1){
-  cout << endl << "P2P - handleClientMessage" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   //Parsing dell'oggetto JSON ricevuto dalla socket
   rapidjson::Document document;
   cout << endl << "Client Peer: Messaggio ricevuto: " << data;
@@ -131,9 +132,10 @@ void handleClientMessage(const string & data){
 }
 
 Message::Message(MessageType type, string data){
-  if(debug == 1){
-  cout << endl << "Message::Message" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   this->type = type;
   this->data = data;
   this->stat = "";
@@ -142,9 +144,10 @@ Message::Message(MessageType type, string data){
   }
 }
 Message::Message(MessageType type, string data, string stat){
-  if(debug == 1){
-  cout << endl << "Message::Message" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   this->type = type;
   this->data = data;
   this->stat = stat;
@@ -155,18 +158,20 @@ Message::Message(MessageType type, string data, string stat){
 
 /*Rappresentazione in formato JSON dell'oggetto Message*/
 string Message::toString(){
-  if(debug == 1){
-  cout << endl << "Message::toString" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   return "{\"type\": " + to_string(type) + ", \"data\": " + data + ", \"stat\": \"" + stat + "\"}";
 }
 
 /* Questa funzione esegue il polling sulla lista delle connessioni aperte dal
 thread client, se ci sono nuovi messaggi ricevuti viene eseguito l'handler adatto*/
 void Peer::checkReceivedMessage(){
-  // if(debug == 1){
-  // cout << endl << "Peer::checkReceivedMessage" << endl;
-  // }
+  // #if DEBUG_FLAG == 1
+  // DEBUG_INFO("");
+  // #endif
+
   /*Flag per segnalare che ci sono socket che sono state chiuse, questo viene conservato
   perchè non è possibile rimuovere la socket nello stesso loop del polling, infatti
   abbiamo bisogno di un riferimento diretto in tale loop, mentre è necessario utilizzare
@@ -205,9 +210,10 @@ void Peer::checkReceivedMessage(){
 /*Questo metodo controlla il vettore di socket (client), eliminando quelle
 che sono state chiuse*/
 void Peer::clearClosedWs(){
-  if(debug == 1){
-  cout << endl << "Message::clearClosedWs" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   vector<easywsclient::WebSocket::pointer> temp; //Creo un vettore di appoggio
   for(auto ws: openedConnections){
     //Inserisco nel nuovo vettore solo le socket aperte
@@ -223,9 +229,10 @@ void Peer::clearClosedWs(){
 
 /*Dato l'url di un server P2P viene aperta una nuova connessione verso di esso dal thread client*/
 void Peer::connectToPeers(std::string peer){
-  if(debug == 1){
-  cout << endl << "Peer::connectToPeers" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   cout << "Client Peer: Aggiunta di { " << peer << " } alla lista dei peer..." << endl;
   WebSocket::pointer ws;
   ws = WebSocket::from_url(peer);
@@ -246,9 +253,10 @@ void Peer::connectToPeers(std::string peer){
 
 /*Ritorna il numero d peer (si considerano sia le connessioni aperte dal thread client che quelle ricevute dal thread server)*/
 int Peer::countPeers(){
-  if(debug == 1){
-    cout << endl << "Peer::countPeers" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   connectionsMtx.lock();
   int count = receivedConnections.size() + openedConnections.size();
   connectionsMtx.unlock();
@@ -258,9 +266,10 @@ int Peer::countPeers(){
 /*Business logic per un messaggio di tipo RESPONSE_BLOCKCHAIN, questa funzione
 è chiamata nell'handler dei messaggi in arrivo*/
 void Peer::handleBlockchainResponse(list<Block> receivedBlocks){
-  if(debug == 1){
-    cout << endl << "Peer::handleBlockchainResponse" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   if (receivedBlocks.size() == 0) {
       cout << "ERRORE (handleBlockchainResponse): La blockchain ricevuta ha lunghezza 0!" << endl;
       return;
@@ -296,9 +305,10 @@ void Peer::handleBlockchainResponse(list<Block> receivedBlocks){
 
 /*Inizializzazione del server P2P*/
 void Peer::initP2PServer(int port){
-  if(debug == 1){
-    cout << endl << "Peer::initP2PServer" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   crow::SimpleApp app;
   CROW_ROUTE(app, "/").websocket()
     //Gesitione della ricezione di nuove connessioni
@@ -335,9 +345,10 @@ void Peer::initP2PServer(int port){
 
 /*Avvio del polling del client sulle socket aperte*/
 void Peer::startClientPoll(){
-  if(debug == 1){
-    cout << endl << "Peer::startClientPoll" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   cout << "Starting P2P client...." << endl;
   while(true){
     /*Il polling avviene con una cadenza di un secondo, non ci sono particolari
@@ -349,9 +360,9 @@ void Peer::startClientPoll(){
 
 /*Gestore dei messaggi in arrivo al Server Peer*/
 void Peer::handleServerMessage(crow::websocket::connection& connection, const string& data){
-  if(debug == 1){
-    cout << endl << "Peer::handleServerMessage" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
 
   //Parsing dell'oggetto ricevuto
   rapidjson::Document document;
@@ -471,9 +482,10 @@ void Peer::handleServerMessage(crow::websocket::connection& connection, const st
 
 /*Controllo della validità del tipo di messaggio (se appartiene all'enumeratore)*/
 bool Peer::isValidType(int type){
-  if(debug == 1){
-    cout << endl << "Peer::isValidType" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   MessageType receivedType = static_cast<MessageType>(type);
   for ( int val = QUERY_LATEST; val != TRANSACTION_POOL_STATS+1; val++ ){
     if(receivedType == val)return true;
@@ -485,9 +497,10 @@ bool Peer::isValidType(int type){
  su tutte le socket aperte dal thread client e su tutte quelle aperte da altri
  client verso il thread server*/
 void Peer::broadcast(string message){
-  if(debug == 1){
-    cout << endl << "Peer::broadcast" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   //Broadcast sulle socket aperte dal thread client
   for(auto ws: openedConnections){
     if(ws->getReadyState() != WebSocket::CLOSED) {
@@ -502,22 +515,25 @@ void Peer::broadcast(string message){
 
 /*Metodi per il broadcast dei messaggi*/
 void Peer::broadCastTransactionPool(){
-  if(debug == 1){
-    cout << endl << "Peer::broadCastTransactionPool" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   broadcast(responseTransactionPoolMsg());
 }
 void Peer::broadcastLatest(string stat){
-  if(debug == 1){
-    cout << endl << "Peer::broadcastLatest" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   broadcast(responseLatestMsg(stat));
 }
 
 void Peer::broadcastTxPoolStat(vector<string> stats){
-  if(debug == 1){
-    cout << endl << "Peer::broadcastTxPoolStat" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   broadcast(txPoolStatsMessage(stats));
 }
 

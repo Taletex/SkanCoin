@@ -3,9 +3,10 @@
 using namespace std;
 
 Block::Block (int index, string hash, string previousHash, long timestamp, vector<Transaction> data, int difficulty, int nonce) {
-  if(debug == 1){
-    cout << endl << "Block::Block" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   this->index = index;
   this->previousHash = previousHash;
   this->timestamp = timestamp;
@@ -16,9 +17,10 @@ Block::Block (int index, string hash, string previousHash, long timestamp, vecto
 }
 
 string Block::toString(){
-  if(debug == 1){
-    cout << endl << "Block::toString" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   string ret = "{\"index\": " + to_string(index) + ", \"previousHash\": \"" + previousHash  + "\", \"timestamp\": " + to_string(timestamp) + ", \"hash\": \"" + hash + "\", \"difficulty\": " + to_string(difficulty)  + ", \"nonce\": " + to_string(nonce)   + ", \"data\": [";
   vector<Transaction>::iterator it;
   for(it = data.begin(); it != data.end(); ++it){
@@ -32,16 +34,18 @@ string Block::toString(){
 }
 
 bool Block::isEqual(Block other){
-  if(debug == 1){
-    cout << endl << "Block::isEqual" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   return this->toString() == other.toString();
 }
 
 BlockChain::BlockChain(){
-  if(debug == 1){
-    cout << endl << "BlockChain::BlockChain" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+  
   Block genesisBlock = getGenesisBlock();
   blockchain = {genesisBlock};
   try{
@@ -57,9 +61,10 @@ BlockChain::BlockChain(){
 
 /*Generazione blocco di genesi (il primo blocco della blockchain)*/
 Block BlockChain::getGenesisBlock(){
-  if(debug == 1){
-    cout << endl << "BlockChain::getGenesisBlock" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   vector<TxIn> txInsVector = {TxIn("","",0)};
   vector<TxOut> txOutsVector = {TxOut(getPublicFromWallet(), COINBASE_AMOUNT)};
   Transaction genesisTransaction("", txInsVector, txOutsVector);
@@ -72,9 +77,10 @@ Block BlockChain::getGenesisBlock(){
 
 /*Rappresentazione in stringa della blockchain*/
 string BlockChain::toString(){
-  if(debug == 1){
-    cout << endl << "BlockChain::toString" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   string ret = "[";
   list<Block>::iterator it;
   for(it = blockchain.begin(); it != blockchain.end(); ++it){
@@ -90,9 +96,10 @@ string BlockChain::toString(){
 /*Tabella di conversione dei caratteri esadecimali in byte,
 usata per verificare la correttezza (difficoltà) degli hash*/
 string BlockChain::hexToBinaryLookup(char c){
-  if(debug == 1){
-    cout << endl << "BlockChain::hexToBinaryLookup" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   string ret= "";
   switch(c){
       case '0': ret = "0000";
@@ -135,9 +142,10 @@ string BlockChain::hexToBinaryLookup(char c){
 /*Converte una stringa esadecimale in una sequenza binaria, in modo da poter
  verificare il numero di zeri iniziali (difficoltà) durante la validazione del blocco*/
 string BlockChain::hexToBinary(string s){
-  if(debug == 1){
-    cout << endl << "BlockChain::hexToBinary" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   string ret = "";
   for(char& c : s) {
     ret = ret + hexToBinaryLookup(c);
@@ -147,25 +155,28 @@ string BlockChain::hexToBinary(string s){
 
 /*Ritorna la BlockChain*/
 list<Block> BlockChain::getBlockchain(){
-  if(debug == 1){
-    cout << endl << "BlockChain::getBlockchain" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   return blockchain;
 }
 
 /*Ritorna il vettore di output non spesi*/
 vector<UnspentTxOut> BlockChain::getUnspentTxOuts(){
-  if(debug == 1){
-    cout << endl << "BlockChain::getUnspentTxOuts" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   return unspentTxOuts;
 }
 
 /*Reimposta il vettore di output non spesi*/
 void BlockChain::setUnspentTxOuts(vector<UnspentTxOut> newUnspentTxOuts){
-  if(debug == 1){
-    cout << endl << "BlockChain::setUnspentTxOuts" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   vector<UnspentTxOut>::iterator it;
   for(it = newUnspentTxOuts.begin(); it != newUnspentTxOuts.end(); ++it){
     cout << it->toString();
@@ -175,17 +186,19 @@ void BlockChain::setUnspentTxOuts(vector<UnspentTxOut> newUnspentTxOuts){
 
 /*Ritorna l'ultimo blocco della BlockChain*/
 Block BlockChain::getLatestBlock(){
-  if(debug == 1){
-    cout << endl << "BlockChain::getLatestBlock" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   return blockchain.back();
 }
 
 /*Ritorna un blocco dato il suo hash*/
 Block BlockChain::getBlockFromHash(string hash){
-  if(debug == 1){
-    cout << endl << "BlockChain::getBlockFromHash" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   list<Block>::iterator it;
   for(it = blockchain.begin(); it != blockchain.end(); ++it){
     if(it->hash == hash){
@@ -198,9 +211,10 @@ Block BlockChain::getBlockFromHash(string hash){
 
 /*Calcola la nuova difficoltà per i blocchi*/
 int BlockChain::getAdjustedDifficulty(Block latestBlock, list<Block> aBlockchain){
-  if(debug == 1){
-    cout << endl << "BlockChain::getAdjustedDifficulty" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   list<Block>::iterator it = aBlockchain.begin();
   //Avanza l'iteratore fino al blocco in cui è cambiata l'ultima volta la difficoltà
   advance(it, (blockchain.size() - DIFFICULTY_ADJUSTMENT_INTERVAL));
@@ -222,9 +236,10 @@ int BlockChain::getAdjustedDifficulty(Block latestBlock, list<Block> aBlockchain
 
 /*Ritorna la difficoltà per il prossimo blocco*/
 int BlockChain::getDifficulty(list<Block> aBlockchain){
-  if(debug == 1){
-    cout << endl << "BlockChain::getDifficulty" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   Block latestBlock = aBlockchain.back();
   if ((latestBlock.index % DIFFICULTY_ADJUSTMENT_INTERVAL) == 0 && latestBlock.index != 0) {
       return getAdjustedDifficulty(latestBlock, aBlockchain);
@@ -236,9 +251,10 @@ int BlockChain::getDifficulty(list<Block> aBlockchain){
 /*Data la lista di transazioni da inserire nel blocco si esegue il mining del
 blocco e si inserisce nella BlockChain*/
 Block BlockChain::generateRawNextBlock(vector<Transaction> blockData){
-  if(debug == 1){
-    cout << endl << "BlockChain::generateRawNextBlock" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   Block previousBlock = getLatestBlock();
   int difficulty = getDifficulty(getBlockchain());
   int nextIndex = previousBlock.index + 1;
@@ -283,18 +299,20 @@ Block BlockChain::generateRawNextBlock(vector<Transaction> blockData){
 
 /*Ritorna la lista degli output non spesi appartenenti al nodo*/
 vector<UnspentTxOut> BlockChain::getMyUnspentTransactionOutputs(){
-  if(debug == 1){
-    cout << endl << "BlockChain::getMyUnspentTransactionOutputs" << endl;
-  }
-    return findUnspentTxOutsOfAddress(getPublicFromWallet(), getUnspentTxOuts());
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
+  return findUnspentTxOutsOfAddress(getPublicFromWallet(), getUnspentTxOuts());
 }
 
 /*Colleziona le transazioni dal transaction pool, inizializza la coinbase
 transaction ed avvia la procedura di mining ed inserimento del blocco*/
 Block BlockChain::generateNextBlock(){
-  if(debug == 1){
-    cout << endl << "BlockChain::generateNextBlock" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   Transaction coinbaseTx = getCoinbaseTransaction(getPublicFromWallet(), getLatestBlock().index + 1);
   vector<Transaction> blockData = TransactionPool::getInstance().getTransactionPool();
   blockData.insert (blockData.begin() , coinbaseTx);
@@ -331,13 +349,13 @@ Block BlockChain::generateNextBlock(){
 partire da un vettore di coppie [indirizzo destinazione, amount] e lo inserisce
 nella BlockChain (transazion con multipli output) */
 Block BlockChain::generateNextBlockWithTransaction(vector<TxOut> txOuts){
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   vector<Transaction> blockData;
   vector<TxOut>::iterator it;
   blockData.push_back(getCoinbaseTransaction(getPublicFromWallet(), getLatestBlock().index + 1));
-
-  if(debug == 1){
-    cout << endl << "BlockChain::generateNextBlockWithTransaction" << endl;
-  }
 
   for(it = txOuts.begin(); it != txOuts.end(); ++it) {
     if(typeid(it->amount) != typeid(float)) {
@@ -363,9 +381,10 @@ Block BlockChain::generateNextBlockWithTransaction(vector<TxOut> txOuts){
 /*Questo metodo effettua il mining di un nuovo blocco, viengono generati
 (e scartati) nuovi blocchi finche l'hash ottenuto non rispetta la difficoltà richiesta*/
 Block BlockChain::findBlock(int index, string previousHash, long timestamp, vector<Transaction> data, int difficulty) {
-  if(debug == 1){
-    cout << endl << "BlockChain::findBlock" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   int nonce = 0;
   string hash;
   double duration;
@@ -395,17 +414,19 @@ Block BlockChain::findBlock(int index, string previousHash, long timestamp, vect
 
 /*Ritorna il totale degli output non spesi nel wallet del nodo*/
 float BlockChain::getAccountBalance(){
-  if(debug == 1){
-    cout << endl << "BlockChain::getAccountBalance" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   return getBalance(getPublicFromWallet(), getUnspentTxOuts());
 }
 
 /*Crea una nuova transazione e la inserisce nel transaction pool*/
 Transaction BlockChain::sendTransaction(string address, float amount){
-  if(debug == 1){
-    cout << endl << "BlockChain::sendTransaction" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   Transaction tx;
   try{
     tx = createTransaction(address, amount, getPrivateFromWallet(), getUnspentTxOuts(), TransactionPool::getInstance().getTransactionPool());
@@ -431,9 +452,10 @@ Transaction BlockChain::sendTransaction(string address, float amount){
 
 /*Ritorna una transazione della blockchain dato il suo id*/
 Transaction BlockChain::getTransactionFromId(string transactionId){
-  if(debug == 1){
-    cout << endl << "BlockChain::getTransactionFromId" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   list<Block>::iterator it;
   vector<Transaction>::iterator it2;
   for(it = blockchain.begin(); it != blockchain.end(); ++it){
@@ -449,9 +471,10 @@ Transaction BlockChain::getTransactionFromId(string transactionId){
 
 /*Calcolo dell'hash per un blocco*/
 string BlockChain::calculateHash (int index, string previousHash, long timestamp, vector<Transaction> data, int difficulty, int nonce){
-  if(debug == 1){
-    cout << endl << "BlockChain::calculateHash" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   string ret = to_string(index) + previousHash + to_string(timestamp);
   vector<Transaction>::iterator it;
   for(it = data.begin(); it != data.end(); ++it){
@@ -463,9 +486,10 @@ string BlockChain::calculateHash (int index, string previousHash, long timestamp
 
 /*Validazione della struttura (type checking) del blocco*/
 bool BlockChain::isValidBlockStructure(Block block){
-  if(debug == 1){
-    cout << endl << "BlockChain::isValidBlockStructure" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   return (
     typeid(block.index).name() == typeid(int).name() &&
     typeid(block.hash).name() == typeid(string).name() &&
@@ -477,9 +501,10 @@ bool BlockChain::isValidBlockStructure(Block block){
 /*Calcolo della complessità del mining del prossimo blocco (numero di
 zeri iniziali necessari nell'hash) della blockchain data*/
 int BlockChain::getAccumulatedDifficulty(vector<Block> aBlockchain){
-  if(debug == 1){
-    cout << endl << "BlockChain::getAccumulatedDifficulty" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   int res = 0;
   vector<Block>::iterator it;
   for(it = aBlockchain.begin(); it != aBlockchain.end(); ++it){
@@ -493,26 +518,29 @@ rendere valido un blocco con difficoltà inferiore a quella attuale vengono acce
 cui il mining è iniziato al massimo un minuto prima del mining dell'ultimo blocco ed al
 massimo un minuto prima del tempo percepito dal nodo che effettua la validazione*/
 bool BlockChain::isValidTimestamp(Block newBlock, Block previousBlock){
-  if(debug == 1){
-    cout << endl << "BlockChain::isValidTimestamp" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   return (( previousBlock.timestamp - 60 < newBlock.timestamp ) && ( newBlock.timestamp - 60 < time(nullptr) ) );
 }
 
 /*Ricalcola l'hash del blocco e lo confronta con quello proposto (per rilevare modifiche)*/
 bool BlockChain::hashMatchesBlockContent(Block block){
-  if(debug == 1){
-    cout << endl << "BlockChain::hashMatchesBlockContent" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   string blockHash = calculateHash(block.index, block.previousHash, block.timestamp, block.data, block.difficulty, block.nonce);
   return blockHash == block.hash;
 }
 
 /*Controlla se l'hash rispetta la difficoltà minima (deve iniziare con un certo numero di zeri)*/
 bool BlockChain::hashMatchesDifficulty(string hash, int difficulty){
-  if(debug == 1){
-    cout << endl << "BlockChain::hashMatchesDifficulty" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   string hashInBinary = hexToBinary(hash);
   int n = hashInBinary.length();
   char charArray[n+1];
@@ -530,9 +558,10 @@ bool BlockChain::hashMatchesDifficulty(string hash, int difficulty){
 
 /*Controllo della validità dell'hash e del rispetto della difficoltà minima (proof of work)*/
 bool BlockChain::hasValidHash(Block block){
-  if(debug == 1){
-    cout << endl << "BlockChain::hasValidHash" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   if (!hashMatchesBlockContent(block)) {
       cout << "ERRORE (hasValidHash): Hash non valido:" << endl << block.hash << endl;
       return false;
@@ -545,9 +574,10 @@ bool BlockChain::hasValidHash(Block block){
 
 /*Validazione della struttura e della correttezza logica del blocco*/
 bool BlockChain::isValidNewBlock(Block newBlock, Block previousBlock){
-  if(debug == 1){
-    cout << endl << "BlockChain::isValidNewBlock" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   if (!isValidBlockStructure(newBlock)) { //Validazione struttura
     cout << "invalid block structure: " <<  newBlock.toString();
     return false;
@@ -574,9 +604,10 @@ bool BlockChain::isValidNewBlock(Block newBlock, Block previousBlock){
 /*Verifica la validità della blockchain ricevutaa, ritorna la lista aggiornata degli
 output non spesi se questa è valida*/
 vector<UnspentTxOut> BlockChain::isValidChain(list<Block> blockchainToValidate) {
-  if(debug == 1){
-    cout << endl << "BlockChain::isValidChain" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   vector<UnspentTxOut> aUnspentTxOuts;
   list<Block>::iterator it1;
 
@@ -608,9 +639,10 @@ vector<UnspentTxOut> BlockChain::isValidChain(list<Block> blockchainToValidate) 
 
 /*Aggiunta di un blocco alla blockchain*/
 bool BlockChain::addBlockToChain(Block newBlock) {
-  if(debug == 1){
-    cout << endl << "BlockChain::addBlockToChain" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   //Controllo validità del blocco
   if(isValidNewBlock(newBlock, getLatestBlock())) {
     vector<UnspentTxOut> ret;
@@ -643,9 +675,10 @@ bool BlockChain::addBlockToChain(Block newBlock) {
 valida ed ha una difficoltà complessiva maggiore) si ricorda infatti che non
 è valida la chain più lunga ma quella con la difficoltà cumulativa maggiore*/
 void BlockChain::replaceChain(list<Block> newBlocks) {
-  if(debug == 1){
-    cout << endl << "BlockChain::replaceChain" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   vector<UnspentTxOut> aUnspentTxOuts;
   try{
     aUnspentTxOuts = isValidChain(newBlocks);
@@ -684,9 +717,10 @@ void BlockChain::replaceChain(list<Block> newBlocks) {
 /*Gestione per la ricezione di una nuova transazione, questa deve essere
 aggiunta al transaction pool*/
 void BlockChain::handleReceivedTransaction(Transaction transaction) {
-  if(debug == 1){
-    cout << endl << "BlockChain::handleReceivedTransaction" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   try{
     TransactionPool::getInstance().addToTransactionPool(transaction, getUnspentTxOuts());
   }catch(const char* msg){
@@ -699,9 +733,10 @@ void BlockChain::handleReceivedTransaction(Transaction transaction) {
 /*Salva in un file le statistiche della blockchain (numero di blocchi,
 di transazioni e di coin)*/
 void BlockChain::saveBlockchainStats() {
-  if(debug == 1){
-    cout << endl << "BlockChain::saveBlockchainStats" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   list<Block>::iterator it;
   int transactionNumber = 0;
   vector<UnspentTxOut>::iterator it2;
@@ -735,9 +770,10 @@ void BlockChain::saveBlockchainStats() {
 
 /*Elimina i file delle statistiche se esistono */
 void BlockChain::initStatFiles() {
-  if(debug == 1){
-    cout << endl << "BlockChain::initStatFiles" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   if (FILE* file = fopen("blockchainstats.txt", "r")) {
     fclose(file);
     remove("blockchainstats.txt");

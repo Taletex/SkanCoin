@@ -4,9 +4,10 @@ using namespace std;
 
 /*Carica la chiave (pubblica o privata) dall'apposito file*/
 string loadKey(bool isPrivate){
-  if(debug == 1){
-    cout << endl << "Wallet - loadKey" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   string location;
   string key;
   if(isPrivate == false){
@@ -27,9 +28,10 @@ string loadKey(bool isPrivate){
 
 /*Salvataggio della chiave (pubblica o privata) nell'apposito file*/
 void saveKey(string key, bool isPrivate){
-  if(debug == 1){
-    cout << endl << "Wallet - saveKey" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   string location;
   if(isPrivate == false){
     location = publicKeyLocation;
@@ -57,9 +59,10 @@ dell'array, utilizzando il punto come separatore (es: 33.243.453.334. ....)*/
 
 /*Conversione array di byte -> stringa*/
 string stringFromByteArray(uint8_t *array, int len){
-  if(debug == 1){
-    cout << endl << "Wallet - stringFromByteArray" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   string ret = "";
   for (int a = 0; a < len; a++) {
     if(a != 0){
@@ -72,9 +75,10 @@ string stringFromByteArray(uint8_t *array, int len){
 
 /*Conversione stringa -> array di byte*/
 void byteArrayFromString(string str, uint8_t *dest){
-  if(debug == 1){
-    cout << endl << "Wallet - byteArrayFromString" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   stringstream tempstream(str);
   string segment;
   int x;
@@ -88,9 +92,10 @@ void byteArrayFromString(string str, uint8_t *dest){
 
 /*Legge la chiave privata del nodo dal file*/
 string getPrivateFromWallet(){
-  if(debug == 1){
-    cout << endl << "Wallet - getPrivateFromWallet" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   try{
     return loadKey(true);
   }catch(const char* msg){
@@ -102,9 +107,10 @@ string getPrivateFromWallet(){
 
 /*Legge la chiave pubblica del nodo dal file*/
 string getPublicFromWallet(){
-  if(debug == 1){
-    cout << endl << "Wallet - getPublicFromWallet" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   try{
     return loadKey(false);
   }catch(const char* msg){
@@ -116,9 +122,10 @@ string getPublicFromWallet(){
 
 /*Generazione di una nuova coppia di chiavi e salvataggio negi appositi file*/
 void generateKeys(){
-  if(debug == 1){
-    cout << endl << "Wallet - generateKeys" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   uint8_t p_publicKey[ECC_BYTES+1];
   uint8_t p_privateKey[ECC_BYTES];
   int count = 0;
@@ -148,9 +155,10 @@ void generateKeys(){
 /*Inizializzazione del wallet (chiave privata), se il file non esiste si
 genera una nuova chiave e si salva su file*/
 void initWallet(){
-  if(debug == 1){
-    cout << endl << "Wallet - initWallet" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   //controllo se esiste il file con la chiave privata
   if (FILE* file = fopen(privateKeyLocation.c_str(), "r")) {
     fclose(file);
@@ -171,9 +179,10 @@ void initWallet(){
 
 /*Eliminazione del wallet (file contenenti le chiavi)*/
 void deleteWallet(){
-  if(debug == 1){
-    cout << endl << "Wallet - deleteWallet" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   if (FILE* file = fopen(privateKeyLocation.c_str(), "r")) {
     fclose(file);
 
@@ -189,9 +198,10 @@ void deleteWallet(){
 
 /*Ritorna la lista degli output non spesi appartenenti ad un certo indirizzo (wallet)*/
 vector<UnspentTxOut> findUnspentTxOutsOfAddress(string ownerAddress, vector<UnspentTxOut> unspentTxOuts){
-  if(debug == 1){
-    cout << endl << "Wallet - findUnspentTxOutsOfAddress" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   vector<UnspentTxOut> res;
   //Per fare una copia del vettore faccio solo una allocazione per avere migliori prestazioni
   res.reserve(res.size() + unspentTxOuts.size());
@@ -210,9 +220,10 @@ vector<UnspentTxOut> findUnspentTxOutsOfAddress(string ownerAddress, vector<Unsp
 
 /*Calcolo del totale degli output non spesi appartenenti ad un certo indirizzo*/
 float getBalance(string address, vector<UnspentTxOut> unspentTxOuts){
-  if(debug == 1){
-    cout << endl << "Wallet - getBalance" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   float total = 0;
   vector<UnspentTxOut> unspentTxOutsOfAddress = findUnspentTxOutsOfAddress(address, unspentTxOuts);
   vector<UnspentTxOut>::iterator it;
@@ -224,9 +235,10 @@ float getBalance(string address, vector<UnspentTxOut> unspentTxOuts){
 
 /*Calcola il totale data una lista di output non spesi*/
 float getTotalFromOutputVector(vector<UnspentTxOut> unspentTxOuts){
-  if(debug == 1){
-    cout << endl << "Wallet - getTotalFromOutputVector" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   float total = 0;
   vector<UnspentTxOut>::iterator it;
   for(it = unspentTxOuts.begin(); it != unspentTxOuts.end(); ++it){
@@ -241,9 +253,10 @@ Viene ritornata la lista degli output non spesi che saranno utilizzati,
 inoltre si assegna il valore di un puntatore contenente il valore superfluo
 che dovra essere indirizzato al mittente stesso*/
 vector<UnspentTxOut> findTxOutsForAmount(float amount, vector<UnspentTxOut> myUnspentTxOuts, float *leftOverAmount){
-  if(debug == 1){
-    cout << endl << "Wallet - findTxOutsForAmount" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   float currentAmount = 0;
   vector<UnspentTxOut> includedUnspentTxOuts;
   vector<UnspentTxOut>::iterator it;
@@ -261,9 +274,10 @@ vector<UnspentTxOut> findTxOutsForAmount(float amount, vector<UnspentTxOut> myUn
 /*Generazione degli output di transazione dati l'importo e la
 differenza che deve tornare al mittente*/
 vector<TxOut> createTxOuts(string receiverAddress, string myAddress, float amount, float leftOverAmount){
-  if(debug == 1){
-    cout << endl << "Wallet - createTxOuts" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   TxOut txOut1 = TxOut(receiverAddress, amount);
   if (leftOverAmount == 0) {
       return {txOut1};
@@ -276,9 +290,10 @@ vector<TxOut> createTxOuts(string receiverAddress, string myAddress, float amoun
 /*Verifica se l'output non speso (1° parametro) è referenziato da un
 input nella lista txIns (2° parametro)*/
 bool isReferencedUnspentTxOut(UnspentTxOut uTxOut, vector<TxIn> txIns){
-  if(debug == 1){
-    cout << endl << "Wallet - isReferencedUnspentTxOut" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   vector<TxIn>::iterator it;
   for(it = txIns.begin(); it != txIns.end(); ++it){
     if(it->txOutIndex == uTxOut.txOutIndex && it->txOutId == uTxOut.txOutId){
@@ -291,9 +306,10 @@ bool isReferencedUnspentTxOut(UnspentTxOut uTxOut, vector<TxIn> txIns){
 /*Ritorna la lista di tutti gli output non spesi, senza quelli che sono
 referenziati da un qualche input in una delle transazioni presenti nella transaction pool*/
 vector<UnspentTxOut> filterTxPoolTxs(vector<UnspentTxOut> unspentTxOuts, vector<Transaction> transactionPool){
-  if(debug == 1){
-    cout << endl << "Wallet - filterTxPoolTxs" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   vector<TxIn> txIns;
 
   vector<Transaction>::iterator it;
@@ -324,9 +340,10 @@ vector<UnspentTxOut> filterTxPoolTxs(vector<UnspentTxOut> unspentTxOuts, vector<
 /*Creazione di un input di transazione a partire da un output non speso
 a cui questo farà riferimento*/
 TxIn toUnsignedTxIn(UnspentTxOut unspentTxOut){
-  if(debug == 1){
-    cout << endl << "Wallet - toUnsignedTxIn" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   TxIn txIn = TxIn();
   txIn.txOutId = unspentTxOut.txOutId;
   txIn.txOutIndex = unspentTxOut.txOutIndex;
@@ -335,9 +352,10 @@ TxIn toUnsignedTxIn(UnspentTxOut unspentTxOut){
 
 /*Generazione di una nuova transazione*/
 Transaction createTransaction(string receiverAddress, float amount, string privateKey, vector<UnspentTxOut> unspentTxOuts, vector<Transaction> txPool){
-  if(debug == 1){
-    cout << endl << "Wallet - createTransaction" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   //Ottengo la lista degli output non spesi per il mio wallet
   string myAddress = getPublicFromWallet();
   vector<UnspentTxOut> myUnspentTxOutsA = findUnspentTxOutsOfAddress(myAddress, unspentTxOuts);
@@ -390,9 +408,10 @@ Transaction createTransaction(string receiverAddress, float amount, string priva
 permettere di esporre la rest per effettuare più movimenti dallo stesso wallet
 in un solo blocco senza passare dal transaction pool*/
 Transaction createTransactionWithMultipleOutputs (std::vector<TxOut> txOuts, std::string privateKey, std::vector<UnspentTxOut> unspentTxOuts, std::vector<Transaction> txPool){
-  if(debug == 1){
-    cout << endl << "Wallet - createTransactionWithMultipleOutputs" << endl;
-  }
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+
   //Ottengo la lista degli output non spesi per il mio wallet
   string myAddress = getPublicFromWallet();
   vector<UnspentTxOut> myUnspentTxOutsA = findUnspentTxOutsOfAddress(myAddress, unspentTxOuts);

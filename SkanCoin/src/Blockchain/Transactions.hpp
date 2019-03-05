@@ -6,6 +6,7 @@
 #include <typeinfo>
 #include <regex>
 #include "picosha2.h"
+#include "../debug.hpp"
 
 class UnspentTxOut {
   public:

@@ -8,6 +8,7 @@
 #include "../HttpServer/HttpServer.hpp"
 #include "document.h"
 #include "easywsclient.hpp"
+#include "../debug.hpp"
 
 //Possible types of messages exchanged between the peers
 enum MessageType {

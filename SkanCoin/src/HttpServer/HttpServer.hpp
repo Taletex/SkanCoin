@@ -10,6 +10,7 @@
 #include "../Blockchain/TransactionPool.hpp"
 #include "../Blockchain/Blockchain.hpp"
 #include "../P2P/Peer.hpp"
+#include "../debug.hpp"
 
 void initHttpServer(int port);
 

@@ -18,3 +18,6 @@ include_directories(./libs/crow ./libs/picosha2 ./libs/easyEcc ./libs/rapidjson 
 
 add_executable(skancoin src/Main.cpp)
 target_link_libraries(skancoin ${CMAKE_THREAD_LIBS_INIT})
+
+# variables
+# TODO: set(ENV{DEBUG_FLAG} 1)		# 1 to enable debug info, 0 to disable them
