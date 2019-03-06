@@ -31,6 +31,7 @@
 *.app
 
 SkanCoin/build
-SkanCoin/NodeWallet/private_key
+SkanCoin/build2
 SkanCoin/src/P2P/p2p.html
-
+SkanCoin/.idea
+SkanCoin/cmake-build-debug/
