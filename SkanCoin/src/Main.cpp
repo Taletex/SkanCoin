@@ -11,6 +11,7 @@
 #include "easywsclient.hpp"
 #include "easywsclient.cpp"
 #include "ecc.h"
+#include "config.hpp"
 
 int debug = 1;
 
@@ -34,6 +35,10 @@ void startP2PClient(){
 }
 
 int main(){
+  cout << "######################################################" << endl;
+  cout << "############### " << PROJECT_NAME << " - version " << VERSION_NUMBER << " ###############" << endl;
+  cout << "######################################################" << endl << endl;
+
   try{
     cout <<"Starting node..." << endl << "Generating wallet..." << endl;
     initWallet();

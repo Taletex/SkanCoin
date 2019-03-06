@@ -5,12 +5,12 @@
 #include <sstream>
 #include "document.h"
 #include "crow.h"
+#include "config.hpp"
 #include "../Blockchain/Transactions.hpp"
 #include "../Blockchain/Wallet.hpp"
 #include "../Blockchain/TransactionPool.hpp"
 #include "../Blockchain/Blockchain.hpp"
 #include "../P2P/Peer.hpp"
-#include "../debug.hpp"
 
 void initHttpServer(int port);
 

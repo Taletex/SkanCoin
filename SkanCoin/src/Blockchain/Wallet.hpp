@@ -5,7 +5,7 @@
 #include <string>
 #include <fstream>
 #include <streambuf>
-#include "../debug.hpp"
+#include "config.hpp"
 
 //path del file contenente la chiave privata del nodo
 const std::string privateKeyLocation = "private_key";

@@ -8,7 +8,7 @@
 #include "Wallet.hpp"
 #include "picosha2.h"
 #include "TransactionPool.hpp"
-#include "../debug.hpp"
+#include "config.hpp"
 
 class Block {
   public:

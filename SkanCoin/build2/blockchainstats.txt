@@ -1,1 +1,0 @@
-{"time": "3:15:29 6/3/2019", "timestamp": 53, "blocks": 2, "transactions": 2, "coins": 20}

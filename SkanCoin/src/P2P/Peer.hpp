@@ -5,10 +5,10 @@
 #include <mutex>
 #include <thread>
 #include <unordered_set>
-#include "../HttpServer/HttpServer.hpp"
 #include "document.h"
 #include "easywsclient.hpp"
-#include "../debug.hpp"
+#include "config.hpp"
+#include "../HttpServer/HttpServer.hpp"
 
 //Possible types of messages exchanged between the peers
 enum MessageType {

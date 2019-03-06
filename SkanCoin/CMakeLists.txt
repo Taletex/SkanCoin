@@ -1,9 +1,12 @@
-# cmake version to be used
+# CMAKE VERSION TO BE USED
 cmake_minimum_required( VERSION 3.0 )
 
-# project name
+
+# PROJECT NAME
 project( SkanCoin )
 
+
+# PACKAGES AND LIBRARIES #
 find_package(Threads)
 find_package(OpenSSL)
 
@@ -19,5 +22,15 @@ include_directories(./libs/crow ./libs/picosha2 ./libs/easyEcc ./libs/rapidjson 
 add_executable(skancoin src/Main.cpp)
 target_link_libraries(skancoin ${CMAKE_THREAD_LIBS_INIT})
 
-# variables
-# TODO: set(ENV{DEBUG_FLAG} 1)		# 1 to enable debug info, 0 to disable them
+
+# PASSING VARIABLES TO C++ SOURCE FILES
+set (PROJECT_NAME "SkanCoin")
+set (VERSION_NUMBER 1.0)
+option(DEBUG_FLAG "Enable debug info on stdout" 1)	# set to 1 to enable debug info on stdout, 0 to disabled it
+
+configure_file (																		# configure a header file to pass some of the CMake settings to the source code
+  "${PROJECT_SOURCE_DIR}/config.hpp.in"
+  "${PROJECT_BINARY_DIR}/config.hpp"
+  )
+
+include_directories("${PROJECT_BINARY_DIR}")				# add the binary tree to the search path for include files so that we will find debug.hpp

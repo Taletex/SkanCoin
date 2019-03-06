@@ -1,0 +1,15 @@
+/* CMAKE CONFIGURATION FILE */
+#ifndef __CONFIGURATION_DEFINITION__
+#define __CONFIGURATION_DEFINITION__
+
+/* Version and project name */
+#define PROJECT_NAME "@PROJECT_NAME@"
+#define VERSION_NUMBER "@VERSION_NUMBER@"
+
+/* Debug Mode*/
+#define DEBUG_FLAG @DEBUG_FLAG@
+#define DEBUG_INFO(msg) \
+    fprintf(stdout, "> Debug: %s in file %s riga %d\n", __func__, __FILE__, __LINE__); \
+    if(msg != "") fprintf(stdout, "  %s\n", msg);
+
+#endif
