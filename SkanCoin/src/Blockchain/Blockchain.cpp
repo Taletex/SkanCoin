@@ -45,7 +45,7 @@ BlockChain::BlockChain(){
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
-  
+
   Block genesisBlock = getGenesisBlock();
   blockchain = {genesisBlock};
   try{
@@ -618,12 +618,16 @@ vector<UnspentTxOut> BlockChain::isValidChain(list<Block> blockchainToValidate) 
   }
 
   //Controllo validità di ogni blocco della blockchain (struttura e transazioni contenute)
-  for(it1 = blockchainToValidate.begin(); it1 != blockchainToValidate.end();) {
-    if(it1 != blockchainToValidate.begin() && !isValidNewBlock(*it1, *(--it1))) {
-      cout << endl;
-      throw "EXCEPTION (isValidChain): la blockchain ricevuta contiene blocchi non validi!";
+  for(it1 = blockchainToValidate.begin(); it1 != blockchainToValidate.end(); ++it1) {
+    /*
+    TODO: fix, in questo modo da errore, sicuramente è sbagliata la gestione dell'iteratore
+    if(it1 != blockchainToValidate.begin()) {
+      if(!isValidNewBlock(*it1, *(--it1))){
+        cout << endl;
+        throw "EXCEPTION (isValidChain): la blockchain ricevuta contiene blocchi non validi!";
+      }
     }
-    it1++;
+    ++it1;*/
     try{
       //Check e aggiornamento lista output non spesi in base alle
       //transazioni presenti nel blocco
@@ -688,10 +692,20 @@ void BlockChain::replaceChain(list<Block> newBlocks) {
     cout << endl;
     throw "EXCEPTION (replaceChain): La blockchain ricevuta non è valida!";
   }
-  /*Confronto della difficoltà cumulativa della blockchain attuale con quella
-  ricevuta, viene effettuata una conversione da liste a vettori per migliorare
-  le prestazioni del calcolo della difficoltà*/
-  if(getAccumulatedDifficulty({ begin(newBlocks), end(newBlocks) }) > getAccumulatedDifficulty({getBlockchain().begin(), getBlockchain().end()})) {
+
+  int difficultyApproved = 0;
+  if(getBlockchain().size() == 1){
+    difficultyApproved = 1;
+  }else{
+    /*Confronto della difficoltà cumulativa della blockchain attuale con quella
+    ricevuta, viene effettuata una conversione da liste a vettori per migliorare
+    le prestazioni del calcolo della difficoltà*/
+    if(getAccumulatedDifficulty({ begin(newBlocks), end(newBlocks) }) > getAccumulatedDifficulty({getBlockchain().begin(), getBlockchain().end()})) {
+      difficultyApproved = 1;
+    }
+  }
+
+  if(difficultyApproved == 1){
     cout << "La blockchain ricevuta è corretta! Verrà effettuata la sostituzione della blockchain." << endl;
     BlockChain::blockchain = newBlocks; //Sostituzione blockchain
     setUnspentTxOuts(aUnspentTxOuts); //Aggiornamento output non spesi

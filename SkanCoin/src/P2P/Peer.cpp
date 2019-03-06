@@ -244,8 +244,11 @@ void Peer::connectToPeers(std::string peer){
   ws->send(queryChainLengthMsg());
   openedConnections.push_back(ws);
   connectionsMtx.unlock();
-  //Viene triggerata la diffusione del transaction pool di ogni nodo
-  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+  /*Si attende un certo periodo di tempo prima di richiedere la transactionpool
+   in quanto bisogna attendere che termini il protocollo di aggiornamento della blockchain*/
+   //TODO: settare un timeout, non bloccare il thread, se no è inutile aspettare
+  std::this_thread::sleep_for(std::chrono::milliseconds(6000));
   connectionsMtx.lock();
   broadcast(queryTransactionPoolMsg());
   connectionsMtx.unlock();
@@ -280,6 +283,9 @@ void Peer::handleBlockchainResponse(list<Block> receivedBlocks){
       return;
   }
   Block latestBlockHeld = BlockChain::getInstance().getLatestBlock();
+  //TODO: gestire secondo la accumulateddifficulty e non in base alla lunghezza!
+  //NOTE: in replacechain viene già controllato che la difficoltàdei nuovi blocchi
+  //sia superiore, ma qui la sostituzione viene bloccata anche in quel caso se la BC è più corta (sbagliato)
   if (latestBlockReceived.index > latestBlockHeld.index) {
     //La blockchain locale è probabilmente obsoleta
     if (latestBlockHeld.hash == latestBlockReceived.previousHash) {
@@ -296,10 +302,18 @@ void Peer::handleBlockchainResponse(list<Block> receivedBlocks){
        a quella ricevuta, si effettua la sostituzione*/
       BlockChain::getInstance().replaceChain(receivedBlocks);
     }
+  }else if(latestBlockReceived.index == latestBlockHeld.index && latestBlockHeld.timestamp > latestBlockReceived.timestamp){
+    /*Effettuiamo la sostituzione della blockchain anche se la lunghezza è
+    uguale ma l'ultimo blocco ha timestamp minore*/
+    if (receivedBlocks.size() == 1 && latestBlockReceived.index!=0) {
+      broadcast(queryAllMsg());
+    } else {
+      BlockChain::getInstance().replaceChain(receivedBlocks);
+    }
   }
 
-    /*Se si è ricevuta una blockchain che non è più lunga di quella locale non
-    è necessario fare nulla*/
+    /*Se si è ricevuta una blockchain più corta o di pari lunghezza ma
+    con timestamp maggiore di quella locale non è necessario fare nulla*/
 
 }
 
@@ -318,7 +332,9 @@ void Peer::initP2PServer(int port){
       receivedConnections.insert(&connection);
       connection.send_text(queryChainLengthMsg());
       connectionsMtx.unlock();
-      //
+      /*Si attende un certo periodo di tempo prima di richiedere la transactionpool
+       in quanto bisogna attendere che termini il protocollo di aggiornamento della blockchain*/
+       //TODO: settare un timeout, non bloccare il thread, se no è inutile aspettare
       std::this_thread::sleep_for(std::chrono::milliseconds(1000));
       connectionsMtx.lock();
       broadcast(queryTransactionPoolMsg());

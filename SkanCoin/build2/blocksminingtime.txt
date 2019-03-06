@@ -1,0 +1,1 @@
+{"block": 1, "miningtime": 1.067}

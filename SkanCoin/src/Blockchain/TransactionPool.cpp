@@ -57,7 +57,6 @@ bool TransactionPool::addToTransactionPool(Transaction tx, vector<UnspentTxOut> 
 }
 
 /* Aggiorna la transaction pool eliminando le transazioni non valide*/
-// TODO: ho cambiato la logica. E' da controllare se non si spascia niente (anche se sembra funzionare tutto!)
 void TransactionPool::updateTransactionPool(vector<UnspentTxOut> unspentTxOuts) {
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
@@ -91,7 +90,6 @@ void TransactionPool::deleteStat(string transactionId) {
   for(it = stats.begin(); it != stats.end(); ++it) {
     cout << "IN CICLO";
     if((it->transactionId.compare(transactionId))==0){
-      cout << "CIAOOOCIAOOOCIAOOOCIAOOOCIAOOOCIAOOOCIAOOOCIAOOOCIAOOOCIAOOOCIAOOOCIAOOO";
       stats.erase(it);
       return;
     }
@@ -195,6 +193,6 @@ string TransactionStat::getDiffTimeString(){
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
-  
+
   return "{\"transactionId\": " + this->transactionId + ", \"millisWaitTime\": " + to_string(this->getDiffTime()) + "}";
 }

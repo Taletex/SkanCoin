@@ -1,0 +1,51 @@
+Determining if the pthread_create exist failed with the following output:
+Change Dir: /home/orazio/git/SkanCoin/SkanCoin/build2/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_c24bd/fast"
+/usr/bin/make -f CMakeFiles/cmTC_c24bd.dir/build.make CMakeFiles/cmTC_c24bd.dir/build
+make[1]: ingresso nella directory "/home/orazio/git/SkanCoin/SkanCoin/build2/CMakeFiles/CMakeTmp"
+Building C object CMakeFiles/cmTC_c24bd.dir/CheckSymbolExists.c.o
+/usr/bin/cc    -o CMakeFiles/cmTC_c24bd.dir/CheckSymbolExists.c.o   -c /home/orazio/git/SkanCoin/SkanCoin/build2/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_c24bd
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c24bd.dir/link.txt --verbose=1
+/usr/bin/cc      -rdynamic CMakeFiles/cmTC_c24bd.dir/CheckSymbolExists.c.o  -o cmTC_c24bd 
+/usr/bin/ld: CMakeFiles/cmTC_c24bd.dir/CheckSymbolExists.c.o: in function `main':
+CheckSymbolExists.c:(.text+0x1b): undefined reference to `pthread_create'
+collect2: error: ld returned 1 exit status
+make[1]: *** [CMakeFiles/cmTC_c24bd.dir/build.make:87: cmTC_c24bd] Error 1
+make[1]: uscita dalla directory "/home/orazio/git/SkanCoin/SkanCoin/build2/CMakeFiles/CMakeTmp"
+make: *** [Makefile:121: cmTC_c24bd/fast] Error 2
+
+File /home/orazio/git/SkanCoin/SkanCoin/build2/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <pthread.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef pthread_create
+  return ((int*)(&pthread_create))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Determining if the function pthread_create exists in the pthreads failed with the following output:
+Change Dir: /home/orazio/git/SkanCoin/SkanCoin/build2/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_146c6/fast"
+/usr/bin/make -f CMakeFiles/cmTC_146c6.dir/build.make CMakeFiles/cmTC_146c6.dir/build
+make[1]: ingresso nella directory "/home/orazio/git/SkanCoin/SkanCoin/build2/CMakeFiles/CMakeTmp"
+Building C object CMakeFiles/cmTC_146c6.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_146c6.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.13/Modules/CheckFunctionExists.c
+Linking C executable cmTC_146c6
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_146c6.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=pthread_create    -rdynamic CMakeFiles/cmTC_146c6.dir/CheckFunctionExists.c.o  -o cmTC_146c6 -lpthreads 
+/usr/bin/ld: impossibile trovare -lpthreads
+collect2: error: ld returned 1 exit status
+make[1]: *** [CMakeFiles/cmTC_146c6.dir/build.make:87: cmTC_146c6] Error 1
+make[1]: uscita dalla directory "/home/orazio/git/SkanCoin/SkanCoin/build2/CMakeFiles/CMakeTmp"
+make: *** [Makefile:121: cmTC_146c6/fast] Error 2
+
+
