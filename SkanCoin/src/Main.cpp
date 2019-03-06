@@ -9,7 +9,6 @@
 #include "HttpServer/HttpServer.hpp"
 #include "P2P/Peer.hpp"
 #include "easywsclient.hpp"
-#include "easywsclient.cpp"
 #include "ecc.h"
 #include "config.hpp"
 
@@ -22,6 +21,7 @@ int debug = 1;
 #include "HttpServer/HttpServer.cpp"
 #include "Blockchain/Wallet.cpp"
 #include "P2P/Peer.cpp"
+#include "easywsclient.cpp"
 #include "ecc.c"
 
 using namespace std;

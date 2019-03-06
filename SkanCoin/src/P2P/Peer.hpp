@@ -10,7 +10,7 @@
 #include "config.hpp"
 #include "../HttpServer/HttpServer.hpp"
 
-//Possible types of messages exchanged between the peers
+/*I tipi di messaggi che i peer possono scambiarsi*/
 enum MessageType {
     QUERY_LATEST = 0,
     QUERY_ALL = 1,
@@ -20,7 +20,8 @@ enum MessageType {
     TRANSACTION_POOL_STATS = 5
 };
 
-//This class models a peer message and contains a toString method used to send it in a websocket
+/*Questa classe modella un messaggio di un peer ed ha un metodo toString ù
+che permette di inviarlo su una web socket*/
 class Message {
   public:
     MessageType type;

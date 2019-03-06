@@ -294,7 +294,6 @@ Block BlockChain::generateRawNextBlock(vector<Transaction> blockData){
       cout << endl;
       throw "EXCEPTION (generateRawNextBlock): Errore durante l'inserimento del nuovo blocco nella BlockChain!";
   }
-  return newBlock;
 }
 
 /*Ritorna la lista degli output non spesi appartenenti al nodo*/
@@ -610,6 +609,7 @@ vector<UnspentTxOut> BlockChain::isValidChain(list<Block> blockchainToValidate) 
 
   vector<UnspentTxOut> aUnspentTxOuts;
   list<Block>::iterator it1;
+  list<Block>::iterator it2;
 
   //Validità del blocco di genesi
   if(blockchainToValidate.front().isEqual(getGenesisBlock())) {
@@ -619,15 +619,17 @@ vector<UnspentTxOut> BlockChain::isValidChain(list<Block> blockchainToValidate) 
 
   //Controllo validità di ogni blocco della blockchain (struttura e transazioni contenute)
   for(it1 = blockchainToValidate.begin(); it1 != blockchainToValidate.end(); ++it1) {
-    /*
-    TODO: fix, in questo modo da errore, sicuramente è sbagliata la gestione dell'iteratore
+
     if(it1 != blockchainToValidate.begin()) {
-      if(!isValidNewBlock(*it1, *(--it1))){
+      it2 = it1;
+      it2--;
+      if(!isValidNewBlock(*it1, *it2)){
         cout << endl;
         throw "EXCEPTION (isValidChain): la blockchain ricevuta contiene blocchi non validi!";
       }
     }
-    ++it1;*/
+
+
     try{
       //Check e aggiornamento lista output non spesi in base alle
       //transazioni presenti nel blocco
@@ -694,13 +696,18 @@ void BlockChain::replaceChain(list<Block> newBlocks) {
   }
 
   int difficultyApproved = 0;
-  if(getBlockchain().size() == 1){
-    difficultyApproved = 1;
+
+
+  if(getBlockchain().size() == 1 && newBlocks.size() == 1 && getBlockchain().back().timestamp > newBlocks.back().timestamp){
+      //Si sta facendo un confronto tra due blocchi di genesi, si seleziona quello con timestamp minore
+      difficultyApproved = 1;
   }else{
-    /*Confronto della difficoltà cumulativa della blockchain attuale con quella
-    ricevuta, viene effettuata una conversione da liste a vettori per migliorare
-    le prestazioni del calcolo della difficoltà*/
-    if(getAccumulatedDifficulty({ begin(newBlocks), end(newBlocks) }) > getAccumulatedDifficulty({getBlockchain().begin(), getBlockchain().end()})) {
+    /*Confronto della difficoltà cumulativa della blockchain attuale con quella ricevuta, a parità di difficoltà si
+     * seleziona la blockchain per cui l'ultimo blocco ha timestamp mionre. Viene effettuata
+     * una conversione da liste a vettori per migliorare le prestazioni del calcolo della difficoltà*/
+    int newDiff = getAccumulatedDifficulty({ begin(newBlocks), end(newBlocks) });
+    int localDiff = getAccumulatedDifficulty({begin(blockchain), end(blockchain)});
+    if(newDiff > localDiff || (newDiff == localDiff && getBlockchain().back().timestamp > newBlocks.back().timestamp)) {
       difficultyApproved = 1;
     }
   }
