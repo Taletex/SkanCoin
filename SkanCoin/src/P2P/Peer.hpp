@@ -26,9 +26,10 @@ class Message {
   public:
     MessageType type;
     std::string data;
-    std::string stat;
+    int index;
+    double duration;
     Message(MessageType type, std::string data);
-    Message(MessageType type, std::string data, std::string stat);
+    Message(MessageType type, std::string data, int index, double duration);
     std::string toString();
 };
 
@@ -65,7 +66,7 @@ class Peer {
     std::string queryAllMsg();
     std::string queryTransactionPoolMsg();
     std::string responseChainMsg();
-    std::string responseLatestMsg(std::string stat);
+    std::string responseLatestMsg(int index, double duration);
     std::string responseTransactionPoolMsg();
     std::string txPoolStatsMessage(std::vector<std::string> stats);
 
@@ -74,8 +75,9 @@ class Peer {
 
     /*Metodi per il broadcast dei messaggi*/
     void broadCastTransactionPool();
-    void broadcastLatest(std::string stat);
+    void broadcastLatest(int index, double duration);
     void broadcastTxPoolStat(std::vector<std::string>);
+    void broadcastTxPoolQuery();
 
     /*Avvio del polling del client sulle socket aperte*/
     void startClientPoll();

@@ -88,7 +88,6 @@ void TransactionPool::deleteStat(string transactionId) {
 
   list<TransactionStat>::iterator it;
   for(it = stats.begin(); it != stats.end(); ++it) {
-    cout << "IN CICLO";
     if((it->transactionId.compare(transactionId))==0){
       stats.erase(it);
       return;

@@ -123,7 +123,7 @@ class BlockChain {
 
     /*Questo metodo effettua il mining di un nuovo blocco, viengono generati
     (e scartati) nuovi blocchi finche l'hash ottenuto non rispetta la difficoltà richiesta*/
-    Block findBlock(int index, std::string previousHash, time_t timestamp, std::vector<Transaction> data, int difficulty);
+    Block findBlock(int index, std::string previousHash, time_t timestamp, std::vector<Transaction> data, int difficulty, double *time);
 
     /*Calcolo della complessità del mining del prossimo blocco (numero di
     zeri iniziali necessari nell'hash) della blockchain data*/

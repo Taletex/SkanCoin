@@ -105,7 +105,10 @@ string Transaction::toString(){
     ret = ret + it->toString();
   }
 
-  ret = ret + "],\"txOuts\": [";
+  ret = ret + "]";
+  if(txOuts.size()>0){
+    ret = ret + ",\"txOuts\": [";
+  }
   vector<TxOut>::iterator it2;
   for(it2 = txOuts.begin(); it2 != txOuts.end(); ++it2){
     if(it2 != txOuts.begin()){
@@ -113,8 +116,10 @@ string Transaction::toString(){
     }
     ret = ret + it2->toString();
   }
-
-  ret = ret + "]}";
+  if(txOuts.size()>0){
+    ret = ret + "]";
+  }
+  ret = ret + "}";
   return  ret;
 }
 
