@@ -5,8 +5,8 @@ A simple criptocurrency written in C++
 
 - [References](#references)
 - [Screenshots](#screenshots)
-- [Requirements](#Requirements-(to-run-the-project))
-- [Dependencies](#Dependencies-(libraries-and-packages))
+- [Requirements](#Requirements)
+- [Dependencies](#Dependencies)
 - [Testing](#running-for-test)
 
 
@@ -26,7 +26,8 @@ References available (italian only) at:
 ![screenshot](screenshots/2.png)
 
 
-## Requirements (to run the project)
+## Requirements
+The application has the following requirements (needed to run the project)
 Note: this app was successfully tested on Ubuntu 18.04 and ArchLinux. The following links refers to Ubuntu 18.04. If you use a different Operative System, you have to search and download the proper software. Because of C++ App dependencies it's not possible to run this project on Windows or MacOS.
 - **C++ Application**:
   1. Cmake (yet installed on Ubuntu 18.04)
@@ -68,7 +69,8 @@ Note: this app was successfully tested on Ubuntu 18.04 and ArchLinux. The follow
 		install.packages("ggplot2")
 		install.packages("jsonlite")
 		```
-## Dependencies (libraries and packages)
+## Dependencies
+The application has the following dependencies (libraries and packages)
 - **C++ Application**:
   1. Crow https://github.com/ipkn/crow. Used for HTTP server and P2P server.
   2. Easywsclient https://github.com/dhbaird/easywsclient. Used for P2P client.
