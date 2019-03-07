@@ -103,11 +103,11 @@ cd SkanCoin
 mkdir build
 cd build
 export CXX=/usr/local/clang_7.0.1/bin/clang++
-cmake -DDEBUG_INFO=0 ..
+cmake -DDEBUG_FLAG=0 ..
 make
 ./skancoin
 ```
-If you want to enable debug informations on the terminal where the C++ application is running, you can write "-DDEBUG_INFO=1" instead of "-DDEBUG_INFO=0". This feature prints on stdout, every time a function is called, the called function name, and the file name and row number where it is placed.
+If you want to enable debug informations on the terminal where the C++ application is running, you can write "-DDEBUG_FLAG=1" instead of "-DDEBUG_FLAG=0". This feature prints on stdout, every time a function is called, the called function name, and the file name and row number where it is placed.
 
 #### 3 - Run the Web Application
 Open a new terminal in the folder where you have cloned the repository and write
