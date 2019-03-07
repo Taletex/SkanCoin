@@ -165,10 +165,7 @@ Message::Message(MessageType type, string data, int index, double duration){
 
 /*Rappresentazione in formato JSON dell'oggetto Message*/
 string Message::toString(){
-  #if DEBUG_FLAG == 1
-  DEBUG_INFO("");
-  #endif
-  return "{\"type\": " + to_string(type) + ", \"data\": " + data + ", \"index\": " + to_string(index) + ", \"duration\": " + to_string(duration) + "}";
+  return "{\"type\": " + to_string(type) + ", \"data\": " + data + ", \"stat\": \"" + stat + "\"}";
 }
 
 /* Questa funzione esegue il polling sulla lista delle connessioni aperte dal

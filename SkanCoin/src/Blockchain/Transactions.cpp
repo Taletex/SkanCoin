@@ -18,10 +18,6 @@ UnspentTxOut::UnspentTxOut(string txOutId, int txOutIndex, string address, float
 }
 
 string UnspentTxOut::toString(){
-  #if DEBUG_FLAG == 1
-  DEBUG_INFO("");
-  #endif
-
   return "{\"txOutId\": \"" + this->txOutId + "\", \"address\": \"" + this->address + "\", \"txOutIndex\": " + to_string(this->txOutIndex) + ", \"amount\": " + to_string(this->amount) + "}";
 }
 
@@ -54,10 +50,6 @@ bool TxIn::isEqual(TxIn other){
 }
 
 string TxIn::toString(){
-  #if DEBUG_FLAG == 1
-  DEBUG_INFO("");
-  #endif
-
   return "{\"txOutId\": \"" + txOutId + "\", \"signature\": \"" + signature + "\", \"txOutIndex\": " + to_string(txOutIndex) + "}";
 }
 
@@ -73,10 +65,6 @@ TxOut::TxOut(string address, float amount) {
 }
 
 string TxOut::toString(){
-  #if DEBUG_FLAG == 1
-  DEBUG_INFO("");
-  #endif
-
   return "{\"address\": \"" + address + "\", \"amount\": " + to_string(amount) + "}";
 }
 
@@ -92,10 +80,6 @@ Transaction::Transaction(string id, vector<TxIn> txIns, vector<TxOut> txOuts){
 }
 
 string Transaction::toString(){
-  #if DEBUG_FLAG == 1
-  DEBUG_INFO("");
-  #endif
-
   string ret = "{\"id\": \"" + this->id + "\",\"txIns\": [";
   vector<TxIn>::iterator it;
   for(it = txIns.begin(); it != txIns.end(); ++it){
