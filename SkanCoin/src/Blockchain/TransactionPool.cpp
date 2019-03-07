@@ -24,10 +24,6 @@ vector<Transaction> TransactionPool::getTransactionPool() {
 
 /*Rappresentazione in formato stringa del pool di transazioni*/
 string TransactionPool::toString(){
-  #if DEBUG_FLAG == 1
-  DEBUG_INFO("");
-  #endif
-
   string ret = "[";
   list<Transaction>::iterator it;
   for(it = unconfirmedTransactions.begin(); it != unconfirmedTransactions.end(); ++it){

@@ -17,10 +17,6 @@ Block::Block (int index, string hash, string previousHash, long timestamp, vecto
 }
 
 string Block::toString(){
-  #if DEBUG_FLAG == 1
-  DEBUG_INFO("");
-  #endif
-
   string ret = "{\"index\": " + to_string(index) + ", \"previousHash\": \"" + previousHash  + "\", \"timestamp\": " + to_string(timestamp) + ", \"hash\": \"" + hash + "\", \"difficulty\": " + to_string(difficulty)  + ", \"nonce\": " + to_string(nonce)   + ", \"data\": [";
   vector<Transaction>::iterator it;
   for(it = data.begin(); it != data.end(); ++it){
@@ -77,10 +73,6 @@ Block BlockChain::getGenesisBlock(){
 
 /*Rappresentazione in stringa della blockchain*/
 string BlockChain::toString(){
-  #if DEBUG_FLAG == 1
-  DEBUG_INFO("");
-  #endif
-
   string ret = "[";
   list<Block>::iterator it;
   for(it = blockchain.begin(); it != blockchain.end(); ++it){

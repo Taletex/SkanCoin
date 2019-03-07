@@ -158,10 +158,6 @@ Message::Message(MessageType type, string data, string stat){
 
 /*Rappresentazione in formato JSON dell'oggetto Message*/
 string Message::toString(){
-  #if DEBUG_FLAG == 1
-  DEBUG_INFO("");
-  #endif
-
   return "{\"type\": " + to_string(type) + ", \"data\": " + data + ", \"stat\": \"" + stat + "\"}";
 }
 
