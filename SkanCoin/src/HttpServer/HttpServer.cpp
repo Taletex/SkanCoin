@@ -182,8 +182,7 @@ void initHttpServer(int port){
         throw "Errore: non è stato possibile aprire il file per leggere il tempo di mining del blocco!";
       }
     }catch(const char* msg){
-      cout << msg << endl;
-      cout << endl;
+      cout << msg << endl << endl;
       ret = "{\"success\": false, \"message\": \"Errore durante l'apertura del file " + filename + ".txt\"" + "}";
     }
     return createResponse(ret, 200);
