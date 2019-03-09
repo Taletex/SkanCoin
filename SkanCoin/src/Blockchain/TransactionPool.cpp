@@ -190,5 +190,5 @@ string TransactionStat::getDiffTimeString(){
   DEBUG_INFO("");
   #endif
 
-  return "{\"transactionId\": \"" + this->transactionId + "\", \"millisWaitTime\": " + to_string(this->getDiffTime()) + "}";
+  return "{\"transactionId\": \"" + this->transactionId + "\", \"millisWaitTime\": " + to_string((this->getDiffTime())/1000000) + "}";
 }
