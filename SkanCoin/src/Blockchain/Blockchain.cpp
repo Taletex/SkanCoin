@@ -501,7 +501,7 @@ bool BlockChain::hashDifficultyCheck(string hash, int difficulty){
 
   /*Controllo che i primi byte dell'hash siano zeri, fino a raggiungere
    un numero pari alla difficoltà attuale*/
-  return (hashInBinary.substr(0, difficulty)).compare(prefix);
+  return (hashInBinary.substr(0, difficulty)).compare(prefix) == 0;
 }
 
 /*Controllo della validità dell'hash e del rispetto della difficoltà minima (proof of work)*/
