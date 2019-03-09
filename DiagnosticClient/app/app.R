@@ -24,7 +24,7 @@ ui <- fluidPage(
         style="margin-bottom:10px; display: flex; align-items: center"
       ),
       div(
-        div("Grafica tempo di attesa per la conferma di ogni transazione"),
+        div("Grafica tempo di attesa per la conferma di ogni transazione (s)"),
         actionButton("query3", "Invia", style="margin-left: auto"),
         style="margin-bottom:10px; display: flex; align-items: center"
       ),
@@ -61,7 +61,7 @@ server <- function(input, output) {
 
   observeEvent(input$query3, {
     v$query <- 3
-    v$title <- "Tempo di attesa per la conferma di ogni transazione"
+    v$title <- "Tempo di attesa per la conferma di ogni transazione (s)"
     v$data <- getStats("transactionwaitingtime")
   })
 
