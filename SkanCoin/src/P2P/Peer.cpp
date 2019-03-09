@@ -3,23 +3,33 @@
 using namespace std;
 using easywsclient::WebSocket;
 
-/*Gestore per messaggi in arrivo dalle socke aperte dal thread client (easywsclient::WebSocket)
-Questo metodo deve avere un solo parametro (const string & data), questo è il motivo per cui
- abbiamo bisogno di una variabile esterna di supporto (tempWs) che sia un riferimento alla socket corrente*/
-void handleClientMessage(const string & data){
-  #if DEBUG_FLAG == 1
-  DEBUG_INFO("");
-  #endif
+/*Business logic per la gestione dei messaggi in arrivo dai peer*/
+void Peer::handlePeerMessage(const string & data, int isServer){
+  string nome;
+
+  if(isServer == 1){
+    nome = "Server Peer";
+  }else if (isServer == 0){
+    nome = "Client Peer";
+  }else{
+    cout << "ERRORE - HandlePeerMessage: Non è stato specificato correttamente se il tipo di socket è client o server!" << endl;
+    return;
+  }
+
+  if(data.compare("") == 0){
+    cout << "ERRORE - HandlePeerMessage: Il messaggio ricevuto è vuoto!" << endl;
+  }
+
 
   //Parsing dell'oggetto JSON ricevuto dalla socket
   rapidjson::Document document;
-  cout << endl << "Client Peer: Messaggio ricevuto: ";
+  cout << endl << nome << ": Messaggio ricevuto: ";
   //cout << data;
   document.Parse(data.c_str());
 
   //Controllo che il messaggio ricevuto sia valido
   if(document["type"].IsNull() || Peer::getInstance().isValidType(document["type"].GetInt()) == false){
-    cout << endl << "ERRORE (handleClientMessage): il tipo di messaggio ricevuto non è valido" << endl;
+    cout << endl << "ERRORE (" << nome << "): il tipo di messaggio ricevuto non è valido" << endl;
     return;
   }
 
@@ -40,107 +50,130 @@ void handleClientMessage(const string & data){
     //Un peer ha richiesto l'ultimo blocco, esso viene inserito nella risposta
     case QUERY_LATEST:
       cout << " - QUERY_LATEST" << endl;
-      Peer::getInstance().tempWs->send(Peer::getInstance().responseLatestMsg(-1,0));
-      break;
-    //Un peer ha richiesto la blockchain, essa viene inserita nella risposta
+          if(isServer == false){
+            tempClientWs->send(responseLatestMsg(-1,0));
+          }else{
+            tempServerWs->send_text(responseLatestMsg(-1,0));
+          }
+          break;
+          //Un peer ha richiesto la blockchain, essa viene inserita nella risposta
     case QUERY_ALL:
       cout << " - QUERY_ALL" << endl;
-      Peer::getInstance().tempWs->send(Peer::getInstance().responseChainMsg());
-      break;
-    //Un peer ha inviato la propria versione di blockchain
+          if(isServer == false){
+            tempClientWs->send(responseChainMsg());
+          }else{
+            tempServerWs->send_text(responseChainMsg());
+          }
+          break;
+          //Un peer ha inviato la propria versione di blockchain
     case RESPONSE_BLOCKCHAIN:
       cout << " - RESPONSE_BLOCKCHAIN" << endl;
-      if(document["data"].IsNull()){
-        cout << "ERROR (handleClientMessage - RESPONSE_BLOCKCHAIN): Nessun dato ricevuto" << endl;
-        return;
-      }
-      try {
-        receivedBlocks = parseBlockList(document["data"]);
-        bAddedBlock = Peer::getInstance().handleBlockchainResponse(receivedBlocks);
-      } catch(const char* msg){
-        cout << msg << endl;
-        cout << "EXCEPTION (handleClientMessage - RESPONSE_BLOCKCHAIN): Errore durante l'elaborazione' del messaggio!" << endl;
-        return;
-      }
-      /*Aggiornamento dei dati relativi al tempo di mining del blocco (questo campo
-       è non nullo solo se siamo in corrispondenza della diffuzione di un nuovo
-        blocco che è stato minato ed aggiunto alla blockchain)*/
-      //TODO: vedi riga 423
-      if(bAddedBlock && !document["index"].IsNull() && !document["duration"].IsNull()){
-        if(document["index"].GetInt() != -1){
-          row = "{\"block\": " +  to_string(document["index"].GetInt()) + ", \"miningtime\": " + to_string(document["duration"].GetDouble()) + "}\n";
-          ofstream myfile;
-          myfile.open ("blocksminingtime.txt", ios::out | ios::app);
-          if(myfile.is_open()) {
-              myfile << row;
-          } else {
-              cout << "ERRORE (handleClientMessage - RESPONSE_BLOCKCHAIN): non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
+          if(document["data"].IsNull()){
+            cout << "ERROR (" << nome << " - RESPONSE_BLOCKCHAIN): Nessun dato ricevuto" << endl;
+            return;
           }
-          myfile.close();
-        }
-      }
-      break;
-    //Un peer ha richiesto il transaction pool, esso viene inserito nella risposta
+          try {
+            receivedBlocks = parseBlockList(document["data"]);
+            bAddedBlock = handleBlockchainResponse(receivedBlocks);
+          } catch(const char* msg){
+            cout << msg << endl;
+            cout << "EXCEPTION (" << nome << " - RESPONSE_BLOCKCHAIN): Errore durante l'elaborazione' del messaggio!" << endl;
+            return;
+          }
+          /*Aggiornamento dei dati relativi al tempo di mining del blocco (questo campo
+           è non nullo solo se siamo in corrispondenza della diffuzione di un nuovo
+            blocco che è stato minato ed aggiunto alla blockchain)*/
+          if(bAddedBlock && !document["index"].IsNull() && !document["duration"].IsNull()){
+            if(document["index"].GetInt() != -1){
+              row = "{\"block\": " +  to_string(document["index"].GetInt()) + ", \"miningtime\": " + to_string(document["duration"].GetDouble()) + "}\n";
+              ofstream myfile;
+              myfile.open ("blocksminingtime.txt", ios::out | ios::app);
+              if(myfile.is_open()) {
+                myfile << row;
+              } else {
+                cout << "ERRORE (" << nome << " - RESPONSE_BLOCKCHAIN): non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
+              }
+              myfile.close();
+            }
+          }
+          break;
+          //Un peer ha richiesto il transaction pool, esso viene inserito nella risposta
     case QUERY_TRANSACTION_POOL:
       cout << " - QUERY_TRANSACTION_POOL" << endl;
-      if(!(TransactionPool::getInstance().getTransactionPool().size() == 0)){
-        Peer::getInstance().tempWs->send(Peer::getInstance().responseTransactionPoolMsg());
-      }
-      break;
+          if(!(TransactionPool::getInstance().getTransactionPool().size() == 0)){
+            if(isServer == false){
+              tempClientWs->send(responseTransactionPoolMsg());
+            }else{
+              tempServerWs->send_text(responseTransactionPoolMsg());
+            }
+          }
+          break;
 
-    //Un peer ha inviato la propria versione di transaction pool
+          //Un peer ha inviato la propria versione di transaction pool
     case RESPONSE_TRANSACTION_POOL:
       cout << " - RESPONSE_TRANSACTION_POOL" << endl;
 
-      //Parsing del pool ricevuto
-      if(document["data"].IsNull()){
-        cout << "ERRORE (handleClientMessage - RESPONSE_TRANSACTION_POOL) nessun dato ricevuto!" << endl;
-        return;
-      }
-      try{
-        receivedTransactions = parseTransactionVector(document["data"]);
-      }catch(const char* msg){
-        cout << msg << endl;
-        cout << "ERRORE (handleClientMessage - RESPONSE_TRANSACTION_POOL): errore durante il parsing del messaggio!" << endl;
-        return;
-      }
-      /*Per ogni transazione questa viene elaborata e successivamente si
-      effettua un broadcast del transaction pool aggiornato*/
-      for(it = receivedTransactions.begin(); it != receivedTransactions.end(); ++it){
-        try{
-            BlockChain::getInstance().handleReceivedTransaction(*it);
-            Peer::getInstance().broadCastTransactionPool();
-        }catch(const char* msg) {
-            cout << msg << endl;
-            cout << "ERRORE (handleClientMessage - RESPONSE_TRANSACTION_POOL): Errore durante l'inserimento della transazione nel pool" << endl;
-        }
-      }
-      break;
-      /*Un peer ha prelevato delle transazioni dal proprio pool,, aggiornamento
-      del file contenente le statistiche*/
-      case TRANSACTION_POOL_STATS:
-        cout << " - TRANSACTION_POOL_STATS" << endl;
-        if(!document["data"].IsNull()){
-          try{
-            myfile.open ("transactionwaitingtime.txt", ios::out | ios::app);
-            if(myfile.is_open()) {
-              for (rapidjson::SizeType i = 0; i < document["data"].Size(); i++){
-                myfile << "{" << "\"transactionId\": " << document["data"][i]["transactionId"].GetString() <<  ", \"millisWaitTime\": " << to_string(document["data"][i]["millisWaitTime"].GetDouble()) << "}"  << "\n";
-              }
-              myfile.close();
-            } else {
-              throw "EXCEPTION (handleClientMessage - TRANSACTION_POOL_STATS): non è stato possibile aprire il file per salvare le statistiche di attesa delle transazioni!";
-            }
-          }catch(const char* msg) {
-              cout << msg << endl;
-              cout << "EXCEPTION (handleClientMessage - TRANSACTION_POOL_STATS): Errore durante l'apertura del file per aggiornare le statistiche" << endl;
+          //Parsing del pool ricevuto
+          if(document["data"].IsNull()){
+            cout << "ERRORE (" << nome << " - RESPONSE_TRANSACTION_POOL) nessun dato ricevuto!" << endl;
+            return;
           }
-        }
-        break;
+          try{
+            receivedTransactions = parseTransactionVector(document["data"]);
+          }catch(const char* msg){
+            cout << msg << endl;
+            cout << "ERRORE (" << nome << " - RESPONSE_TRANSACTION_POOL): errore durante il parsing del messaggio!" << endl;
+            return;
+          }
+          /*Per ogni transazione questa viene elaborata e successivamente si
+          effettua un broadcast del transaction pool aggiornato*/
+          for(it = receivedTransactions.begin(); it != receivedTransactions.end(); ++it){
+            try{
+              BlockChain::getInstance().handleReceivedTransaction(*it);
+              broadCastTransactionPool();
+            }catch(const char* msg) {
+              cout << msg << endl;
+              cout << "ERRORE (" << nome << " - RESPONSE_TRANSACTION_POOL): Errore durante l'inserimento della transazione nel pool" << endl;
+            }
+          }
+          break;
+          /*Un peer ha prelevato delle transazioni dal proprio pool,, aggiornamento
+          del file contenente le statistiche*/
+    case TRANSACTION_POOL_STATS:
+      cout << " - TRANSACTION_POOL_STATS" << endl;
+          if(!document["data"].IsNull()){
+            try{
+              myfile.open ("transactionwaitingtime.txt", ios::out | ios::app);
+              if(myfile.is_open()) {
+                for (rapidjson::SizeType i = 0; i < document["data"].Size(); i++){
+                  myfile << "{" << "\"transactionId\": " << document["data"][i]["transactionId"].GetString() <<  ", \"millisWaitTime\": " << to_string(document["data"][i]["millisWaitTime"].GetDouble()) << "}"  << "\n";
+                }
+                myfile.close();
+              } else {
+                string msg = "EXCEPTION (" + nome + " - TRANSACTION_POOL_STATS): non è stato possibile aprire il file per salvare le statistiche di attesa delle transazioni!";
+                throw msg;
+              }
+            }catch(const char* msg) {
+              cout << msg << endl;
+              cout << "ERRORE (" << nome << " - TRANSACTION_POOL_STATS): Errore durante l'apertura del file per aggiornare le statistiche" << endl;
+            }
+          }
+          break;
 
     default:
-      cout << "ERRORE (handleClientMessage): Il messaggio non ha un tipo valido!" << endl;
+      cout << "ERRORE (" << nome << "): Il messaggio non ha un tipo valido!" << endl;
   }
+}
+
+/*Gestore per messaggi in arrivo dalle socket aperte dal thread client (easywsclient::WebSocket)
+Questo metodo deve avere un solo parametro (const string & data), questo è il motivo per cui
+ abbiamo bisogno di una variabile esterna di supporto (tempClientWs) che sia un riferimento alla socket corrente.
+ */
+void handleClientMessage(const string & data){
+  #if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+  #endif
+  Peer::getInstance().handlePeerMessage(data, 0);
 }
 
 Message::Message(MessageType type, string data){
@@ -195,7 +228,7 @@ void Peer::checkReceivedMessage(){
       /*Assegno il riferimento corrente alla variabile di supporto, in modo da
         poterla utilizare all'interno dell'handler (infatti come spiegato sopra
           non è possibile passare ad esso un secondo parametro)*/
-      tempWs = ws;
+      tempClientWs = ws;
 
       /*Se ci sono messaggi in arrivo, questo metodo riempie il buffer che verrà
        utilizzato dall'handler con i dati ricevuti /*/
@@ -346,7 +379,8 @@ void Peer::initP2PServer(int port){
     //Gestione della ricezione di un messaggio
     .onmessage([&](crow::websocket::connection& connection, const std::string& data, bool){
       connectionsMtx.lock();
-      handleServerMessage(connection, data);
+      tempServerWs = &connection;
+      handlePeerMessage(data, 1);
       connectionsMtx.unlock();
     });
 
@@ -367,142 +401,6 @@ void Peer::startClientPoll(){
     checkReceivedMessage();
   }
 }
-
-/*Gestore dei messaggi in arrivo al Server Peer*/
-void Peer::handleServerMessage(crow::websocket::connection& connection, const string& data){
-  #if DEBUG_FLAG == 1
-  DEBUG_INFO("");
-  #endif
-
-  //Parsing dell'oggetto ricevuto
-  rapidjson::Document document;
-  cout << endl << "Server Peer: Messaggio ricevuto: ";
-  //cout  << data;
-  //cout << endl;
-  document.Parse(data.c_str());
-
-  //Controllo che il messaggio ricevuto sia valido
-  if(document["type"].IsNull() || isValidType(document["type"].GetInt()) == false){
-    cout << endl << "ERRORE (handleServerMessage): il tipo di messaggio ricevuto non è valido" << endl;    return;
-  }
-
-  //Mapping dell'oggetto in una nuova istanza di Message
-  Message message = Message(static_cast<MessageType>(document["type"].GetInt()), "");
-
-  /*Liste usate per la gestione di alcuni tipi di messaggi (non è possibile inizializzare
-   nuove variabili all'interno dei singoli case, se non si usano le parentesi graffe)*/
-  list<Block> receivedBlocks;
-  vector<Transaction> receivedTransactions;
-  vector<Transaction>::iterator it;
-  ofstream myfile;
-  string row;
-  bool bAddedBlock = false;
-
-  //Questo switch contiene la logica di gestione dei vari tipi di messaggi in arrivo
-  switch (message.type) {
-    //Un peer ha richiesto l'ultimo blocco, esso viene inserito nella risposta
-    case QUERY_LATEST:
-      cout << " - QUERY_LATEST" << endl;
-      connection.send_text(responseLatestMsg(-1,0));
-      break;
-    //Un peer ha richiesto la blockchain, essa viene inserita nella risposta
-    case QUERY_ALL:
-      cout << " - QUERY_ALL" << endl;
-      connection.send_text(responseChainMsg());
-      break;
-    //Un peer ha inviato la propria versione di blockchain
-    case RESPONSE_BLOCKCHAIN:
-      cout << " - RESPONSE_BLOCKCHAIN" << endl;
-      if(document["data"].IsNull()){
-        cout << "ERROR (handleServerMessage - RESPONSE_BLOCKCHAIN): Nessun dato ricevuto" << endl;
-        return;
-      }
-      try {
-        receivedBlocks = parseBlockList(document["data"]);
-        bAddedBlock = Peer::getInstance().handleBlockchainResponse(receivedBlocks);
-      } catch(const char* msg){
-        cout << msg << endl;
-        cout << "EXCEPTION (handleServerMessage - RESPONSE_BLOCKCHAIN): Errore durante l'elaborazione' del messaggio!" << endl;
-        return;
-      }
-
-      /*Aggiornamento dei dati relativi al tempo di mining del blocco (questo campo
-        è non nullo solo se siamo in corrispondenza della diffuzione di un nuovo
-        blocco che è stato minato ed aggiunto alla blockchain)*/
-      if(bAddedBlock && !document["index"].IsNull() && !document["duration"].IsNull()) {
-        if(document["index"].GetInt() != -1) {
-          row = "{\"block\": " +  to_string(document["index"].GetInt()) + ", \"miningtime\": " + to_string(document["duration"].GetDouble()) + "}\n";
-          ofstream myfile;
-          myfile.open ("blocksminingtime.txt", ios::out | ios::app);
-          if(myfile.is_open()) {
-              myfile << row;
-          } else {
-              cout << "ERRORE (handleClientMessage - RESPONSE_BLOCKCHAIN): non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
-          }
-          myfile.close();
-        }
-      }
-      break;
-    //Un peer ha richiesto il transaction pool, esso viene inserito nella risposta
-    case QUERY_TRANSACTION_POOL:
-      cout << " - QUERY_TRANSACTION_POOL" << endl;
-      if(!(TransactionPool::getInstance().getTransactionPool().size() == 0)){
-        connection.send_text(responseTransactionPoolMsg());
-      }
-      break;
-    //Un peer ha inviato la propria versione di transaction pool
-    case RESPONSE_TRANSACTION_POOL:
-      cout << " - RESPONSE_TRANSACTION_POOL" << endl;
-
-      if(document["data"].IsNull()){
-        cout << "ERRORE (handleServerMessage - RESPONSE_TRANSACTION_POOL) nessun dato ricevuto!" << endl;
-        return;
-      }
-      try{
-        receivedTransactions = parseTransactionVector(document["data"]);
-      }catch(const char* msg){
-        cout << msg << endl;
-        cout << "ERRORE (handleServerMessage - RESPONSE_TRANSACTION_POOL): errore durante il parsing del messaggio!" << endl;
-        return;
-      }
-      /*Per ogni transazione questa viene elaborata e successivamente si
-      effettua un broadcast del transaction pool aggiornato*/
-      for(it = receivedTransactions.begin(); it != receivedTransactions.end(); ++it){
-        try{
-            BlockChain::getInstance().handleReceivedTransaction(*it);
-            broadCastTransactionPool();
-        }catch(const char* msg) {
-            cout << msg << endl;
-            cout << "ERRORE (handleServerMessage - RESPONSE_TRANSACTION_POOL): Errore durante l'inserimento della transazione nel pool" << endl;
-        }
-      }
-      break;
-    /*Un peer ha prelevato delle transazioni dal proprio pool,, aggiornamento
-    del file contenente le statistiche*/
-    case TRANSACTION_POOL_STATS:
-      cout << " - TRANSACTION_POOL_STATS" << endl;
-      if(!document["data"].IsNull()){
-        try{
-          myfile.open ("transactionwaitingtime.txt", ios::out | ios::app);
-          if(myfile.is_open()) {
-            for (rapidjson::SizeType i = 0; i < document["data"].Size(); i++){
-              myfile << "{" << "\"transactionId\": " << document["data"][i]["transactionId"].GetString() <<  ", \"millisWaitTime\": " << to_string(document["data"][i]["millisWaitTime"].GetDouble()) << "}"  << "\n";
-            }
-            myfile.close();
-          } else {
-            throw "EXCEPTION (handleClientMessage - TRANSACTION_POOL_STATS): non è stato possibile aprire il file per salvare le statistiche di attesa delle transazioni!";
-          }
-        }catch(const char* msg) {
-          cout << msg << endl;
-          cout << "EXCEPTION (handleClientMessage - TRANSACTION_POOL_STATS): Errore durante l'apertura del file per aggiornare le statistiche" << endl;
-        }
-      }
-      break;
-    default:
-    cout << "ERRORE (handleServerMessage): Il messaggio non ha un tipo valido!" << endl;
-  }
-}
-
 /*Controllo della validità del tipo di messaggio (se appartiene all'enumeratore)*/
 bool Peer::isValidType(int type){
   #if DEBUG_FLAG == 1

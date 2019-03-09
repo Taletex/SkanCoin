@@ -47,7 +47,16 @@ class Peer {
     /*Questa è una variabile di supporto usata dall'handler dei messaggi in arrivo
      per gestire un evento per una socket secifica (vedi spiegazione più approfondita
        in corrispondenza dell'implementazione del metodo - handleClientMessage)*/
-    easywsclient::WebSocket::pointer tempWs;
+    easywsclient::WebSocket::pointer tempClientWs;
+
+    /*
+     * Per poter utilizzare lo stesso metodo anche per i messaggi ricevuti dal thread server, utilizziamo lo stesso pattern
+     * con riferimento alla socket corrente, in questo modo sarà possibile gestire i due casi utilizzando la stessa interfaccia
+     * per il metodo. Questa scelta è stata fatta in quanto (sempre a causa di forzature nelle interfacce richieste dalle
+     * librerie) si usano delle reference, tipi che non possono mai puntare ad un oggetto nullo, dunque non è stato possibile
+     * discriminare i due casi sulla base del fatto che un campo fosse valorizzato o meno.
+     * */
+    crow::websocket::connection *tempServerWs;
 
     /*Metodo getInstance per l'implementazione del pattern Singleton*/
     static Peer& getInstance() {
@@ -95,6 +104,9 @@ class Peer {
      client verso il thread server*/
     void broadcast(std::string message);
 
+    /*Business logic per la gestione dei messaggi in arrivo dai peer*/
+    void handlePeerMessage(const std::string & data, int isServer);
+
   private:
     /*Il pattern singleton viene implementato rendendo il costruttore di default privato
     ed eliminando il costruttore di copia e l'operazione di assegnamento*/
@@ -106,9 +118,6 @@ class Peer {
     che sono state chiuse*/
     void clearClosedWs();
 
-    /*Gestore dei messaggi in arrivo al Server Peer*/
-    void handleServerMessage(crow::websocket::connection& connection, const std::string& data);
-
     /* Questa funzione esegue il polling sulla lista delle connessioni aperte dal
     thread client, se ci sono nuovi messaggi ricevuti viene eseguito l'handler adatto*/
     void checkReceivedMessage();
@@ -116,7 +125,7 @@ class Peer {
 
 /*Gestore per messaggi in arrivo dalle socke aperte dal thread client (easywsclient::WebSocket)
 Questo metodo deve avere un solo parametro (const string & data), questo è il motivo per cui
-abbiamo bisogno di una variabile esterna di supporto (tempWs) che sia un
+abbiamo bisogno di una variabile esterna di supporto (tempClientWs) che sia un
 riferimento alla socket corrente. Sempre per rispettare l'interfaccia richiesta
 dalla libreria esso non può essere membro della classe Peer in quanto è
 utilizzato come handler per i messaggi in arrivo dalle socket*/
