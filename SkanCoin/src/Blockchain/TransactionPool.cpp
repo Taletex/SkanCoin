@@ -47,6 +47,7 @@ bool TransactionPool::addToTransactionPool(Transaction tx, vector<UnspentTxOut> 
     throw "EXCEPTION (addToTransactionPool): La transazione che si vuole inserire nel pool non è valida!";
   }
   cout << "Nuova transazione aggiunta al pool: " << tx.toString() << endl;
+  cout << "La transaction pool contiene " << TransactionPool::getInstance().getTransactionPool().size()+1 << " transazioni" << endl;
   unconfirmedTransactions.push_back(tx);
   stats.push_back(TransactionStat(tx.id));
   return true;
@@ -189,5 +190,5 @@ string TransactionStat::getDiffTimeString(){
   DEBUG_INFO("");
   #endif
 
-  return "{\"transactionId\": " + this->transactionId + ", \"millisWaitTime\": " + to_string(this->getDiffTime()) + "}";
+  return "{\"transactionId\": \"" + this->transactionId + "\", \"millisWaitTime\": " + to_string(this->getDiffTime()) + "}";
 }

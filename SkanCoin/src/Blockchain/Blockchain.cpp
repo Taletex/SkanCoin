@@ -168,11 +168,6 @@ void BlockChain::setUnspentTxOuts(vector<UnspentTxOut> newUnspentTxOuts){
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
-
-  vector<UnspentTxOut>::iterator it;
-  for(it = newUnspentTxOuts.begin(); it != newUnspentTxOuts.end(); ++it){
-    cout << it->toString();
-  }
   unspentTxOuts.swap(newUnspentTxOuts);
 }
 
@@ -261,6 +256,7 @@ Block BlockChain::generateRawNextBlock(vector<Transaction> blockData){
     throw "EXCEPTION (generateRawNextBlock): Errore durante il mining del nuovo blocco";
   }
   if (addBlockToChain(newBlock)) {
+    cout << "Nuovo Blocco aggiunto alla blockchain! (indice " << newBlock.index << ")" << endl;
     string data = "";
     try{
       //Aggiornamento dell'apposito file per la raccolta di statistiche sul tempo di mining
@@ -309,14 +305,16 @@ Block BlockChain::generateNextBlock(){
   vector<Transaction> blockData = TransactionPool::getInstance().getTransactionPool();
   blockData.insert (blockData.begin() , coinbaseTx);
   try{
+    vector<string> stats = TransactionPool::getInstance().getStatStrings();
     Block ret = generateRawNextBlock(blockData);
     /*Aggiornamento locale e verso tutti i peer delle statistiche relative ai tempi di attesa
     delle transazioni nel pool, vengono comunicati i tempi di attesa delle transazioni appena prelevate*/
-    vector<string> stats = TransactionPool::getInstance().getStatStrings();
     vector<string>::iterator it;
-    Peer::getInstance().connectionsMtx.lock();
-    Peer::getInstance().broadcastTxPoolStat(stats);
-    Peer::getInstance().connectionsMtx.unlock();
+    if(stats.size() > 0){
+      Peer::getInstance().connectionsMtx.lock();
+      Peer::getInstance().broadcastTxPoolStat(stats);
+      Peer::getInstance().connectionsMtx.unlock();
+    }
     ofstream myfile;
     myfile.open ("transactionwaitingtime.txt", ios::out | ios::app);
     if(myfile.is_open()) {
@@ -708,10 +706,8 @@ void BlockChain::replaceChain(list<Block> newBlocks) {
     cout << endl;
     throw "EXCEPTION (replaceChain): La blockchain ricevuta non è valida!";
   }
-
-
-  cout << "La blockchain ricevuta è corretta! Verrà effettuata la sostituzione della blockchain." << endl;
   BlockChain::blockchain = newBlocks; //Sostituzione blockchain
+  cout << "Blockchain sostituita! Nuova BlockChain:" << endl << BlockChain::getInstance().toString();
   setUnspentTxOuts(aUnspentTxOuts); //Aggiornamento output non spesi
   //Aggiornamento transactionPool in base agli output non spesi aggiornati
   TransactionPool::getInstance().updateTransactionPool(getUnspentTxOuts());
@@ -725,7 +721,6 @@ void BlockChain::replaceChain(list<Block> newBlocks) {
   //In precedenza potrei aver scartato transazioni perchè la mia blockchain non era aggiornata,
   // richiedo la transaction pool per verificarle di nuovo
   Peer::getInstance().broadcastTxPoolQuery();
-  cout << "Blockchain sostituita! Nuova BlockChain:" << endl << BlockChain::getInstance().toString();
   try{
     //Salvataggio dei nuovi dati relativi alla blockchain nell'apposito file
     saveBlockchainStats();

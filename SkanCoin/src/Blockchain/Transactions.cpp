@@ -282,7 +282,6 @@ bool validateTxIn(TxIn txIn, Transaction transaction, vector<UnspentTxOut> aUnsp
   byteArrayFromString(txIn.signature, p_signature);
 
   int signOk = ecdsa_verify(p_public, p_hash , p_signature);
-  cout << signOk << endl;
   if(signOk != 1){
     return false;
   }

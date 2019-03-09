@@ -13,7 +13,8 @@ void handleClientMessage(const string & data){
 
   //Parsing dell'oggetto JSON ricevuto dalla socket
   rapidjson::Document document;
-  cout << endl << "Client Peer: Messaggio ricevuto: " << data;
+  cout << endl << "Client Peer: Messaggio ricevuto: ";
+  //cout << data;
   document.Parse(data.c_str());
 
   //Controllo che il messaggio ricevuto sia valido
@@ -62,7 +63,6 @@ void handleClientMessage(const string & data){
       /*Aggiornamento dei dati relativi al tempo di mining del blocco (questo campo
        è non nullo solo se siamo in corrispondenza della diffuzione di un nuovo
         blocco che è stato minato ed aggiunto alla blockchain)*/
-      //TODO: vedi riga 423
       if(!document["index"].IsNull() && !document["duration"].IsNull()){
         if(document["index"].GetInt() != -1){
             row = "{\"block\": " +  to_string(document["index"].GetInt()) + ", \"miningtime\": " + to_string(document["duration"].GetDouble()) + "}\n";
@@ -80,7 +80,9 @@ void handleClientMessage(const string & data){
     //Un peer ha richiesto il transaction pool, esso viene inserito nella risposta
     case QUERY_TRANSACTION_POOL:
       cout << " - QUERY_TRANSACTION_POOL" << endl;
-      Peer::getInstance().tempWs->send(Peer::getInstance().responseTransactionPoolMsg());
+      if(!(TransactionPool::getInstance().getTransactionPool().size() == 0)){
+        Peer::getInstance().tempWs->send(Peer::getInstance().responseTransactionPoolMsg());
+      }
       break;
 
     //Un peer ha inviato la propria versione di transaction pool
@@ -119,7 +121,9 @@ void handleClientMessage(const string & data){
           try{
             myfile.open ("transactionwaitingtime.txt", ios::out | ios::app);
             if(myfile.is_open()) {
-              myfile << document["data"].GetString();
+              for (rapidjson::SizeType i = 0; i < document["data"].Size(); i++){
+                myfile << "{" << "\"transactionId\": " << document["data"][i]["transactionId"].GetString() <<  ", \"millisWaitTime\": " << to_string(document["data"][i]["millisWaitTime"].GetDouble()) << "}"  << "\n";
+              }
               myfile.close();
             } else {
               throw "EXCEPTION (handleClientMessage - TRANSACTION_POOL_STATS): non è stato possibile aprire il file per salvare le statistiche di attesa delle transazioni!";
@@ -185,15 +189,14 @@ void Peer::checkReceivedMessage(){
   for(auto ws: openedConnections){
     //Controlla se la socket è stat chiusa
     if(ws->getReadyState() != WebSocket::CLOSED) {
+      /*Assegno il riferimento corrente alla variabile di supporto, in modo da
+        poterla utilizare all'interno dell'handler (infatti come spiegato sopra
+          non è possibile passare ad esso un secondo parametro)*/
+      tempWs = ws;
+
       /*Se ci sono messaggi in arrivo, questo metodo riempie il buffer che verrà
        utilizzato dall'handler con i dati ricevuti /*/
       ws->poll();
-
-      /*Assegno il riferimento corrente alla variabile di supporto, in modo da
-      poterla utilizare all'interno dell'handler (infatti come spiegato sopra
-        non è possibile passare ad esso un secondo parametro)*/
-      tempWs = ws;
-
       //Esecuzione dell'handler per il messaggio ricevuto
       ws->dispatch(handleClientMessage);
     }else{
@@ -357,7 +360,6 @@ void Peer::startClientPoll(){
   while(true){
     /*Il polling avviene con una cadenza di un secondo, non ci sono particolari
     vincoli temporali quindi non è necessario sovraccaricare la rete o il nodo effettuando un polling moto frequente*/
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     checkReceivedMessage();
   }
 }
@@ -370,7 +372,9 @@ void Peer::handleServerMessage(crow::websocket::connection& connection, const st
 
   //Parsing dell'oggetto ricevuto
   rapidjson::Document document;
-  cout << endl << "Server Peer: Messaggio ricevuto: " << data;
+  cout << endl << "Server Peer: Messaggio ricevuto: ";
+  //cout  << data;
+  //cout << endl;
   document.Parse(data.c_str());
 
   //Controllo che il messaggio ricevuto sia valido
@@ -418,7 +422,6 @@ void Peer::handleServerMessage(crow::websocket::connection& connection, const st
       /*Aggiornamento dei dati relativi al tempo di mining del blocco (questo campo
        è non nullo solo se siamo in corrispondenza della diffuzione di un nuovo
         blocco che è stato minato ed aggiunto alla blockchain)*/
-      //TODO: questa cosa si deve fare dentro handleblockchainresponse, se il blocco viene effettivamente aggiornato (oppure far ritornare un bool alla funzione e controllarlo qui)
       if(!document["index"].IsNull() && !document["duration"].IsNull()){
           if(document["index"].GetInt() != -1){
               row = "{\"block\": " +  to_string(document["index"].GetInt()) + ", \"miningtime\": " + to_string(document["duration"].GetDouble()) + "}\n";
@@ -427,7 +430,7 @@ void Peer::handleServerMessage(crow::websocket::connection& connection, const st
               if(myfile.is_open()) {
                   myfile << row;
               } else {
-                  cout << "ERRORE (handleClientMessage - RESPONSE_BLOCKCHAIN): non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
+                  cout << "ERRORE (handleServerMessage - RESPONSE_BLOCKCHAIN): non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
               }
               myfile.close();
           }
@@ -436,7 +439,9 @@ void Peer::handleServerMessage(crow::websocket::connection& connection, const st
     //Un peer ha richiesto il transaction pool, esso viene inserito nella risposta
     case QUERY_TRANSACTION_POOL:
       cout << " - QUERY_TRANSACTION_POOL" << endl;
-      connection.send_text(responseTransactionPoolMsg());
+      if(!(TransactionPool::getInstance().getTransactionPool().size() == 0)){
+        connection.send_text(responseTransactionPoolMsg());
+      }
       break;
     //Un peer ha inviato la propria versione di transaction pool
     case RESPONSE_TRANSACTION_POOL:
@@ -471,17 +476,19 @@ void Peer::handleServerMessage(crow::websocket::connection& connection, const st
       cout << " - TRANSACTION_POOL_STATS" << endl;
       if(!document["data"].IsNull()){
         try{
-          myfile.open("transactionwaitingtime.txt", ios::out | ios::app);
+          myfile.open ("transactionwaitingtime.txt", ios::out | ios::app);
           if(myfile.is_open()) {
-            myfile << document["data"].GetString();
+            for (rapidjson::SizeType i = 0; i < document["data"].Size(); i++){
+              myfile << "{" << "\"transactionId\": " << document["data"][i]["transactionId"].GetString() <<  ", \"millisWaitTime\": " << to_string(document["data"][i]["millisWaitTime"].GetDouble()) << "}"  << "\n";
+            }
+            myfile.close();
           } else {
-            throw "EXCEPTION (handleServerMessage - TRANSACTION_POOL_STATS): non è stato possibile aprire il file per salvare le statistiche di attesa delle transazioni!";
+            throw "EXCEPTION (handleClientMessage - TRANSACTION_POOL_STATS): non è stato possibile aprire il file per salvare le statistiche di attesa delle transazioni!";
           }
         }catch(const char* msg) {
-            cout << msg << endl;
-            cout << "ERRORE (handleServerMessage - TRANSACTION_POOL_STATS): Errore durante l'apertura del file per aggiornare le statistiche" << endl;
+          cout << msg << endl;
+          cout << "EXCEPTION (handleClientMessage - TRANSACTION_POOL_STATS): Errore durante l'apertura del file per aggiornare le statistiche" << endl;
         }
-        myfile.close();
       }
       break;
     default:
@@ -576,10 +583,15 @@ string Peer::responseTransactionPoolMsg(){
   return Message(RESPONSE_TRANSACTION_POOL, TransactionPool::getInstance().toString()).toString();
 }
 string Peer::txPoolStatsMessage(vector<string> stats){
-  string msg = "";
-  vector<string>::iterator it;
-  for(it = stats.begin(); it != stats.end(); ++it){
-    msg = msg + *it + "\n";
-  }
-  return Message(TRANSACTION_POOL_STATS, msg).toString();
+    string msg = "[";
+
+    vector<string>::iterator it;
+    for(it = stats.begin(); it != stats.end(); ++it){
+        if(it != stats.begin()){
+          msg = msg + ",";
+        }
+        msg = msg + *it;
+    }
+    msg = msg + "]";
+    return Message(TRANSACTION_POOL_STATS, msg).toString();
 }
