@@ -7,7 +7,7 @@ A simple criptocurrency written in C++
 - [Screenshots](#screenshots)
 - [Requirements](#Requirements)
 - [Dependencies](#Dependencies)
-- [Testing](#running)
+- [Running](#running)
 
 
 
