@@ -5,6 +5,9 @@ using easywsclient::WebSocket;
 
 /*Business logic per la gestione dei messaggi in arrivo dai peer*/
 void Peer::handlePeerMessage(const string & data, int isServer){
+    #if DEBUG_FLAG == 1
+        DEBUG_INFO("");
+    #endif
   string nome;
 
   if(isServer == 1){
@@ -125,15 +128,15 @@ void Peer::handlePeerMessage(const string & data, int isServer){
             cout << "ERRORE (" << nome << " - RESPONSE_TRANSACTION_POOL): errore durante il parsing del messaggio!" << endl;
             return;
           }
-          /*Per ogni transazione questa viene elaborata e successivamente si
+          /*Per ogni transazione questa viene elaborata e se questa viene approvata si
           effettua un broadcast del transaction pool aggiornato*/
           for(it = receivedTransactions.begin(); it != receivedTransactions.end(); ++it){
             try{
-              BlockChain::getInstance().handleReceivedTransaction(*it);
+              TransactionPool::getInstance().addToTransactionPool(*it, BlockChain::getInstance().getUnspentTxOuts());
               broadCastTransactionPool();
             }catch(const char* msg) {
               cout << msg << endl;
-              cout << "ERRORE (" << nome << " - RESPONSE_TRANSACTION_POOL): Errore durante l'inserimento della transazione nel pool" << endl;
+              cout << "INFO (" << nome << " - RESPONSE_TRANSACTION_POOL): La transaction Pool ricevuta è stata scartata..." << endl;
             }
           }
           break;

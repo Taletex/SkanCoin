@@ -88,9 +88,6 @@ class BlockChain {
     è valida la chain più lunga ma quella con la difficoltà cumulativa maggiore*/
     void replaceChain(std::list<Block> newBlocks);
 
-    /*Gestione per la ricezione di una nuova transazione, questa deve essere
-    aggiunta al transaction pool*/
-    void handleReceivedTransaction(Transaction transaction);
   private:
     /*Il pattern singleton viene implementato rendendo il costruttore di default privato
     ed eliminando il costruttore di copia e l'operazione di assegnamento*/

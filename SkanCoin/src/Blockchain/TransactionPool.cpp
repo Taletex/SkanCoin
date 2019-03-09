@@ -44,7 +44,7 @@ bool TransactionPool::addToTransactionPool(Transaction tx, vector<UnspentTxOut> 
 
   if(!validateTransaction(tx, unspentTxOuts) || !isValidTxForPool(tx)) {
     cout << endl;
-    throw "EXCEPTION (addToTransactionPool): La transazione che si vuole inserire nel pool non è valida!";
+    throw "INFO (addToTransactionPool): La transazione che si vuole inserire nel pool è già presente o non è valida...";
   }
   cout << "Nuova transazione aggiunta al pool: " << tx.toString() << endl;
   cout << "La transaction pool contiene " << TransactionPool::getInstance().getTransactionPool().size()+1 << " transazioni" << endl;
@@ -137,7 +137,7 @@ bool TransactionPool::isValidTxForPool(Transaction tx) {
   for(it1 = tx.txIns.begin(); it1 != tx.txIns.end(); ++it1) {
     for(it2 = txPoolIns.begin(); it2 != txPoolIns.end(); ++it2) {
       if(it1->isEqual(*it2)) {
-        cout << "ERRORE (isValidTxForPool): L'input di transazione è già presente in una delle transazioni presenti nel pool!" << it1->toString() << endl;
+        cout << "INFO (isValidTxForPool): L'input di transazione è già stato speso in una delle transazioni presenti nel pool!" << endl;
         return false;
       }
     }

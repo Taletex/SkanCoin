@@ -722,21 +722,6 @@ void BlockChain::replaceChain(list<Block> newBlocks) {
   }
 }
 
-/*Gestione per la ricezione di una nuova transazione, questa deve essere
-aggiunta al transaction pool*/
-void BlockChain::handleReceivedTransaction(Transaction transaction) {
-  #if DEBUG_FLAG == 1
-  DEBUG_INFO("");
-  #endif
-
-  try{
-    TransactionPool::getInstance().addToTransactionPool(transaction, getUnspentTxOuts());
-  }catch(const char* msg){
-    cout << msg << endl << endl;
-    throw "EXCEPTION (handleReceivedTransaction): La transazione ricevuta non è valida!";
-    }
-}
-
 /*Salva in un file le statistiche della blockchain (numero di blocchi,
 di transazioni e di coin)*/
 void BlockChain::saveBlockchainStats() {

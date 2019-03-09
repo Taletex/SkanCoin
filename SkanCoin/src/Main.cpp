@@ -12,8 +12,6 @@
 #include "ecc.h"
 #include "config.hpp"
 
-int debug = 1;
-
 //source files//
 #include "Blockchain/TransactionPool.cpp"
 #include "Blockchain/Transactions.cpp"
