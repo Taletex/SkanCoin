@@ -7,7 +7,7 @@ A simple criptocurrency written in C++
 - [Screenshots](#screenshots)
 - [Requirements](#Requirements)
 - [Dependencies](#Dependencies)
-- [Testing](#running-for-test)
+- [Running](#running)
 
 
 
@@ -87,7 +87,7 @@ The application has the following dependencies (libraries and packages)
   3. Jsonlite https://cran.r-project.org/web/packages/jsonlite/index.html. Used to make HTTP request in R.
 
 
-## Running for Test
+## Running
 After you have installed all requirements you can clone this project and run it following the next steps.
 
 #### 1 - Clone the project from develop branch
@@ -117,7 +117,7 @@ http-server -o
 ```
 It will open a new browser tab at the address where the web application is running.
 
-#### 3 - Run the Diagnostic Client
+#### 4 - Run the Diagnostic Client
 Open a new terminal and write
 ```
 sudo -i R
