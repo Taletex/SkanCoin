@@ -26,13 +26,15 @@ void handleClientMessage(const string & data){
   //Mapping dell'oggetto in una nuova istanza di Message
   Message message = Message(static_cast<MessageType>(document["type"].GetInt()), "");
 
-  /*Liste usade per la gestione di alcuni tipi di messaggi (non è possibile inizializzare
+  /*Liste usate per la gestione di alcuni tipi di messaggi (non è possibile inizializzare
    nuove variabili all'interno dei singoli case, se non si usano le parentesi graffe)*/
   list<Block> receivedBlocks;
   vector<Transaction> receivedTransactions;
   vector<Transaction>::iterator it;
   ofstream myfile;
   string row;
+  bool bAddedBlock = false;
+
   //Questo switch contiene la logica di gestione dei vari tipi di messaggi in arrivo
   switch (message.type) {
     //Un peer ha richiesto l'ultimo blocco, esso viene inserito nella risposta
@@ -52,10 +54,10 @@ void handleClientMessage(const string & data){
         cout << "ERROR (handleClientMessage - RESPONSE_BLOCKCHAIN): Nessun dato ricevuto" << endl;
         return;
       }
-      try{
+      try {
         receivedBlocks = parseBlockList(document["data"]);
-        Peer::getInstance().handleBlockchainResponse(receivedBlocks);
-      }catch(const char* msg){
+        bAddedBlock = Peer::getInstance().handleBlockchainResponse(receivedBlocks);
+      } catch(const char* msg){
         cout << msg << endl;
         cout << "EXCEPTION (handleClientMessage - RESPONSE_BLOCKCHAIN): Errore durante l'elaborazione' del messaggio!" << endl;
         return;
@@ -63,17 +65,18 @@ void handleClientMessage(const string & data){
       /*Aggiornamento dei dati relativi al tempo di mining del blocco (questo campo
        è non nullo solo se siamo in corrispondenza della diffuzione di un nuovo
         blocco che è stato minato ed aggiunto alla blockchain)*/
-      if(!document["index"].IsNull() && !document["duration"].IsNull()){
+      //TODO: vedi riga 423
+      if(bAddedBlock && !document["index"].IsNull() && !document["duration"].IsNull()){
         if(document["index"].GetInt() != -1){
-            row = "{\"block\": " +  to_string(document["index"].GetInt()) + ", \"miningtime\": " + to_string(document["duration"].GetDouble()) + "}\n";
-            ofstream myfile;
-            myfile.open ("blocksminingtime.txt", ios::out | ios::app);
-            if(myfile.is_open()) {
-                myfile << row;
-            } else {
-                cout << "ERRORE (handleClientMessage - RESPONSE_BLOCKCHAIN): non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
-            }
-            myfile.close();
+          row = "{\"block\": " +  to_string(document["index"].GetInt()) + ", \"miningtime\": " + to_string(document["duration"].GetDouble()) + "}\n";
+          ofstream myfile;
+          myfile.open ("blocksminingtime.txt", ios::out | ios::app);
+          if(myfile.is_open()) {
+              myfile << row;
+          } else {
+              cout << "ERRORE (handleClientMessage - RESPONSE_BLOCKCHAIN): non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
+          }
+          myfile.close();
         }
       }
       break;
@@ -264,33 +267,34 @@ int Peer::countPeers(){
   return count;
 }
 
-/*Business logic per un messaggio di tipo RESPONSE_BLOCKCHAIN, questa funzione
-è chiamata nell'handler dei messaggi in arrivo*/
-void Peer::handleBlockchainResponse(list<Block> receivedBlocks){
+/* Business logic per un messaggio di tipo RESPONSE_BLOCKCHAIN, questa funzione
+è chiamata nell'handler dei messaggi in arrivo. Ritorna true se ha aggiunto un
+singolo blocco nella blockchain, altrimenti false (anche in caso di replace) */
+bool Peer::handleBlockchainResponse(list<Block> receivedBlocks) {
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
 
+  bool ret = false;
   /*Valuto eventuali aggiornamenti locali in base ai blocchi ricevuti dagli altri peer
   NOTE: in replacechain viene controllato che la difficoltà dei nuovi blocchi
   sia superiore*/
   if (receivedBlocks.size() == 0) {
       cout << "ERRORE (handleBlockchainResponse): La blockchain ricevuta ha lunghezza 0!" << endl;
-      return;
+      return ret;
   }
   Block latestBlockReceived = receivedBlocks.back();
   if (BlockChain::getInstance().isValidBlockStructure(latestBlockReceived) == false) {
       cout << "ERRORE (handleBlockchainResponse): la struttura del blocco non è valida" << endl;
-      return;
+      return ret;
   }
   Block latestBlockHeld = BlockChain::getInstance().getLatestBlock();
 
-  if(receivedBlocks.size() == 1){
-    if (latestBlockReceived.index == 0){
+  if(receivedBlocks.size() == 1) {
+    if (latestBlockReceived.index == 0) {
       //Confronto fra due blocchi di genesi, verrà selezionato quello con timestamp minore
       BlockChain::getInstance().replaceChain(receivedBlocks);
-    }else{
-
+    } else {
       if (latestBlockHeld.hash == latestBlockReceived.previousHash) {
         //Il nuovo blocco è l'unico da aggiungere in quanto successivo dell'ultimo della blockchian locale
         if (BlockChain::getInstance().addBlockToChain(latestBlockReceived)) {
@@ -298,21 +302,21 @@ void Peer::handleBlockchainResponse(list<Block> receivedBlocks){
           //In precedenza potrei aver scartato transazioni perchè la mia blockchain non era aggiornata,
           // richiedo la transaction pool per verificarle di nuovo
           broadcastTxPoolQuery();
+          ret = true;
         }
-      }else{
+      } else {
         //Ci sono più versioni non congruenti o la blockchain locale è indietro di più di un blocco,
         //richiedo in broadcast le version di blockchain dei vari peer
         broadcast(queryAllMsg());
       }
-
     }
-  }else{
-    //E' stata ricevuta una nuova versione di blockchain (più blocchi), richiamo replacechain per confrontarla
+  } else {
+    // E' stata ricevuta una nuova versione di blockchain (più blocchi), richiamo replacechain per confrontarla
     // con quella locale ed eventualmente sostituirla
     BlockChain::getInstance().replaceChain(receivedBlocks);
   }
 
-
+  return ret;
 }
 
 /*Inizializzazione del server P2P*/
@@ -385,13 +389,15 @@ void Peer::handleServerMessage(crow::websocket::connection& connection, const st
   //Mapping dell'oggetto in una nuova istanza di Message
   Message message = Message(static_cast<MessageType>(document["type"].GetInt()), "");
 
-  /*Liste usade per la gestione di alcuni tipi di messaggi (non è possibile inizializzare
+  /*Liste usate per la gestione di alcuni tipi di messaggi (non è possibile inizializzare
    nuove variabili all'interno dei singoli case, se non si usano le parentesi graffe)*/
   list<Block> receivedBlocks;
   vector<Transaction> receivedTransactions;
   vector<Transaction>::iterator it;
   ofstream myfile;
   string row;
+  bool bAddedBlock = false;
+
   //Questo switch contiene la logica di gestione dei vari tipi di messaggi in arrivo
   switch (message.type) {
     //Un peer ha richiesto l'ultimo blocco, esso viene inserito nella risposta
@@ -411,29 +417,30 @@ void Peer::handleServerMessage(crow::websocket::connection& connection, const st
         cout << "ERROR (handleServerMessage - RESPONSE_BLOCKCHAIN): Nessun dato ricevuto" << endl;
         return;
       }
-      try{
+      try {
         receivedBlocks = parseBlockList(document["data"]);
-        Peer::getInstance().handleBlockchainResponse(receivedBlocks);
-      }catch(const char* msg){
+        bAddedBlock = Peer::getInstance().handleBlockchainResponse(receivedBlocks);
+      } catch(const char* msg){
         cout << msg << endl;
         cout << "EXCEPTION (handleServerMessage - RESPONSE_BLOCKCHAIN): Errore durante l'elaborazione' del messaggio!" << endl;
         return;
       }
+
       /*Aggiornamento dei dati relativi al tempo di mining del blocco (questo campo
-       è non nullo solo se siamo in corrispondenza della diffuzione di un nuovo
+        è non nullo solo se siamo in corrispondenza della diffuzione di un nuovo
         blocco che è stato minato ed aggiunto alla blockchain)*/
-      if(!document["index"].IsNull() && !document["duration"].IsNull()){
-          if(document["index"].GetInt() != -1){
-              row = "{\"block\": " +  to_string(document["index"].GetInt()) + ", \"miningtime\": " + to_string(document["duration"].GetDouble()) + "}\n";
-              ofstream myfile;
-              myfile.open ("blocksminingtime.txt", ios::out | ios::app);
-              if(myfile.is_open()) {
-                  myfile << row;
-              } else {
-                  cout << "ERRORE (handleServerMessage - RESPONSE_BLOCKCHAIN): non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
-              }
-              myfile.close();
+      if(bAddedBlock && !document["index"].IsNull() && !document["duration"].IsNull()) {
+        if(document["index"].GetInt() != -1) {
+          row = "{\"block\": " +  to_string(document["index"].GetInt()) + ", \"miningtime\": " + to_string(document["duration"].GetDouble()) + "}\n";
+          ofstream myfile;
+          myfile.open ("blocksminingtime.txt", ios::out | ios::app);
+          if(myfile.is_open()) {
+              myfile << row;
+          } else {
+              cout << "ERRORE (handleClientMessage - RESPONSE_BLOCKCHAIN): non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
           }
+          myfile.close();
+        }
       }
       break;
     //Un peer ha richiesto il transaction pool, esso viene inserito nella risposta

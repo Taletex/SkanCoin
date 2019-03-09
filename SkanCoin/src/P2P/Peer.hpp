@@ -85,9 +85,10 @@ class Peer {
     /*Dato l'url di un server P2P viene aperta una nuova connessione verso di esso dal thread client*/
     void connectToPeers(std::string peer);
 
-    /*Business logic per un messaggio di tipo RESPONSE_BLOCKCHAIN, questa funzione
-    è chiamata nell'handler dei messaggi in arrivo*/
-    void handleBlockchainResponse(std::list<Block> receivedBlocks);
+    /* Business logic per un messaggio di tipo RESPONSE_BLOCKCHAIN, questa funzione
+    è chiamata nell'handler dei messaggi in arrivo. Ritorna true se ha aggiunto un
+    singolo blocco nella blockchain, altrimenti false (anche in caso di replace) */
+    bool handleBlockchainResponse(std::list<Block> receivedBlocks);
 
     /*Questo metodo effettua un broadcast di un certo messaggio, per fare ciò lo invia
      su tutte le socket aperte dal thread client e su tutte quelle aperte da altri

@@ -209,5 +209,26 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
     $scope.inputs.txOuts.push({amount: 1, address: ""});
   }
 
+  $scope.removeLastOutputToInput = function() {
+    $scope.inputs.txOuts.pop();
+  }
+
+  $scope.isTxOutsValid = function() {
+    var ret = true;
+    if($scope.inputs.txOuts.length == 0) {
+      ret = false;
+    } else {
+      for(var i = 0; i < $scope.inputs.txOuts.length; i++) {
+        if($scope.inputs.txOuts[i].amount == null || $scope.inputs.txOuts[i].amount == '' ||
+        $scope.inputs.txOuts[i].address == null || $scope.inputs.txOuts[i].address == '') {
+           ret = false;
+           break;
+        }
+      }
+    }
+
+    return ret;
+  }
+
   $scope.getPublicKey();
 });

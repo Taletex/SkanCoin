@@ -49,8 +49,7 @@ BlockChain::BlockChain(){
     saveBlockchainStats();
     initStatFiles();
   }catch(const char* msg){
-    cout << msg << endl;
-    cout << endl;
+    cout << msg << endl << endl;
     throw "EXCEPTION (BlockChain): Creazione della blockchain fallita!";
   }
 }
@@ -329,8 +328,7 @@ Block BlockChain::generateNextBlock(){
     }
     return ret;
   }catch(const char* msg){
-    cout << msg << endl;
-    cout << endl;
+    cout << msg << endl << endl;
     throw "EXCEPTION (generateNextBlock): Errore durante la generazione del nuovo blocco";
   }
 }
@@ -422,16 +420,14 @@ Transaction BlockChain::sendTransaction(string address, float amount){
   try{
     tx = createTransaction(address, amount, getPrivateFromWallet(), getUnspentTxOuts(), TransactionPool::getInstance().getTransactionPool());
   }catch(const char* msg){
-    cout << msg << endl;
-    cout << endl;
+    cout << msg << endl << endl;
     throw "EXCEPTION (sendTransaction): Creazione delle transazione fallita";
   }
   try{
     //Aggiunta della nuova transazione al transaction pool
     TransactionPool::getInstance().addToTransactionPool(tx, getUnspentTxOuts());
   }catch(const char* msg){
-    cout << msg << endl;
-    cout << endl;
+    cout << msg << endl << endl;
     throw "EXCEPTION (sendTransaction):Inserimento della transazione nel pool fallito!";
   }
   //Broadcast a tutti gli altri peer della transactionpool aggiornata
@@ -627,8 +623,7 @@ vector<UnspentTxOut> BlockChain::isValidChain(list<Block> blockchainToValidate) 
       //transazioni presenti nel blocco
       aUnspentTxOuts = processTransactions(it1->data, aUnspentTxOuts, it1->index);
     }catch(const char* msg){
-      cout << msg << endl;
-      cout << endl;
+      cout << msg << endl << endl;
       throw "EXCEPTION (isValidChain): la blockchain ricevuta contiene delle transazioni non valide!";
     }
   }
@@ -660,8 +655,7 @@ bool BlockChain::addBlockToChain(Block newBlock) {
     try{
         saveBlockchainStats();
     }catch(const char* msg){
-      cout << msg << endl;
-      cout << endl;
+      cout << msg << endl << endl;
     }
     return true;
   }else{
@@ -702,8 +696,7 @@ void BlockChain::replaceChain(list<Block> newBlocks) {
     aUnspentTxOuts = isValidChain(newBlocks);
     //Verifica della validità dei blocchi ricevuti
   }catch(const char* msg){
-    cout << msg << endl;
-    cout << endl;
+    cout << msg << endl << endl;
     throw "EXCEPTION (replaceChain): La blockchain ricevuta non è valida!";
   }
   BlockChain::blockchain = newBlocks; //Sostituzione blockchain
@@ -725,8 +718,7 @@ void BlockChain::replaceChain(list<Block> newBlocks) {
     //Salvataggio dei nuovi dati relativi alla blockchain nell'apposito file
     saveBlockchainStats();
   }catch(const char* msg){
-    cout << msg << endl;
-    cout << endl;
+    cout << msg << endl << endl;
   }
 }
 
@@ -740,8 +732,7 @@ void BlockChain::handleReceivedTransaction(Transaction transaction) {
   try{
     TransactionPool::getInstance().addToTransactionPool(transaction, getUnspentTxOuts());
   }catch(const char* msg){
-    cout << msg << endl;
-    cout << endl;
+    cout << msg << endl << endl;
     throw "EXCEPTION (handleReceivedTransaction): La transazione ricevuta non è valida!";
     }
 }
