@@ -91,7 +91,7 @@ void byteArrayFromString(string str, uint8_t *dest){
 }
 
 /*Legge la chiave privata del nodo dal file*/
-string getPrivateFromWallet(){
+string getWalletPrivateKey(){
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
@@ -101,12 +101,12 @@ string getPrivateFromWallet(){
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;
-    throw "EXCEPTION (getPrivateFromWallet): Errore durante il caricamento della chiave privata!";
+    throw "EXCEPTION (getWalletPrivateKey): Errore durante il caricamento della chiave privata!";
   }
 }
 
 /*Legge la chiave pubblica del nodo dal file*/
-string getPublicFromWallet(){
+string getWalletPublicKey(){
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
@@ -116,7 +116,7 @@ string getPublicFromWallet(){
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;
-    throw "EXCEPTION (getPublicFromWallet): Errore durante il caricamento della chiave pubblica!";
+    throw "EXCEPTION (getWalletPublicKey): Errore durante il caricamento della chiave pubblica!";
   }
 }
 
@@ -197,17 +197,17 @@ void deleteWallet(){
 }
 
 /*Ritorna la lista degli output non spesi appartenenti ad un certo indirizzo (wallet)*/
-vector<UnspentTxOut> findUnspentTxOutsOfAddress(string ownerAddress, vector<UnspentTxOut> unspentTxOuts){
+vector<UnspentTransOut> getUnspentTransOutsOfAddress(string ownerAddress, vector<UnspentTransOut> unspentTransOuts){
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
 
-  vector<UnspentTxOut> res;
+  vector<UnspentTransOut> res;
   //Per fare una copia del vettore faccio solo una allocazione per avere migliori prestazioni
-  res.reserve(res.size() + unspentTxOuts.size());
-  res.insert(res.end(), unspentTxOuts.begin(), unspentTxOuts.end());
+  res.reserve(res.size() + unspentTransOuts.size());
+  res.insert(res.end(), unspentTransOuts.begin(), unspentTransOuts.end());
 
-  vector<UnspentTxOut>::iterator it;
+  vector<UnspentTransOut>::iterator it;
   for (it = res.begin(); it != res.end(); ) {
     if (it->address != ownerAddress) {
       it = res.erase(it);
@@ -219,29 +219,29 @@ vector<UnspentTxOut> findUnspentTxOutsOfAddress(string ownerAddress, vector<Unsp
 }
 
 /*Calcolo del totale degli output non spesi appartenenti ad un certo indirizzo*/
-float getBalance(string address, vector<UnspentTxOut> unspentTxOuts){
+float getBalance(string address, vector<UnspentTransOut> unspentTransOuts){
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
 
   float total = 0;
-  vector<UnspentTxOut> unspentTxOutsOfAddress = findUnspentTxOutsOfAddress(address, unspentTxOuts);
-  vector<UnspentTxOut>::iterator it;
-  for(it = unspentTxOutsOfAddress.begin(); it != unspentTxOutsOfAddress.end(); ++it){
+  vector<UnspentTransOut> unspentTransOutsOfAddress = getUnspentTransOutsOfAddress(address, unspentTransOuts);
+  vector<UnspentTransOut>::iterator it;
+  for(it = unspentTransOutsOfAddress.begin(); it != unspentTransOutsOfAddress.end(); ++it){
     total = total + it->amount;
   }
     return total;
 }
 
 /*Calcola il totale data una lista di output non spesi*/
-float getTotalFromOutputVector(vector<UnspentTxOut> unspentTxOuts){
+float getTotalFromOutputVector(vector<UnspentTransOut> unspentTransOuts){
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
 
   float total = 0;
-  vector<UnspentTxOut>::iterator it;
-  for(it = unspentTxOuts.begin(); it != unspentTxOuts.end(); ++it){
+  vector<UnspentTransOut>::iterator it;
+  for(it = unspentTransOuts.begin(); it != unspentTransOuts.end(); ++it){
     total = total + it->amount;
   }
     return total;
@@ -252,221 +252,96 @@ float getTotalFromOutputVector(vector<UnspentTxOut> unspentTxOuts){
 Viene ritornata la lista degli output non spesi che saranno utilizzati,
 inoltre si assegna il valore di un puntatore contenente il valore superfluo
 che dovra essere indirizzato al mittente stesso*/
-vector<UnspentTxOut> findTxOutsForAmount(float amount, vector<UnspentTxOut> myUnspentTxOuts, float *leftOverAmount){
+vector<UnspentTransOut> getTransOutsForAmount(float amount, vector<UnspentTransOut> myUnspentTransOuts, float *leftOverAmount){
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
 
   float currentAmount = 0;
-  vector<UnspentTxOut> includedUnspentTxOuts;
-  vector<UnspentTxOut>::iterator it;
-  for (it = myUnspentTxOuts.begin(); it != myUnspentTxOuts.end(); ++it) {
-    includedUnspentTxOuts.push_back(*it);
+  vector<UnspentTransOut> includedUnspentTransOuts;
+  vector<UnspentTransOut>::iterator it;
+  for (it = myUnspentTransOuts.begin(); it != myUnspentTransOuts.end(); ++it) {
+    includedUnspentTransOuts.push_back(*it);
     currentAmount = currentAmount + it->amount;
     if (currentAmount >= amount) {
         *leftOverAmount = currentAmount - amount;
-        return includedUnspentTxOuts;
+        return includedUnspentTransOuts;
     }
   }
-  throw "EXCEPTION (findTxOutsForAmount): Impossibile creare la transazione, il wallet sorgente non contiene abbastanza skancoin!";
+  throw "EXCEPTION (getTransOutsForAmount): Impossibile creare la transazione, il wallet sorgente non contiene abbastanza skancoin!";
 }
 
 /*Generazione degli output di transazione dati l'importo e la
 differenza che deve tornare al mittente*/
-vector<TxOut> createTxOuts(string receiverAddress, string myAddress, float amount, float leftOverAmount){
+vector<TransOut> createTransOuts(string receiverAddress, string myAddress, float amount, float leftOverAmount){
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
 
-  TxOut txOut1 = TxOut(receiverAddress, amount);
+  TransOut transOut1 = TransOut(receiverAddress, amount);
   if (leftOverAmount == 0) {
-      return {txOut1};
+      return {transOut1};
   } else {
-      TxOut leftOverTx = TxOut(myAddress, leftOverAmount);
-      return {txOut1, leftOverTx};
+      TransOut leftOverTx = TransOut(myAddress, leftOverAmount);
+      return {transOut1, leftOverTx};
   }
 }
 
 /*Verifica se l'output non speso (1° parametro) è referenziato da un
-input nella lista txIns (2° parametro)*/
-bool isReferencedUnspentTxOut(UnspentTxOut uTxOut, vector<TxIn> txIns){
+input nella lista transIns (2° parametro)*/
+bool isReferencedUnspentTransOut(UnspentTransOut uTransOut, vector<TransIn> transIns){
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
 
-  vector<TxIn>::iterator it;
-  for(it = txIns.begin(); it != txIns.end(); ++it){
-    if(it->txOutIndex == uTxOut.txOutIndex && it->txOutId == uTxOut.txOutId){
+  vector<TransIn>::iterator it;
+  for(it = transIns.begin(); it != transIns.end(); ++it){
+    if(it->transOutIndex == uTransOut.transOutIndex && it->transOutId == uTransOut.transOutId){
       return true;
     }
   }
   return false;
 }
 
-/*Ritorna la lista di tutti gli output non spesi, senza quelli che sono
-referenziati da un qualche input in una delle transazioni presenti nella transaction pool*/
-vector<UnspentTxOut> filterTxPoolTxs(vector<UnspentTxOut> unspentTxOuts, vector<Transaction> transactionPool){
-  #if DEBUG_FLAG == 1
-  DEBUG_INFO("");
-  #endif
+/*Verifica della firma, effettuo le conversioni ad array di byte, per ottenere
+un formato compatibile con l'interfaccia della libreria per ECDSA
+Funzione utilizzata per verificare la firma posta su un input di Transazione
+che deve corrispondere alla firma dell'id della transazione effettuata con la
+chiave privata del proprietario dell'output di transazione referenziato */
+int signVerify(string key, string hash, string signature) {
+  //Chiave pubblica del proprietario dell'output non speso
+  uint8_t p_public[ECC_BYTES+1];
+  byteArrayFromString(key, p_public);
 
-  vector<TxIn> txIns;
+  /*Id della transazione (hash su cui è stata fatta la firma). Su questo elemento
+  non applichiamo la conversione implementata in wallet, poiche questo hash
+  è una normale stringa che non rispetta la notazione puntata utilizzata nelle
+  nostre conversioni, dunque si converte semplicemente ogni carattere in un byte*/
+  uint8_t p_hash[ECC_BYTES];
+  memcpy (p_hash, hash.c_str(), ECC_BYTES);
 
-  vector<Transaction>::iterator it;
-  vector<TxIn>::iterator it2;
-  for(it = transactionPool.begin(); it != transactionPool.end(); ++it){
-    for(it2 = it->txIns.begin(); it2 != it->txIns.end(); ++it2){
-      txIns.push_back(*it2);
-    }
-  }
-  vector<UnspentTxOut> res;
-  //copia del vettore per evitare side effects, faccio solo una allocazione per avere migliori prestazioni
-  res.reserve(res.size() + unspentTxOuts.size());
-  res.insert(res.end(), unspentTxOuts.begin(), unspentTxOuts.end());
+  //Signature creata con la chiave privata del proprietario dell'output non speso
+  uint8_t p_signature[ECC_BYTES*2];
+  byteArrayFromString(signature, p_signature);
 
-  /*Per ogni output non speso cerco nel vettore di txIn quella che fa riferimento
-  //ad esso, se la trovo rimuovo dal vettore l'output non speso*/
-  vector<UnspentTxOut>::iterator it3;
-  for(it3 = res.begin(); it3 != res.end();){
-    if (isReferencedUnspentTxOut(*it3, txIns)) {
-      it3 = res.erase(it3);
-    } else {
-      ++it3;
-    }
-  }
-    return res;
+  return ecdsa_verify(p_public, p_hash , p_signature);
 }
 
-/*Creazione di un input di transazione a partire da un output non speso
-a cui questo farà riferimento*/
-TxIn toUnsignedTxIn(UnspentTxOut unspentTxOut){
-  #if DEBUG_FLAG == 1
-  DEBUG_INFO("");
-  #endif
-
-  TxIn txIn = TxIn();
-  txIn.txOutId = unspentTxOut.txOutId;
-  txIn.txOutIndex = unspentTxOut.txOutIndex;
-  return txIn;
-}
-
-/*Generazione di una nuova transazione*/
-Transaction createTransaction(string receiverAddress, float amount, string privateKey, vector<UnspentTxOut> unspentTxOuts, vector<Transaction> txPool){
-  #if DEBUG_FLAG == 1
-  DEBUG_INFO("");
-  #endif
-
-  //Ottengo la lista degli output non spesi per il mio wallet
-  string myAddress = getPublicFromWallet();
-  vector<UnspentTxOut> myUnspentTxOutsA = findUnspentTxOutsOfAddress(myAddress, unspentTxOuts);
-
-  /*Ottengo la lista dei miei output non spesi a cui sono stati togli gli output
-   che vengono usati come input in una delle transazioni nel pool*/
-  vector<UnspentTxOut> myUnspentTxOuts = filterTxPoolTxs(myUnspentTxOutsA, txPool);
-  float leftOverAmount;
-
-  /*Cerco tra gli output non spesi quelli necessari per il nuovo input
-  (devo "raccogliere" un ammontare pari ad amount),
-  gli output che sto usando saranno nel nuovo vettore includedUnspentTxOuts*/
-  vector<UnspentTxOut> includedUnspentTxOuts;
-  try{
-    includedUnspentTxOuts= findTxOutsForAmount(amount, myUnspentTxOuts, &leftOverAmount);
-  }catch(const char* msg){
-    cout << msg << endl;
-    cout << endl;
-    throw "EXCEPTION (createTransaction): Impossibile creare la transazione, il mittente non possiede abbastanza skanCoin!";
+/* Genera una signature a partire da una chiave privata e un hash da firmare.
+Viene utilizzato in transactions durante la firma degli input degli input di
+transazione. Se la firma va a buon fine il metodo ritorna 1 e il puntatore a
+stringa passato come terzo parametro viene riempito con la signature prodotta */
+int createSignature(string key, string hash, string& signature) {
+  //Generazione della firma a partire dall'hash (id della transazione)
+  uint8_t p_hash[ECC_BYTES];
+  memcpy (p_hash, hash.c_str(), ECC_BYTES);
+  uint8_t p_private[ECC_BYTES];
+  byteArrayFromString(key, p_private);
+  uint8_t p_signature[ECC_BYTES*2];
+  int signCreated = ecdsa_sign(p_private, p_hash, p_signature);
+  if(signCreated == 1) {
+    signature = stringFromByteArray(p_signature, ECC_BYTES*2);
   }
-  /*Raccolti gli output non spesi da usare di creano i rispettivi input per la nuova transazione
-   (che faranno riferimento ad essi), questi devono ancora essere firmati!*/
-  vector<TxIn> unsignedTxIns;
-  vector<UnspentTxOut>::iterator it2;
-  for(it2 = includedUnspentTxOuts.begin(); it2 != includedUnspentTxOuts.end(); ++it2){
-    unsignedTxIns.push_back(toUnsignedTxIn(*it2));
-  }
-  //Creo la transazione, gli input non sono ancora firmati
-  Transaction tx = Transaction();
-  tx.txIns = unsignedTxIns;
-  tx.txOuts = createTxOuts(receiverAddress, myAddress, amount, leftOverAmount);
-  tx.id = getTransactionId(tx);
-  int index = 0;
-  try{
-    //firma di tutti gli input della nuova transazione
-    vector<TxIn>::iterator it3;
-    for(it3 = tx.txIns.begin(); it3 != tx.txIns.end(); ++it3){
-      it3->signature = signTxIn(tx, index, privateKey, unspentTxOuts);
-      index++;
-    }
-  }catch(const char* msg){
-    cout << msg << endl;
-    cout << endl;
-    throw "EXCEPTION (createTransaction): Creazione della transazione fallita, alcuni input di transazione non sono stati firmati correttamente";
-  }
-  return tx;
-}
 
-/*Generazione di una nuova transazione, a partire da un array di output, per
-permettere di esporre la rest per effettuare più movimenti dallo stesso wallet
-in un solo blocco senza passare dal transaction pool*/
-Transaction createTransactionWithMultipleOutputs (std::vector<TxOut> txOuts, std::string privateKey, std::vector<UnspentTxOut> unspentTxOuts, std::vector<Transaction> txPool){
-  #if DEBUG_FLAG == 1
-  DEBUG_INFO("");
-  #endif
-
-  //Ottengo la lista degli output non spesi per il mio wallet
-  string myAddress = getPublicFromWallet();
-  vector<UnspentTxOut> myUnspentTxOutsA = findUnspentTxOutsOfAddress(myAddress, unspentTxOuts);
-
-  /*Ottengo la lista dei miei output non spesi a cui sono stati togli gli output
-   che vengono usati come input in una delle transazioni nel pool*/
-  vector<UnspentTxOut> myUnspentTxOuts = filterTxPoolTxs(myUnspentTxOutsA, txPool);
-  float leftOverAmount;
-
-  /*Cerco tra gli output non spesi quelli necessari per il nuovo input
-  (devo "raccogliere" un ammontare pari ad amount),
-  gli output che sto usando saranno nel nuovo vettore includedUnspentTxOuts*/
-  vector<UnspentTxOut> includedUnspentTxOuts;
-
-  //Calcolo il totale degli output
-  float amount = 0;
-  vector<TxOut>::iterator it;
-  for(it = txOuts.begin(); it != txOuts.end(); ++it){
-    amount += it->amount;
-  }
-  try{
-    includedUnspentTxOuts= findTxOutsForAmount(amount, myUnspentTxOuts, &leftOverAmount);
-  }catch(const char* msg){
-    cout << msg << endl;
-    cout << endl;
-    throw "EXCEPTION (createTransaction): Impossibile creare la transazione, il mittente non possiede abbastanza skanCoin!";
-  }
-  /*Raccolti gli output non spesi da usare di creano i rispettivi input per la nuova transazione
-   (che faranno riferimento ad essi), questi devono ancora essere firmati!*/
-  vector<TxIn> unsignedTxIns;
-  vector<UnspentTxOut>::iterator it2;
-  for(it2 = includedUnspentTxOuts.begin(); it2 != includedUnspentTxOuts.end(); ++it2){
-    unsignedTxIns.push_back(toUnsignedTxIn(*it2));
-  }
-  //Creo la transazione, gli input non sono ancora firmati
-  Transaction tx = Transaction();
-  tx.txIns = unsignedTxIns;
-  tx.txOuts = txOuts;
-  if (leftOverAmount != 0) {
-      TxOut leftOverTx = TxOut(myAddress, leftOverAmount);
-      tx.txOuts.push_back(leftOverTx);
-  }
-  tx.id = getTransactionId(tx);
-  int index = 0;
-  try{
-    //firma di tutti gli input della nuova transazione
-    vector<TxIn>::iterator it3;
-    for(it3 = tx.txIns.begin(); it3 != tx.txIns.end(); ++it3){
-      it3->signature = signTxIn(tx, index, privateKey, unspentTxOuts);
-      index++;
-    }
-  }catch(const char* msg){
-    cout << msg << endl;
-    cout << endl;
-    throw "EXCEPTION (createTransaction): Creazione della transazione fallita, alcuni input di transazione non sono stati firmati correttamente";
-  }
-  return tx;
+  return signCreated;
 }

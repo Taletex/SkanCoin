@@ -13,7 +13,7 @@ TransactionPool::TransactionPool(){
 
 /*Ritorna la lista delle transazioni non confermate nel nodo
 (quelle contenute nel transaction pool) */
-vector<Transaction> TransactionPool::getTransactionPool() {
+vector<Transaction> TransactionPool::getPool() {
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
@@ -37,35 +37,35 @@ string TransactionPool::toString(){
 }
 
 /* Verifica la validità della transazione data e la inserisce nel transaction pool */
-bool TransactionPool::addToTransactionPool(Transaction tx, vector<UnspentTxOut> unspentTxOuts) {
+bool TransactionPool::addToPool(Transaction transaction, vector<UnspentTransOut> unspentTransOuts) {
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
 
-  if(!validateTransaction(tx, unspentTxOuts) || !isValidTxForPool(tx)) {
+  if(!isValidTransaction(transaction, unspentTransOuts) || !isValidTransForPool(transaction)) {
     cout << endl;
-    throw "INFO (addToTransactionPool): La transazione che si vuole inserire nel pool è già presente o non è valida...";
+    throw "INFO (addToPool): La transazione che si vuole inserire nel pool è già presente o non è valida...";
   }
-  cout << "Nuova transazione aggiunta al pool: " << tx.toString() << endl;
-  cout << "La transaction pool contiene " << TransactionPool::getInstance().getTransactionPool().size()+1 << " transazioni" << endl;
-  unconfirmedTransactions.push_back(tx);
-  stats.push_back(TransactionStat(tx.id));
+  cout << "Nuova transazione aggiunta al pool: " << transaction.toString() << endl;
+  cout << "La transaction pool contiene " << TransactionPool::getInstance().getPool().size()+1 << " transazioni" << endl;
+  unconfirmedTransactions.push_back(transaction);
+  stats.push_back(TransactionStat(transaction.id));
   return true;
 }
 
 /* Aggiorna la transaction pool eliminando le transazioni non valide*/
-void TransactionPool::updateTransactionPool(vector<UnspentTxOut> unspentTxOuts) {
+void TransactionPool::updatePool(vector<UnspentTransOut> unspentTransOuts) {
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
 
   list<Transaction> aux;
   list<Transaction>::iterator it1;
-  vector<TxIn>::iterator it2;
+  vector<TransIn>::iterator it2;
 
   for(it1 = unconfirmedTransactions.begin(); it1 != unconfirmedTransactions.end(); ) {
-    for(it2 = it1->txIns.begin(); it2 != it1->txIns.end(); ++it2) {
-      if(!hasTxIn(*it2, unspentTxOuts)) {
+    for(it2 = it1->transIns.begin(); it2 != it1->transIns.end(); ++it2) {
+      if(!hasTransIn(*it2, unspentTransOuts)) {
         deleteStat(it1->id);
         cout << "Rimozione dalla transaction pool della transazione: " << it1->toString() << endl;
         it1 = unconfirmedTransactions.erase(it1);
@@ -92,15 +92,15 @@ void TransactionPool::deleteStat(string transactionId) {
   }
 }
 
-/*Verifica se il TxIn passato come primo parametro è presente nell'array passato come secondo */
-bool TransactionPool::hasTxIn(TxIn txIn, vector<UnspentTxOut> unspentTxOuts) {
+/*Verifica se il TransIn passato come primo parametro è presente nell'array passato come secondo */
+bool TransactionPool::hasTransIn(TransIn transIn, vector<UnspentTransOut> unspentTransOuts) {
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
 
-  vector<UnspentTxOut>::iterator it;
-  for(it = unspentTxOuts.begin(); it != unspentTxOuts.end(); ++it){
-    if(it->txOutId == txIn.txOutId && it->txOutIndex == txIn.txOutIndex){
+  vector<UnspentTransOut>::iterator it;
+  for(it = unspentTransOuts.begin(); it != unspentTransOuts.end(); ++it){
+    if(it->transOutId == transIn.transOutId && it->transOutIndex == transIn.transOutIndex){
       return true;
     }
   }
@@ -109,35 +109,35 @@ bool TransactionPool::hasTxIn(TxIn txIn, vector<UnspentTxOut> unspentTxOuts) {
 
 /*Ritorna un vettore contentente tutti gli input di transazione contenuti
 nelle transazioni presenti nel transaction pool */
-vector<TxIn> TransactionPool::getTxPoolIns() {
+vector<TransIn> TransactionPool::getPoolIns() {
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
 
-  vector<TxIn> txIns;
+  vector<TransIn> transIns;
   list<Transaction>::iterator it;
   for(it = unconfirmedTransactions.begin(); it != unconfirmedTransactions.end(); ++it){
-    txIns.reserve(txIns.size() + it->txIns.size());
-    txIns.insert(txIns.end(), it->txIns.begin(), it->txIns.end());
+    transIns.reserve(transIns.size() + it->transIns.size());
+    transIns.insert(transIns.end(), it->transIns.begin(), it->transIns.end());
   }
-  return txIns;
+  return transIns;
 }
 
 /*Ritorna true se la transazione data non contiene input già presenti nel
  transaction pool (indicati in altre transazioni), altrimenti false*/
-bool TransactionPool::isValidTxForPool(Transaction tx) {
+bool TransactionPool::isValidTransForPool(Transaction transaction) {
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
 
-  vector<TxIn>::iterator it1;
-  vector<TxIn>::iterator it2;
-  vector<TxIn> txPoolIns = getTxPoolIns();
+  vector<TransIn>::iterator it1;
+  vector<TransIn>::iterator it2;
+  vector<TransIn> transPoolIns = getPoolIns();
 
-  for(it1 = tx.txIns.begin(); it1 != tx.txIns.end(); ++it1) {
-    for(it2 = txPoolIns.begin(); it2 != txPoolIns.end(); ++it2) {
+  for(it1 = transaction.transIns.begin(); it1 != transaction.transIns.end(); ++it1) {
+    for(it2 = transPoolIns.begin(); it2 != transPoolIns.end(); ++it2) {
       if(it1->isEqual(*it2)) {
-        cout << "INFO (isValidTxForPool): L'input di transazione è già stato speso in una delle transazioni presenti nel pool!" << endl;
+        cout << "INFO (isValidTransForPool): L'input di transazione è già stato speso in una delle transazioni presenti nel pool!" << endl;
         return false;
       }
     }

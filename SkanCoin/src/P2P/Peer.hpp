@@ -1,6 +1,6 @@
 #ifndef __P2P_SERVER_DEFINITION__
 #define __P2P_SERVER_DEFINITION__
-#include <chrono>
+
 #include <iostream>
 #include <mutex>
 #include <thread>
@@ -8,19 +8,23 @@
 #include "document.h"
 #include "easywsclient.hpp"
 #include "config.hpp"
+#include "../Blockchain/Block.hpp"
+#include "../Blockchain/Blockchain.hpp"
+#include "../Blockchain/Transactions.hpp"
+#include "../Blockchain/TransactionPool.hpp"
 #include "../HttpServer/HttpServer.hpp"
 
 /*I tipi di messaggi che i peer possono scambiarsi*/
 enum MessageType {
-    QUERY_LATEST = 0,
-    QUERY_ALL = 1,
+    QUERY_LATEST_BLOCK = 0,
+    QUERY_BLOCKCHAIN = 1,
     RESPONSE_BLOCKCHAIN = 2,
-    QUERY_TRANSACTION_POOL = 3,
-    RESPONSE_TRANSACTION_POOL = 4,
-    TRANSACTION_POOL_STATS = 5
+    QUERY_POOL = 3,
+    RESPONSE_POOL = 4,
+    POOL_STATS = 5
 };
 
-/*Questa classe modella un messaggio di un peer ed ha un metodo toString ù
+/*Questa classe modella un messaggio di un peer ed ha un metodo toString
 che permette di inviarlo su una web socket*/
 class Message {
   public:
@@ -40,15 +44,14 @@ class Peer {
     quelle aperte non possono essere usate da thread diversi contemporaneamente
     (e noi abbiamo bisogno di usare due thread differenti per gestire questi due tipi di connessione) */
     std::mutex connectionsMtx;
-    /*Lista di connessioni ricevute dal thread server*/
-    std::unordered_set<crow::websocket::connection*> receivedConnections;
     /*Lista di connessioni aperte dal thread client*/
     std::vector<easywsclient::WebSocket::pointer> openedConnections;
+    /*Lista di connessioni ricevute dal thread server*/
+    std::unordered_set<crow::websocket::connection*> receivedConnections;
     /*Questa è una variabile di supporto usata dall'handler dei messaggi in arrivo
      per gestire un evento per una socket secifica (vedi spiegazione più approfondita
-       in corrispondenza dell'implementazione del metodo - handleClientMessage)*/
+     in corrispondenza dell'implementazione del metodo - clientMessageHandler)*/
     easywsclient::WebSocket::pointer tempClientWs;
-
     /*
      * Per poter utilizzare lo stesso metodo anche per i messaggi ricevuti dal thread server, utilizziamo lo stesso pattern
      * con riferimento alla socket corrente, in questo modo sarà possibile gestire i due casi utilizzando la stessa interfaccia
@@ -64,49 +67,48 @@ class Peer {
        return peer;
     }
 
-    /*Ritorna il numero d peer (si considerano sia le connessioni aperte dal thread client che quelle ricevute dal thread server)*/
-    int countPeers();
-
-    /*Controllo della validità del tipo di messaggio (se appartiene all'enumeratore)*/
-    bool isValidType(int type);
-
-    /*metodi per la costruzione dei messaggi da inviare sulle socket*/
-    std::string queryChainLengthMsg();
-    std::string queryAllMsg();
-    std::string queryTransactionPoolMsg();
-    std::string responseChainMsg();
-    std::string responseLatestMsg(int index, double duration);
-    std::string responseTransactionPoolMsg();
-    std::string txPoolStatsMessage(std::vector<std::string> stats);
-
-    /*Inizializzazione del server P2P*/
-    void initP2PServer(int port);
-
-    /*Metodi per il broadcast dei messaggi*/
-    void broadCastTransactionPool();
-    void broadcastLatest(int index, double duration);
-    void broadcastTxPoolStat(std::vector<std::string>);
-    void broadcastTxPoolQuery();
-
-    /*Avvio del polling del client sulle socket aperte*/
-    void startClientPoll();
-
-    /*Dato l'url di un server P2P viene aperta una nuova connessione verso di esso dal thread client*/
-    void connectToPeers(std::string peer);
-
     /* Business logic per un messaggio di tipo RESPONSE_BLOCKCHAIN, questa funzione
     è chiamata nell'handler dei messaggi in arrivo. Ritorna true se ha aggiunto un
     singolo blocco nella blockchain, altrimenti false (anche in caso di replace) */
-    bool handleBlockchainResponse(std::list<Block> receivedBlocks);
+    bool blockchainResponseHandler(std::list<Block> receivedBlocks);
 
     /*Questo metodo effettua un broadcast di un certo messaggio, per fare ciò lo invia
      su tutte le socket aperte dal thread client e su tutte quelle aperte da altri
      client verso il thread server*/
     void broadcast(std::string message);
 
-    /*Business logic per la gestione dei messaggi in arrivo dai peer*/
-    void handlePeerMessage(const std::string & data, int isServer);
+    /*Metodi per il broadcast dei messaggi*/
+    void broadcastLatestBlock(int index, double duration);
+    void broadCastPool();
+    void broadcastPoolStat(std::vector<std::string>);
+    void broadcastPoolQuery();
 
+    /*Dato l'url di un server P2P viene aperta una nuova connessione verso di esso dal thread client*/
+    void connectToPeer(std::string peer);
+
+    /*Ritorna il numero d peer (si considerano sia le connessioni aperte dal thread client che quelle ricevute dal thread server)*/
+    int countPeers();
+
+    /*Inizializzazione del server P2P*/
+    void initP2PServer(int port);
+
+    /*Controllo della validità del tipo di messaggio (se appartiene all'enumeratore)*/
+    bool isValidType(int type);
+
+    /*Business logic per la gestione dei messaggi in arrivo dai peer*/
+    void peerMessageHandler(const std::string & data, int isServer);
+
+    /*metodi per la costruzione dei messaggi da inviare sulle socket*/
+    std::string poolStatsMessage(std::vector<std::string> stats);
+    std::string queryBlockchainMsg();
+    std::string queryLatestBlockMsg();
+    std::string queryPoolMsg();
+    std::string responseBlockchainMsg();
+    std::string responseLatestBlockMsg(int index, double duration);
+    std::string responsePoolMsg();
+
+    /*Avvio del polling del client sulle socket aperte*/
+    void startClientPoll();
   private:
     /*Il pattern singleton viene implementato rendendo il costruttore di default privato
     ed eliminando il costruttore di copia e l'operazione di assegnamento*/
@@ -114,13 +116,13 @@ class Peer {
     Peer(const Peer&) = delete;
     Peer& operator=(const Peer&) = delete;
 
-    /*Questo metodo controlla il vettore di socket (client), eliminando quelle
-    che sono state chiuse*/
-    void clearClosedWs();
-
     /* Questa funzione esegue il polling sulla lista delle connessioni aperte dal
     thread client, se ci sono nuovi messaggi ricevuti viene eseguito l'handler adatto*/
     void checkReceivedMessage();
+
+    /*Questo metodo controlla il vettore di socket (client), eliminando quelle
+    che sono state chiuse*/
+    void clearClosedWs();
 };
 
 /*Gestore per messaggi in arrivo dalle socke aperte dal thread client (easywsclient::WebSocket)
@@ -129,6 +131,16 @@ abbiamo bisogno di una variabile esterna di supporto (tempClientWs) che sia un
 riferimento alla socket corrente. Sempre per rispettare l'interfaccia richiesta
 dalla libreria esso non può essere membro della classe Peer in quanto è
 utilizzato come handler per i messaggi in arrivo dalle socket*/
-void handleClientMessage(const std::string & message);
+void clientMessageHandler(const std::string & message);
 
+#endif
+
+
+/* Definizione della macro BOOST_SYSTEM_NO_DEPRECATED per risolvere il bug
+   boost::system::throws della libreria Boost
+   http://boost.2283326.n4.nabble.com/Re-Boost-build-System-Link-issues-using-BOOST-ERROR-CODE-HEADER-ONLY-td4688963.html
+   https://www.boost.org/doc/libs/1_56_0/libs/system/doc/reference.html#Header-
+*/
+#ifndef BOOST_SYSTEM_NO_DEPRECATED
+#define BOOST_SYSTEM_NO_DEPRECATED
 #endif

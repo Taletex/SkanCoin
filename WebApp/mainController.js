@@ -3,7 +3,7 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
 
   $scope.baseUrl = "http://localhost:3001/webresources/";
   $scope.bLoading = false;
-  $scope.inputs = {txOuts: []};
+  $scope.inputs = {transOuts: []};
   $scope.queryOutput = null;
   $scope.publicKey = "";
 
@@ -57,9 +57,9 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
   };
 
   // Ritorna la lista degli output non spesi dell'intera blockchain
-  $scope.getBlockchainUnspentTransactionOutputs = function() {
+  $scope.getBlockchainUnspentTransOuts = function() {
     $scope.bLoading = true;
-    $http.get($scope.baseUrl + "unspentTransactionOutputs").then(function(resp) {
+    $http.get($scope.baseUrl + "unspentTransOuts").then(function(resp) {
       document.getElementById("output").innerHTML = syntaxHighlight(JSON.stringify(resp.data, undefined, 4));
       $scope.queryOutput = resp.data;
       console.log(resp);
@@ -69,9 +69,9 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
   };
 
   // Ritorna la lista degli output non spesi appartenenti ad un certo indirizzo (wallet)
-  $scope.getWalletUnspentTransactionOutputs = function(address) {
+  $scope.getWalletUnspentTransOuts = function(address) {
     $scope.bLoading = true;
-    $http.get($scope.baseUrl + "unspentTransactionOutputs/" + address).then(function(resp) {
+    $http.get($scope.baseUrl + "unspentTransOuts/" + address).then(function(resp) {
       document.getElementById("output").innerHTML = syntaxHighlight(JSON.stringify(resp.data, undefined, 4));
       $scope.queryOutput = resp.data;
       console.log(resp);
@@ -81,9 +81,9 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
   };
 
   // Ritorna la lista degli output non spesi dal wallet attuale
-  $scope.getMyUnspentTransactionOutputs = function() {
+  $scope.getMyUnspentTransOuts = function() {
     $scope.bLoading = true;
-    $http.get($scope.baseUrl + "myUnspentTransactionOutputs").then(function(resp) {
+    $http.get($scope.baseUrl + "myUnspentTransOuts").then(function(resp) {
       document.getElementById("output").innerHTML = syntaxHighlight(JSON.stringify(resp.data, undefined, 4));
       $scope.queryOutput = resp.data;
       console.log(resp);
@@ -144,10 +144,10 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
 
   // Richiama una REST per effettuare il mining di un nuovo blocco contente la
   // coinbase transaction e una transazione con uno o più output destinazione
-  $scope.mineBlockWithTransaction = function(txOuts) {
-    if(txOuts != null) {
+  $scope.mineBlockWithTransaction = function(transOuts) {
+    if(transOuts != null) {
       $scope.bLoading = true;
-      $http.post($scope.baseUrl + "blocks/transaction",{data: txOuts}, {headers:{'Content-Type': 'application/json'}}).then(function(resp) {
+      $http.post($scope.baseUrl + "blocks/transaction",{data: transOuts}, {headers:{'Content-Type': 'application/json'}}).then(function(resp) {
         document.getElementById("output").innerHTML = syntaxHighlight(JSON.stringify(resp.data, undefined, 4));
         $scope.queryOutput = resp.data;
         console.log(resp);
@@ -206,21 +206,21 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
 
   // Aggiunge una transazione all'array di transazioni di inputs
   $scope.addOutputToInput = function() {
-    $scope.inputs.txOuts.push({amount: 1, address: ""});
+    $scope.inputs.transOuts.push({amount: 1, address: ""});
   }
 
   $scope.removeLastOutputToInput = function() {
-    $scope.inputs.txOuts.pop();
+    $scope.inputs.transOuts.pop();
   }
 
-  $scope.isTxOutsValid = function() {
+  $scope.isTransOutsValid = function() {
     var ret = true;
-    if($scope.inputs.txOuts.length == 0) {
+    if($scope.inputs.transOuts.length == 0) {
       ret = false;
     } else {
-      for(var i = 0; i < $scope.inputs.txOuts.length; i++) {
-        if($scope.inputs.txOuts[i].amount == null || $scope.inputs.txOuts[i].amount == '' ||
-        $scope.inputs.txOuts[i].address == null || $scope.inputs.txOuts[i].address == '') {
+      for(var i = 0; i < $scope.inputs.transOuts.length; i++) {
+        if($scope.inputs.transOuts[i].amount == null || $scope.inputs.transOuts[i].amount == '' ||
+        $scope.inputs.transOuts[i].address == null || $scope.inputs.transOuts[i].address == '') {
            ret = false;
            break;
         }

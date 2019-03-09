@@ -15,7 +15,7 @@ void initHttpServer(int port){
 
   /* REST: Ritorna la chiave pubblica del wallet dell'utente corrente */
   CROW_ROUTE(app, "/webresources/publickey")([]() {
-      return createResponse("{\"success\" :true, \"publickey\": \"" + getPublicFromWallet() + "\"}", 200);
+      return createResponse("{\"success\" :true, \"publickey\": \"" + getWalletPublicKey() + "\"}", 200);
   });
 
   /* REST: Ritorna la blockchain */
@@ -44,18 +44,18 @@ void initHttpServer(int port){
   });
 
   /* REST: Ritorna la lista degli output non spesi dell'intera blockchain */
-  CROW_ROUTE(app, "/webresources/unspentTransactionOutputs")([]() {
-      return createResponse("{\"success\" :true, \"unspentTxOuts\": " + printUnspentTxOuts(BlockChain::getInstance().getUnspentTxOuts()) + "}", 200);
+  CROW_ROUTE(app, "/webresources/unspentTransOuts")([]() {
+      return createResponse("{\"success\" :true, \"unspentTransOuts\": " + printUnspentTransOuts(BlockChain::getInstance().getUnspentTransOuts()) + "}", 200);
   });
 
   /* REST: Ritorna la lista degli output non spesi appartenenti ad un certo indirizzo (wallet) */
-  CROW_ROUTE(app, "/webresources/unspentTransactionOutputs/<string>")([](string address){
-      return createResponse("{\"success\": true, \"unspentTxOuts\":" + printUnspentTxOuts(findUnspentTxOutsOfAddress(address, BlockChain::getInstance().getUnspentTxOuts())) + "}", 200);
+  CROW_ROUTE(app, "/webresources/unspentTransOuts/<string>")([](string address){
+      return createResponse("{\"success\": true, \"unspentTransOuts\":" + printUnspentTransOuts(getUnspentTransOutsOfAddress(address, BlockChain::getInstance().getUnspentTransOuts())) + "}", 200);
   });
 
   /* REST: Ritorna la lista degli output non spesi relativi al wallet dell'utente */
-  CROW_ROUTE(app, "/webresources/myUnspentTransactionOutputs")([]() {
-      return createResponse("{\"success\" :true, \"myUnspentTxOuts\": " + printUnspentTxOuts(BlockChain::getInstance().getMyUnspentTransactionOutputs()) + "}", 200);
+  CROW_ROUTE(app, "/webresources/myUnspentTransOuts")([]() {
+      return createResponse("{\"success\" :true, \"myUnspentTransOuts\": " + printUnspentTransOuts(BlockChain::getInstance().getMyUnspentTransactionOutputs()) + "}", 200);
   });
 
   /* REST: Ritorna il balance del wallet */
@@ -65,7 +65,7 @@ void initHttpServer(int port){
 
   /* REST: Ritorna la transaction pool del nodo */
   CROW_ROUTE(app, "/webresources/transactionPool")([]() {
-      return createResponse("{\"success\" :true, \"transactionPool\": " + printTransactions(TransactionPool::getInstance().getTransactionPool()) + "}", 200);
+      return createResponse("{\"success\" :true, \"transactionPool\": " + printTransactions(TransactionPool::getInstance().getPool()) + "}", 200);
   });
 
   /* REST: Crea una nuova transazione e la inserisce nel transaction pool */
@@ -79,8 +79,8 @@ void initHttpServer(int port){
         return createResponse("{\"success\": false, \"message\": \"Error parsing request: invalid address or amount\" }", 200);
       }
       try {
-        Transaction tx = BlockChain::getInstance().sendTransaction(document["address"].GetString(), document["amount"].GetFloat());
-        return createResponse("{\"success\" :true, \"Transaction\": " + tx.toString() + "}", 200);
+        Transaction transaction = BlockChain::getInstance().sendTransaction(document["address"].GetString(), document["amount"].GetFloat());
+        return createResponse("{\"success\" :true, \"transaction\": " + transaction.toString() + "}", 200);
       } catch (const char* msg) {
         CROW_LOG_INFO << msg << "\n";
         return createResponse("{\"success\": false, \"message\": \"Error sending the transaction\" }", 200);
@@ -94,7 +94,7 @@ void initHttpServer(int port){
       return optionsResponse();           // Per gestire il CORS
     } else {
       try{
-        Block newBlock = BlockChain::getInstance().generateNextBlock();
+        Block newBlock = BlockChain::getInstance().createNextBlock();
         return createResponse("{\"success\" :true, \"newBlock\": " + newBlock.toString() + "}", 200);
       }catch(const char* msg){
         CROW_LOG_INFO << msg << "\n";
@@ -109,7 +109,7 @@ void initHttpServer(int port){
     if(req.method == "OPTIONS"_method) {
       return optionsResponse();           // Per gestire il CORS
     } else {
-      vector<TxOut> transactions;
+      vector<TransOut> transactions;
       rapidjson::Document document;
       document.Parse(req.body.c_str());
       const rapidjson::Value& data = document["data"];
@@ -118,8 +118,8 @@ void initHttpServer(int port){
         return createResponse("{\"success\": false, \"message\": \"Error parsing request: Block data not present\" }", 200);
       }
       try{
-        transactions = parseTxOutVector(data);
-        Block newBlock = BlockChain::getInstance().generateNextBlockWithTransaction(transactions);
+        transactions = parseTransOutVector(data);
+        Block newBlock = BlockChain::getInstance().createNextBlockWithTransaction(transactions);
         return createResponse("{\"success\" :true, \"newBlock\": " + newBlock.toString() + "}", 200);
       }catch(const char* msg){
         CROW_LOG_INFO << msg << "\n";
@@ -140,7 +140,7 @@ void initHttpServer(int port){
       }
       string peer = document["peer"].GetString();
       try{
-        Peer::getInstance().connectToPeers(peer);
+        Peer::getInstance().connectToPeer(peer);
         return createResponse("{\"success\": true, \"peer\": \"" + peer + "\" }", 200);
       }catch (const char* msg) {
         CROW_LOG_INFO << msg << "\n";
@@ -227,36 +227,36 @@ crow::response createResponse(string data, int code) {
  * Parsing da collezioni C++ a stringhe C++ (da usare dentro le risposte HTTP)
  * e da valori rapidjson a collezioni C++                                     */
 
-/* Effettua il parsing di un vettore di transaction input: JSON (rapidjson) -> vector<TxIn> */
-vector<TxIn> parseTxInVector(const rapidjson::Value &txIns){
+/* Effettua il parsing di un vettore di transaction input: JSON (rapidjson) -> vector<TransIn> */
+vector<TransIn> parseTransInVector(const rapidjson::Value &transIns){
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
 
-  if(!txIns.IsArray() || txIns.IsNull()){
+  if(!transIns.IsArray() || transIns.IsNull()){
     cout << endl;
-    throw "Error parsing request: <TxIns Array>";
+    throw "Error parsing request: <TransIns Array>";
   }
-  vector<TxIn> ret;
-  for (rapidjson::SizeType i = 0; i < txIns.Size(); i++){
-    ret.push_back(TxIn(txIns[i]["txOutId"].GetString(), txIns[i]["signature"].GetString(), txIns[i]["txOutIndex"].GetInt()));
+  vector<TransIn> ret;
+  for (rapidjson::SizeType i = 0; i < transIns.Size(); i++){
+    ret.push_back(TransIn(transIns[i]["transOutId"].GetString(), transIns[i]["signature"].GetString(), transIns[i]["transOutIndex"].GetInt()));
   }
   return ret;
 }
 
-/* Effettua il parsing di un vettore di transaction output: JSON (rapidjson) -> vector<TxOut> */
-vector<TxOut> parseTxOutVector(const rapidjson::Value &txOuts){
+/* Effettua il parsing di un vettore di transaction output: JSON (rapidjson) -> vector<TransOut> */
+vector<TransOut> parseTransOutVector(const rapidjson::Value &transOuts){
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
 
-  if(!txOuts.IsArray() || txOuts.IsNull()){
+  if(!transOuts.IsArray() || transOuts.IsNull()){
     cout << endl;
-    throw "Error parsing request: <TxOuts Array>";
+    throw "Error parsing request: <TransOuts Array>";
   }
-  vector<TxOut> ret;
-  for (rapidjson::SizeType i = 0; i < txOuts.Size(); i++){
-    ret.push_back(TxOut(txOuts[i]["address"].GetString(), txOuts[i]["amount"].GetFloat()));
+  vector<TransOut> ret;
+  for (rapidjson::SizeType i = 0; i < transOuts.Size(); i++){
+    ret.push_back(TransOut(transOuts[i]["address"].GetString(), transOuts[i]["amount"].GetFloat()));
   }
   return ret;
 }
@@ -274,7 +274,7 @@ vector<Transaction> parseTransactionVector(const rapidjson::Value &transactions)
   vector<Transaction> ret;
   try{
     for (rapidjson::SizeType i = 0; i < transactions.Size(); i++){
-      ret.push_back(Transaction(transactions[i]["id"].GetString(), parseTxInVector(transactions[i]["txIns"]), parseTxOutVector(transactions[i]["txOuts"])));
+      ret.push_back(Transaction(transactions[i]["id"].GetString(), parseTransInVector(transactions[i]["transIns"]), parseTransOutVector(transactions[i]["transOuts"])));
     }
   }catch(const char* msg){
     cout << endl;
@@ -306,16 +306,16 @@ list<Block> parseBlockList(const rapidjson::Value &blocks){
   return ret;
 }
 
-/* Stampa un vector di unspentTxOuts: vector<UnspentTxOut> -> String (da inserire in un JSON) */
-string printUnspentTxOuts(vector<UnspentTxOut> unspentTxOuts){
+/* Stampa un vector di unspentTransOuts: vector<UnspentTransOut> -> String (da inserire in un JSON) */
+string printUnspentTransOuts(vector<UnspentTransOut> unspentTransOuts){
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
 
   string ret = "[";
-  vector<UnspentTxOut>::iterator it;
-  for(it = unspentTxOuts.begin(); it != unspentTxOuts.end(); ++it){
-    if(it != unspentTxOuts.begin()){
+  vector<UnspentTransOut>::iterator it;
+  for(it = unspentTransOuts.begin(); it != unspentTransOuts.end(); ++it){
+    if(it != unspentTransOuts.begin()){
       ret = ret + ", ";
     }
     ret = ret + it->toString();

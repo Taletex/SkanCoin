@@ -19,7 +19,7 @@ find_package( Boost 1.52 COMPONENTS system thread REQUIRED )
 add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
 include_directories(./libs/crow ./libs/picosha2 ./libs/easyEcc ./libs/rapidjson ./libs/easywsclient)
 
-add_executable(skancoin src/Main.cpp)
+add_executable(skancoin src/Main.cpp src/Blockchain/Blockchain.cpp src/Blockchain/Block.cpp src/Blockchain/Transactions.cpp src/Blockchain/TransactionComponents.cpp src/Blockchain/TransactionPool.cpp src/Blockchain/Wallet.cpp src/HttpServer/HttpServer.cpp src/P2P/Peer.cpp libs/easywsclient/easywsclient.cpp libs/easyEcc/ecc.c)
 target_link_libraries(skancoin ${CMAKE_THREAD_LIBS_INIT})
 
 

@@ -1,26 +1,12 @@
 //Standard libraries//
 #include <iostream>
-#include <thread>
+
 //header files//
 #include "Blockchain/Blockchain.hpp"
-#include "Blockchain/Transactions.hpp"
-#include "Blockchain/TransactionPool.hpp"
 #include "Blockchain/Wallet.hpp"
 #include "HttpServer/HttpServer.hpp"
 #include "P2P/Peer.hpp"
-#include "easywsclient.hpp"
-#include "ecc.h"
 #include "config.hpp"
-
-//source files//
-#include "Blockchain/TransactionPool.cpp"
-#include "Blockchain/Transactions.cpp"
-#include "Blockchain/Blockchain.cpp"
-#include "HttpServer/HttpServer.cpp"
-#include "Blockchain/Wallet.cpp"
-#include "P2P/Peer.cpp"
-#include "easywsclient.cpp"
-#include "ecc.c"
 
 using namespace std;
 
@@ -62,3 +48,13 @@ int main(){
   p2pClient.join();
   return 0;
 }
+
+
+/* Definizione della macro BOOST_SYSTEM_NO_DEPRECATED per risolvere il bug
+   boost::system::throws della libreria Boost
+   http://boost.2283326.n4.nabble.com/Re-Boost-build-System-Link-issues-using-BOOST-ERROR-CODE-HEADER-ONLY-td4688963.html
+   https://www.boost.org/doc/libs/1_56_0/libs/system/doc/reference.html#Header-
+*/
+#ifndef BOOST_SYSTEM_NO_DEPRECATED
+#define BOOST_SYSTEM_NO_DEPRECATED
+#endif

@@ -4,7 +4,7 @@ using namespace std;
 using easywsclient::WebSocket;
 
 /*Business logic per la gestione dei messaggi in arrivo dai peer*/
-void Peer::handlePeerMessage(const string & data, int isServer){
+void Peer::peerMessageHandler(const string & data, int isServer){
     #if DEBUG_FLAG == 1
         DEBUG_INFO("");
     #endif
@@ -51,21 +51,21 @@ void Peer::handlePeerMessage(const string & data, int isServer){
   //Questo switch contiene la logica di gestione dei vari tipi di messaggi in arrivo
   switch (message.type) {
     //Un peer ha richiesto l'ultimo blocco, esso viene inserito nella risposta
-    case QUERY_LATEST:
-      cout << " - QUERY_LATEST" << endl;
+    case QUERY_LATEST_BLOCK:
+      cout << " - QUERY_LATEST_BLOCK" << endl;
           if(isServer == false){
-            tempClientWs->send(responseLatestMsg(-1,0));
+            tempClientWs->send(responseLatestBlockMsg(-1,0));
           }else{
-            tempServerWs->send_text(responseLatestMsg(-1,0));
+            tempServerWs->send_text(responseLatestBlockMsg(-1,0));
           }
           break;
           //Un peer ha richiesto la blockchain, essa viene inserita nella risposta
-    case QUERY_ALL:
-      cout << " - QUERY_ALL" << endl;
+    case QUERY_BLOCKCHAIN:
+      cout << " - QUERY_BLOCKCHAIN" << endl;
           if(isServer == false){
-            tempClientWs->send(responseChainMsg());
+            tempClientWs->send(responseBlockchainMsg());
           }else{
-            tempServerWs->send_text(responseChainMsg());
+            tempServerWs->send_text(responseBlockchainMsg());
           }
           break;
           //Un peer ha inviato la propria versione di blockchain
@@ -77,7 +77,7 @@ void Peer::handlePeerMessage(const string & data, int isServer){
           }
           try {
             receivedBlocks = parseBlockList(document["data"]);
-            bAddedBlock = handleBlockchainResponse(receivedBlocks);
+            bAddedBlock = blockchainResponseHandler(receivedBlocks);
           } catch(const char* msg){
             cout << msg << endl;
             cout << "EXCEPTION (" << nome << " - RESPONSE_BLOCKCHAIN): Errore durante l'elaborazione' del messaggio!" << endl;
@@ -101,49 +101,49 @@ void Peer::handlePeerMessage(const string & data, int isServer){
           }
           break;
           //Un peer ha richiesto il transaction pool, esso viene inserito nella risposta
-    case QUERY_TRANSACTION_POOL:
-      cout << " - QUERY_TRANSACTION_POOL" << endl;
-          if(!(TransactionPool::getInstance().getTransactionPool().size() == 0)){
+    case QUERY_POOL:
+      cout << " - QUERY_POOL" << endl;
+          if(!(TransactionPool::getInstance().getPool().size() == 0)){
             if(isServer == false){
-              tempClientWs->send(responseTransactionPoolMsg());
+              tempClientWs->send(responsePoolMsg());
             }else{
-              tempServerWs->send_text(responseTransactionPoolMsg());
+              tempServerWs->send_text(responsePoolMsg());
             }
           }
           break;
 
           //Un peer ha inviato la propria versione di transaction pool
-    case RESPONSE_TRANSACTION_POOL:
-      cout << " - RESPONSE_TRANSACTION_POOL" << endl;
+    case RESPONSE_POOL:
+      cout << " - RESPONSE_POOL" << endl;
 
           //Parsing del pool ricevuto
           if(document["data"].IsNull()){
-            cout << "ERRORE (" << nome << " - RESPONSE_TRANSACTION_POOL) nessun dato ricevuto!" << endl;
+            cout << "ERRORE (" << nome << " - RESPONSE_POOL) nessun dato ricevuto!" << endl;
             return;
           }
           try{
             receivedTransactions = parseTransactionVector(document["data"]);
           }catch(const char* msg){
             cout << msg << endl;
-            cout << "ERRORE (" << nome << " - RESPONSE_TRANSACTION_POOL): errore durante il parsing del messaggio!" << endl;
+            cout << "ERRORE (" << nome << " - RESPONSE_POOL): errore durante il parsing del messaggio!" << endl;
             return;
           }
           /*Per ogni transazione questa viene elaborata e se questa viene approvata si
           effettua un broadcast del transaction pool aggiornato*/
           for(it = receivedTransactions.begin(); it != receivedTransactions.end(); ++it){
             try{
-              TransactionPool::getInstance().addToTransactionPool(*it, BlockChain::getInstance().getUnspentTxOuts());
-              broadCastTransactionPool();
+              TransactionPool::getInstance().addToPool(*it, BlockChain::getInstance().getUnspentTransOuts());
+              broadCastPool();
             }catch(const char* msg) {
               cout << msg << endl;
-              cout << "INFO (" << nome << " - RESPONSE_TRANSACTION_POOL): La transaction Pool ricevuta è stata scartata..." << endl;
+              cout << "INFO (" << nome << " - RESPONSE_POOL): La transaction Pool ricevuta è stata scartata..." << endl;
             }
           }
           break;
           /*Un peer ha prelevato delle transazioni dal proprio pool,, aggiornamento
           del file contenente le statistiche*/
-    case TRANSACTION_POOL_STATS:
-      cout << " - TRANSACTION_POOL_STATS" << endl;
+    case POOL_STATS:
+      cout << " - POOL_STATS" << endl;
           if(!document["data"].IsNull()){
             try{
               myfile.open ("transactionwaitingtime.txt", ios::out | ios::app);
@@ -153,12 +153,12 @@ void Peer::handlePeerMessage(const string & data, int isServer){
                 }
                 myfile.close();
               } else {
-                string msg = "EXCEPTION (" + nome + " - TRANSACTION_POOL_STATS): non è stato possibile aprire il file per salvare le statistiche di attesa delle transazioni!";
+                string msg = "EXCEPTION (" + nome + " - POOL_STATS): non è stato possibile aprire il file per salvare le statistiche di attesa delle transazioni!";
                 throw msg;
               }
             }catch(const char* msg) {
               cout << msg << endl;
-              cout << "ERRORE (" << nome << " - TRANSACTION_POOL_STATS): Errore durante l'apertura del file per aggiornare le statistiche" << endl;
+              cout << "ERRORE (" << nome << " - POOL_STATS): Errore durante l'apertura del file per aggiornare le statistiche" << endl;
             }
           }
           break;
@@ -172,11 +172,11 @@ void Peer::handlePeerMessage(const string & data, int isServer){
 Questo metodo deve avere un solo parametro (const string & data), questo è il motivo per cui
  abbiamo bisogno di una variabile esterna di supporto (tempClientWs) che sia un riferimento alla socket corrente.
  */
-void handleClientMessage(const string & data){
+void clientMessageHandler(const string & data){
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
-  Peer::getInstance().handlePeerMessage(data, 0);
+  Peer::getInstance().peerMessageHandler(data, 0);
 }
 
 Message::Message(MessageType type, string data){
@@ -237,7 +237,7 @@ void Peer::checkReceivedMessage(){
        utilizzato dall'handler con i dati ricevuti /*/
       ws->poll();
       //Esecuzione dell'handler per il messaggio ricevuto
-      ws->dispatch(handleClientMessage);
+      ws->dispatch(clientMessageHandler);
     }else{
 
       //La socket è stat chiusa, dunque setto il relativo flag
@@ -273,7 +273,7 @@ void Peer::clearClosedWs(){
 }
 
 /*Dato l'url di un server P2P viene aperta una nuova connessione verso di esso dal thread client*/
-void Peer::connectToPeers(std::string peer){
+void Peer::connectToPeer(std::string peer){
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
@@ -286,7 +286,7 @@ void Peer::connectToPeers(std::string peer){
 
   //Lock del mutex sulle liste di connessioni per l'inserimento della nuova connessione
   connectionsMtx.lock();
-  ws->send(queryChainLengthMsg());
+  ws->send(queryLatestBlockMsg());
   openedConnections.push_back(ws);
   connectionsMtx.unlock();
 }
@@ -306,7 +306,7 @@ int Peer::countPeers(){
 /* Business logic per un messaggio di tipo RESPONSE_BLOCKCHAIN, questa funzione
 è chiamata nell'handler dei messaggi in arrivo. Ritorna true se ha aggiunto un
 singolo blocco nella blockchain, altrimenti false (anche in caso di replace) */
-bool Peer::handleBlockchainResponse(list<Block> receivedBlocks) {
+bool Peer::blockchainResponseHandler(list<Block> receivedBlocks) {
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
@@ -316,12 +316,12 @@ bool Peer::handleBlockchainResponse(list<Block> receivedBlocks) {
   NOTE: in replacechain viene controllato che la difficoltà dei nuovi blocchi
   sia superiore*/
   if (receivedBlocks.size() == 0) {
-      cout << "ERRORE (handleBlockchainResponse): La blockchain ricevuta ha lunghezza 0!" << endl;
+      cout << "ERRORE (blockchainResponseHandler): La blockchain ricevuta ha lunghezza 0!" << endl;
       return ret;
   }
   Block latestBlockReceived = receivedBlocks.back();
-  if (BlockChain::getInstance().isValidBlockStructure(latestBlockReceived) == false) {
-      cout << "ERRORE (handleBlockchainResponse): la struttura del blocco non è valida" << endl;
+  if (BlockChain::getInstance().isWellFormedBlock(latestBlockReceived) == false) {
+      cout << "ERRORE (blockchainResponseHandler): la struttura del blocco non è valida" << endl;
       return ret;
   }
   Block latestBlockHeld = BlockChain::getInstance().getLatestBlock();
@@ -333,17 +333,17 @@ bool Peer::handleBlockchainResponse(list<Block> receivedBlocks) {
     } else {
       if (latestBlockHeld.hash == latestBlockReceived.previousHash) {
         //Il nuovo blocco è l'unico da aggiungere in quanto successivo dell'ultimo della blockchian locale
-        if (BlockChain::getInstance().addBlockToChain(latestBlockReceived)) {
-          broadcast(responseLatestMsg(-1,0));
+        if (BlockChain::getInstance().addBlockToBlockchain(latestBlockReceived)) {
+          broadcast(responseLatestBlockMsg(-1,0));
           //In precedenza potrei aver scartato transazioni perchè la mia blockchain non era aggiornata,
           // richiedo la transaction pool per verificarle di nuovo
-          broadcastTxPoolQuery();
+          broadcastPoolQuery();
           ret = true;
         }
       } else {
         //Ci sono più versioni non congruenti o la blockchain locale è indietro di più di un blocco,
         //richiedo in broadcast le version di blockchain dei vari peer
-        broadcast(queryAllMsg());
+        broadcast(queryBlockchainMsg());
       }
     }
   } else {
@@ -368,7 +368,7 @@ void Peer::initP2PServer(int port){
       CROW_LOG_INFO << "Server Peer: ricevuta nuova connessione";
       connectionsMtx.lock();
       receivedConnections.insert(&connection);
-      connection.send_text(queryChainLengthMsg());
+      connection.send_text(queryLatestBlockMsg());
       connectionsMtx.unlock();
 
     })
@@ -383,7 +383,7 @@ void Peer::initP2PServer(int port){
     .onmessage([&](crow::websocket::connection& connection, const std::string& data, bool){
       connectionsMtx.lock();
       tempServerWs = &connection;
-      handlePeerMessage(data, 1);
+      peerMessageHandler(data, 1);
       connectionsMtx.unlock();
     });
 
@@ -411,7 +411,7 @@ bool Peer::isValidType(int type){
   #endif
 
   MessageType receivedType = static_cast<MessageType>(type);
-  for ( int val = QUERY_LATEST; val != TRANSACTION_POOL_STATS+1; val++ ){
+  for ( int val = QUERY_LATEST_BLOCK; val != POOL_STATS+1; val++ ){
     if(receivedType == val)return true;
   }
   return false;
@@ -438,59 +438,59 @@ void Peer::broadcast(string message){
 }
 
 /*Metodi per il broadcast dei messaggi*/
-void Peer::broadCastTransactionPool(){
+void Peer::broadCastPool(){
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
 
-  broadcast(responseTransactionPoolMsg());
+  broadcast(responsePoolMsg());
 }
 
-void Peer::broadcastTxPoolQuery(){
+void Peer::broadcastPoolQuery(){
 #if DEBUG_FLAG == 1
   DEBUG_INFO("");
 #endif
 
-  broadcast(queryTransactionPoolMsg());
+  broadcast(queryPoolMsg());
 }
 
-void Peer::broadcastLatest(int index, double time){
+void Peer::broadcastLatestBlock(int index, double time){
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
 
-  broadcast(responseLatestMsg(index, time));
+  broadcast(responseLatestBlockMsg(index, time));
 }
 
-void Peer::broadcastTxPoolStat(vector<string> stats){
+void Peer::broadcastPoolStat(vector<string> stats){
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
 
-  broadcast(txPoolStatsMessage(stats));
+  broadcast(poolStatsMessage(stats));
 }
 
 
 /*metodi per la costruzione dei messaggi da inviare sulle socket*/
-string Peer::queryChainLengthMsg(){
-  return Message(QUERY_LATEST, "").toString();
+string Peer::queryLatestBlockMsg(){
+  return Message(QUERY_LATEST_BLOCK, "").toString();
 }
-string Peer::queryAllMsg(){
-  return Message(QUERY_ALL, "").toString();
+string Peer::queryBlockchainMsg(){
+  return Message(QUERY_BLOCKCHAIN, "").toString();
 }
-string Peer::queryTransactionPoolMsg(){
-  return Message(QUERY_TRANSACTION_POOL, "").toString();
+string Peer::queryPoolMsg(){
+  return Message(QUERY_POOL, "").toString();
 }
-string Peer::responseChainMsg(){
+string Peer::responseBlockchainMsg(){
   return Message(RESPONSE_BLOCKCHAIN, BlockChain::getInstance().toString()).toString();
 }
-string Peer::responseLatestMsg(int index, double duration){
+string Peer::responseLatestBlockMsg(int index, double duration){
   return Message(RESPONSE_BLOCKCHAIN, "[" + BlockChain::getInstance().getLatestBlock().toString() + "]",  index, duration).toString();
 }
-string Peer::responseTransactionPoolMsg(){
-  return Message(RESPONSE_TRANSACTION_POOL, TransactionPool::getInstance().toString()).toString();
+string Peer::responsePoolMsg(){
+  return Message(RESPONSE_POOL, TransactionPool::getInstance().toString()).toString();
 }
-string Peer::txPoolStatsMessage(vector<string> stats){
+string Peer::poolStatsMessage(vector<string> stats){
     string msg = "[";
 
     vector<string>::iterator it;
@@ -501,5 +501,5 @@ string Peer::txPoolStatsMessage(vector<string> stats){
         msg = msg + *it;
     }
     msg = msg + "]";
-    return Message(TRANSACTION_POOL_STATS, msg).toString();
+    return Message(POOL_STATS, msg).toString();
 }

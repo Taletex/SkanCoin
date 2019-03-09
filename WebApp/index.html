@@ -77,20 +77,20 @@
                                     <li class="d-flex align-items-center justify-content-between list-group-item py-2">
                                         <div><span>Stampa output non spesi della blockchain</span></div>
                                         <div class="form-group m-0 d-flex ml-auto">
-                                            <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="getBlockchainUnspentTransactionOutputs()">Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
+                                            <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="getBlockchainUnspentTransOuts()">Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
                                         </div>
                                     </li>
                                     <li class="d-flex align-items-center justify-content-between list-group-item py-2">
                                         <div class="text-left"><span>Stampa output non spesi della blokchain per un wallet</span></div>
                                         <div class="form-group m-0 d-flex ml-auto">
                                             <input type="text" class="form-control form-control-sm" placeholder="Indirizzo" name="Indirizzo" ng-model="inputs.address">
-                                            <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="getWalletUnspentTransactionOutputs(inputs.address)" ng-disabled="(inputs.address==null || inputs.address=='')" ng-class="{'disabled cursor-not-allowed': (inputs.address==null || inputs.address=='')}">Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
+                                            <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="getWalletUnspentTransOuts(inputs.address)" ng-disabled="(inputs.address==null || inputs.address=='')" ng-class="{'disabled cursor-not-allowed': (inputs.address==null || inputs.address=='')}">Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
                                         </div>
                                     </li>
                                     <li class="d-flex align-items-center justify-content-between list-group-item py-2">
                                         <div><span>Stampa output non spesi della blockchain per il tuo wallet</span></div>
                                         <div class="form-group m-0 d-flex ml-auto">
-                                            <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="getMyUnspentTransactionOutputs()">Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
+                                            <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="getMyUnspentTransOuts()">Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
                                         </div>
                                     </li>
                                     <li class="d-flex align-items-center justify-content-between list-group-item py-2">
@@ -142,7 +142,7 @@
                                         <div class="row m-0 d-flex align-items-center justify-content-between">
                                             <div><span>Effettua il mining di un blocco con una transazione che ha una o più destinazioni</div>
                                             <div class="form-group m-0 d-flex ml-auto">
-                                                <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="mineBlockWithTransaction(inputs.txOuts)" ng-disabled="!isTxOutsValid()" ng-class="{'disabled cursor-not-allowed': !isTxOutsValid()}"><span class="fa fa-right-arrow"></span>Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
+                                                <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="mineBlockWithTransaction(inputs.transOuts)" ng-disabled="!isTransOutsValid()" ng-class="{'disabled cursor-not-allowed': !isTransOutsValid()}"><span class="fa fa-right-arrow"></span>Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
                                             </div>
                                         </div>
                                         <div class="row mx-0 my-2 card" ng-init="bShowDoc4=false">
@@ -152,7 +152,7 @@
                                                 <span>Quantità e Indirizzi (chiave pubblica) per la transazione</span>
                                             </div>
                                             <div class="card-body row m-0 px-2 py-1" ng-show="bShowDoc4">
-                                                <div ng-repeat="output in inputs.txOuts track by $index" class="w-100 row col-12">
+                                                <div ng-repeat="output in inputs.transOuts track by $index" class="w-100 row col-12">
                                                   <div class="form-group m-0 col-3 text-left pl-0">
                                                       <label class="text-muted col-form-label-sm p-0 m-0">Quantità</label>
                                                       <input type="number" min='1' class="form-control form-control-sm" placeholder="quantità" name="quantità_{{$index}}" ng-model="output.amount">
@@ -163,7 +163,7 @@
                                                   </div>
                                                 </div>
                                                 <button ng-click="addOutputToInput()" class="cursor-pointer btn btn-outline-info btn-sm mt-2"><span class="fa fa-plus mr-2"></span> Aggiungi Destinazione</button>
-                                                <button ng-show="inputs.txOuts.length > 0" ng-click="removeLastOutputToInput()" class="cursor-pointer btn btn-outline-danger btn-sm mt-2 ml-2"><span class="fa fa-plus mr-2"></span> Rimuovi ultima Destinazione</button>
+                                                <button ng-show="inputs.transOuts.length > 0" ng-click="removeLastOutputToInput()" class="cursor-pointer btn btn-outline-danger btn-sm mt-2 ml-2"><span class="fa fa-plus mr-2"></span> Rimuovi ultima Destinazione</button>
                                             </div>
                                         </div>
                                     </li>
