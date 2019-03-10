@@ -9,7 +9,7 @@ A simple criptocurrency written in C++
 - [Dependencies](#Dependencies)
 - [Running for production](#Running-for-production-with-docker)
 - [Running for test](#Running-for-test)
-- [Future developments](#Future-development)
+- [Future developments](#Future-developments)
 
 
 ## References
