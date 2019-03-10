@@ -683,6 +683,9 @@ void BlockChain::replaceChain(list<Block> newBlocks) {
   */
   cout << "Broadcast dell'ultimo blocco..." << endl;
   Peer::getInstance().broadcastLatestBlock(-1,0);
+  /*In precedenza potrei aver scartato transazioni perchè la mia blockchain non era aggiornata, richiedo la transaction
+   * pool per verificarle di nuovo*/
+  Peer::getInstance().broadcastQueryPool();
   try{
     //Salvataggio dei nuovi dati relativi alla blockchain nell'apposito file
     cout << "Salvataggio statistiche della Blockchain..." << endl;

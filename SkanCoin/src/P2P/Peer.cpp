@@ -3,6 +3,37 @@
 using namespace std;
 using easywsclient::WebSocket;
 
+/*Questo metodo viene usato per collezionare i blocchi in arrivo da un peer che sta inviando la propria versione
+ * di blockchain quando questa viene interamente collezionata viene invocato il metodo per confrontarla con
+ * quella locale e scegliere la versione da mantenere*/
+void Peer::handleBlockchainResponse(Block b, string address, bool isLast){
+  list<OncomingChain>::iterator it;
+  for(it = oncomingChains.begin(); it != oncomingChains.end(); ++it){
+    if(it->getAddress().compare(address) == 0){
+      it->addBlock(b);
+      if(isLast){
+        cout << "Ricevuti " << b.index + 1 << " blocchi!" << endl;
+        newBlocksHandler(it->getBlocks());
+        oncomingChains.erase(it);
+      }
+      return;
+    }
+  }
+  if(b.index != 0){
+    return;
+  }else{
+    OncomingChain newChain = OncomingChain(address);
+    newChain.addBlock(b);
+    if(isLast){
+      cout << "Ricevuta blockchian di un blocco!" << endl;
+      newBlocksHandler(newChain.getBlocks());
+    }else{
+      oncomingChains.push_back(newChain);
+    }
+  }
+}
+
+
 /*Business logic per la gestione dei messaggi in arrivo dai peer*/
 void Peer::peerMessageHandler(const string & data, int isServer){
   #if DEBUG_FLAG == 1
@@ -57,8 +88,8 @@ void Peer::peerMessageHandler(const string & data, int isServer){
   vector<Transaction>::iterator it;
   ofstream myfile;
   string row;
-  bool bAddedBlock = false;
-  bool sendAll = false;
+  bool bAddedBlock;
+  bool sendAll;
   //Questo switch contiene la logica di gestione dei vari tipi di messaggi in arrivo
   switch (message.type) {
     //Un peer ha richiesto l'ultimo blocco, esso viene inserito nella risposta
@@ -80,11 +111,7 @@ void Peer::peerMessageHandler(const string & data, int isServer){
 
       if(sendAll == true){
         cout << "Il nodo che ha richiesto l'ultimo blocco ha una versione di blockchain non compatibile con quella locale, invio la versione locale della blockchain!" << endl;
-        if(isServer == 0){
-          tempClientWs->send(responseBlockchainMsg());
-        }else{
-          tempServerWs->send_text(responseBlockchainMsg());
-        }
+        sendBlockChain(isServer);
         cout << "BlockChain inviata! (" << (BlockChain::getInstance().getLatestBlock().index + 1) << " blocchi)" << endl;
       }else{
         if(isServer == 0){
@@ -98,30 +125,46 @@ void Peer::peerMessageHandler(const string & data, int isServer){
     //Un peer ha richiesto la blockchain, essa viene inserita nella risposta
     case QUERY_BLOCKCHAIN:
       cout << " - QUERY_BLOCKCHAIN" << endl;
-      if(isServer == 0){
-        tempClientWs->send(responseBlockchainMsg());
-      }else{
-        tempServerWs->send_text(responseBlockchainMsg());
-      }
-      cout << "BlockChain inviata!" << endl;
+        sendBlockChain(isServer);
+        cout << "BlockChain inviata! (" << (BlockChain::getInstance().getLatestBlock().index + 1) << " blocchi)" << endl;
       break;
     //Un peer ha inviato la propria versione di blockchain
     case RESPONSE_BLOCKCHAIN:
       cout << " - RESPONSE_BLOCKCHAIN" << endl;
+          if(!document.HasMember("data") || !document.HasMember("address") || !document.HasMember("isLast")){
+            cout << endl << "ERRORE (" << nome << "): il formato del messaggio ricevuto non è valido" << endl;
+            return;
+          }
+          if(document["data"].IsNull() || document["address"].IsNull() || document["isLast"].IsNull()){
+            cout << "ERRORE (" << nome << " - RESPONSE_BLOCKCHAIN): Nessun dato ricevuto" << endl;
+            return;
+          }
+          try {
+            receivedBlocks = parseBlockList(document["data"]);
+            handleBlockchainResponse(receivedBlocks.front(), document["address"].GetString(), document["isLast"].GetInt()==true);
+          } catch(const char* msg){
+            cout << msg << endl;
+            cout << "ECCEZIONE (" << nome << " - RESPONSE_BLOCKCHAIN): Errore durante l'elaborazione' del messaggio!" << endl;
+            return;
+          }
+      break;
+    case RESPONSE_LATEST:
+      cout << " - RESPONSE_LATEST" << endl;
       if(!document.HasMember("data")){
         cout << endl << "ERRORE (" << nome << "): il formato del messaggio ricevuto non è valido" << endl;
+        return;
       }
       if(document["data"].IsNull()){
-        cout << "ERROR (" << nome << " - RESPONSE_BLOCKCHAIN): Nessun dato ricevuto" << endl;
+        cout << "ERRORE (" << nome << " - RESPONSE_LATEST): Nessun dato ricevuto" << endl;
         return;
       }
       try {
         receivedBlocks = parseBlockList(document["data"]);
-        cout << "Ricevuti " << receivedBlocks.size() << " blocchi!" << endl;
-        bAddedBlock = blockchainResponseHandler(receivedBlocks);
+        cout << "Ricevuto nuovo blocco!" << endl;
+        bAddedBlock = newBlocksHandler(receivedBlocks);
       } catch(const char* msg){
         cout << msg << endl;
-        cout << "ECCEZIONE (" << nome << " - RESPONSE_BLOCKCHAIN): Errore durante l'elaborazione' del messaggio!" << endl;
+        cout << "ECCEZIONE (" << nome << " - RESPONSE_LATEST): Errore durante l'elaborazione' del messaggio!" << endl;
         return;
       }
       if(bAddedBlock){
@@ -130,7 +173,8 @@ void Peer::peerMessageHandler(const string & data, int isServer){
        è non nullo solo se siamo in corrispondenza della diffusione di un nuovo
         blocco che è stato minato ed aggiunto alla blockchain)*/
         if(!document.HasMember("index") || !document.HasMember("duration")){
-          cout << endl << "ERRORE (" << nome << "): il formato del messaggio ricevuto non è valido,non è salvare il tempo di mining del blocco!" << endl;
+          cout << endl << "ERRORE (" << nome << "): il formato del messaggio ricevuto non è valido, non è possibile salvare il tempo di mining del blocco!" << endl;
+          return;
         }
         if(!document["index"].IsNull() && !document["duration"].IsNull()){
           if(document["index"].GetInt() != -1){
@@ -141,24 +185,20 @@ void Peer::peerMessageHandler(const string & data, int isServer){
               cout << "Aggiornamento del file contenente i tempi di mining..." << endl;
               myfile << row;
             } else {
-              cout << "ERRORE (" << nome << " - RESPONSE_BLOCKCHAIN): non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
+              cout << "ERRORE (" << nome << " - RESPONSE_LATEST): non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
             }
             myfile.close();
           }
         }
       }else{
-        cout << "I blocchi ricevuti sono stati scartati" << endl;
+        cout << "Il Blocco ricevuto è stato scartato..." << endl;
       }
       break;
     //Un peer ha richiesto il transaction pool, esso viene inserito nella risposta
     case QUERY_POOL:
       cout << " - QUERY_POOL" << endl;
-      if(!(TransactionPool::getInstance().getPool().size() == 0)){
-        if(isServer == 0){
-          tempClientWs->send(responsePoolMsg());
-        }else{
-          tempServerWs->send_text(responsePoolMsg());
-        }
+      if(TransactionPool::getInstance().getPool().size() != 0){
+        sendPool(isServer);
         cout << "Transaction pool inviato!" << endl;
       }else{
         cout << "Il transaction pool locale è vuoto, non invio nessuna risposta..." << endl;
@@ -170,6 +210,7 @@ void Peer::peerMessageHandler(const string & data, int isServer){
       cout << " - RESPONSE_POOL" << endl;
       if(!document.HasMember("data")){
         cout << endl << "ERRORE (" << nome << "): il formato del messaggio ricevuto non è valido" << endl;
+        return;
       }
       //Parsing del pool ricevuto
       if(document["data"].IsNull()){
@@ -202,7 +243,8 @@ void Peer::peerMessageHandler(const string & data, int isServer){
     case POOL_STATS:
       cout << " - POOL_STATS" << endl;
       if(!document.HasMember("data")){
-        cout << endl << "ERRORE (" << nome << "): il formato del messaggio ricevuto non è valido" << endl;
+        cout << endl << "ERRORE (" << nome << "): il formato del messaggio ricevuto non è valido!" << endl;
+        return;
       }
       if(!document["data"].IsNull()){
         try{
@@ -254,6 +296,7 @@ Message::Message(MessageType type, string data){
   if(data.compare("") == 0){
     this->data = "\"\"";
   }
+  this->address = "\"\"";
 }
 Message::Message(MessageType type, string data, int index, double duration){
   #if DEBUG_FLAG == 1
@@ -267,11 +310,29 @@ Message::Message(MessageType type, string data, int index, double duration){
   if(data.compare("") == 0){
     this->data = "\"\"";
   }
+  this->address = "\"\"";
+}
+
+Message::Message(MessageType type, string data, string address, bool isLast){
+#if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+#endif
+
+  this->type = type;
+  this->data = data;
+  this->index = -1;
+  this->duration = 0;
+  this->address = "\"" + address + "\"";
+  this->isLast = isLast;
+  if(data.compare("") == 0){
+    this->data = "\"\"";
+  }
+
 }
 
 /*Rappresentazione in formato JSON dell'oggetto Message*/
 string Message::toString(){
-   return "{\"type\": " + to_string(type) + ", \"data\": " + data + ", \"index\": " + to_string(index) + ", \"duration\": " + to_string(duration) + "}";
+   return "{\"type\": " + to_string(type) + ", \"data\": " + data + ", \"address\": " + address + ", \"isLast\": " + to_string(isLast) + ", \"index\": " + to_string(index) + ", \"duration\": " + to_string(duration) + "}";
 }
 
 /* Questa funzione esegue il polling sulla lista delle connessioni aperte dal
@@ -377,7 +438,7 @@ int Peer::countPeers(){
 /* Business logic per un messaggio di tipo RESPONSE_BLOCKCHAIN, questa funzione
 è chiamata nell'handler dei messaggi in arrivo. Ritorna true se ha aggiunto un
 singolo blocco nella blockchain, altrimenti false (anche in caso di replace) */
-bool Peer::blockchainResponseHandler(list<Block> receivedBlocks) {
+bool Peer::newBlocksHandler(list<Block> receivedBlocks) {
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
@@ -387,12 +448,12 @@ bool Peer::blockchainResponseHandler(list<Block> receivedBlocks) {
   NOTE: in replacechain viene controllato che la difficoltà dei nuovi blocchi
   sia superiore*/
   if (receivedBlocks.size() == 0) {
-      cout << "ERRORE (blockchainResponseHandler): La blockchain ricevuta ha lunghezza 0!" << endl;
+      cout << "ERRORE (newBlocksHandler): La blockchain ricevuta ha lunghezza 0!" << endl;
       return ret;
   }
   Block latestBlockReceived = receivedBlocks.back();
   if (BlockChain::getInstance().isWellFormedBlock(latestBlockReceived) == false) {
-      cout << "ERRORE (blockchainResponseHandler): la struttura del blocco non è valida" << endl;
+      cout << "ERRORE (newBlocksHandler): la struttura del blocco non è valida" << endl;
       return ret;
   }
   Block latestBlockHeld = BlockChain::getInstance().getLatestBlock();
@@ -409,6 +470,9 @@ bool Peer::blockchainResponseHandler(list<Block> receivedBlocks) {
             cout << "Blocco aggiunto alla Blockchain:  (indice " << latestBlockReceived.index <<")" << endl;
             cout << "Broadcast del nuovo Blocco..." << endl;
             broadcast(responseLatestBlockMsg(-1,0));
+            /*In precedenza potrei aver scartato transazioni perchè la mia blockchain non era aggiornata,
+             richiedo la transaction pool per verificarle di nuovo*/
+            broadcastQueryPool();
             ret = true;
           }
         } else {
@@ -494,7 +558,7 @@ bool Peer::isValidType(int type){
   #endif
 
   MessageType receivedType = static_cast<MessageType>(type);
-  for ( int val = QUERY_LATEST_BLOCK; val != POOL_STATS+1; val++ ){
+  for ( int val = QUERY_LATEST_BLOCK; val != RESPONSE_LATEST+1; val++ ){
     if(receivedType == val)return true;
   }
   return false;
@@ -519,14 +583,35 @@ void Peer::broadcast(string message){
   }
 }
 
+/*Invio della transaction pool verso la socket temporanea, le transazioni vengono inviate ad una ad una per evitare
+ *lo scambio di messaggi troppo grandi che possono causare malfunzionamenti nelle socket client*/
+void Peer::sendPool(int isServer){
+  for(Transaction t : TransactionPool::getInstance().getPool()){
+    if(isServer == 0){
+      tempClientWs->send(responsePoolMsg(t));
+    }else{
+      tempServerWs->send_text(responsePoolMsg(t));
+    }
+  }
+}
+
+
 /*Metodi per il broadcast dei messaggi*/
 void Peer::broadCastPool(){
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
-
-  broadcast(responsePoolMsg());
+  for (Transaction t : TransactionPool::getInstance().getPool()){
+    broadcast(responsePoolMsg(t));
+  }
 }
+void Peer::broadcastQueryPool(){
+#if DEBUG_FLAG == 1
+  DEBUG_INFO("");
+#endif
+  broadcast(queryPoolMsg());
+}
+
 
 void Peer::broadcastLatestBlock(int index, double time){
   #if DEBUG_FLAG == 1
@@ -544,6 +629,15 @@ void Peer::broadcastPoolStat(vector<string> stats){
   broadcast(poolStatsMessage(stats));
 }
 
+void Peer::sendBlockChain(int isServer){
+  for(Block b : BlockChain::getInstance().getBlockchain()){
+    if(isServer == 0){
+      tempClientWs->send(responseBlockchainMsg(b));
+    }else{
+      tempServerWs->send_text(responseBlockchainMsg(b));
+    }
+  }
+}
 
 /*metodi per la costruzione dei messaggi da inviare sulle socket*/
 string Peer::queryLatestBlockMsg(){
@@ -557,14 +651,15 @@ string Peer::queryBlockchainMsg(){
 string Peer::queryPoolMsg(){
   return Message(QUERY_POOL, "").toString();
 }
-string Peer::responseBlockchainMsg(){
-  return Message(RESPONSE_BLOCKCHAIN, BlockChain::getInstance().toString()).toString();
+string Peer::responseBlockchainMsg(Block b){
+  bool isLast = (b.index == BlockChain::getInstance().getLatestBlock().index);
+  return Message(RESPONSE_BLOCKCHAIN, "[" + b.toString() + "]", getWalletPublicKey(), isLast).toString();
 }
 string Peer::responseLatestBlockMsg(int index, double duration){
-  return Message(RESPONSE_BLOCKCHAIN, "[" + BlockChain::getInstance().getLatestBlock().toString() + "]",  index, duration).toString();
+  return Message(RESPONSE_LATEST, "[" + BlockChain::getInstance().getLatestBlock().toString() + "]",  index, duration).toString();
 }
-string Peer::responsePoolMsg(){
-  return Message(RESPONSE_POOL, TransactionPool::getInstance().toString()).toString();
+string Peer::responsePoolMsg(Transaction t){
+  return Message(RESPONSE_POOL, "[" + t.toString() +"]").toString();
 }
 string Peer::poolStatsMessage(vector<string> stats){
     string msg = "[";

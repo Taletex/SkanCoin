@@ -192,7 +192,7 @@ bool isValidTransIn(TransIn transIn, Transaction transaction, vector<UnspentTran
     }
   }
   if (!found) {
-      cout << "ERRORE (isValidTransIn): output di transazione referenziato nell'input non trovato: " << transIn.toString();
+      cout << "ERRORE (isValidTransIn): output di transazione referenziato nell'input non trovato!"<< endl;
       return false;
   }
 
@@ -218,7 +218,7 @@ float getAmountFromInput(TransIn transIn, vector<UnspentTransOut> unspentTransOu
     }
   }
   cout << endl;
-  throw "ECCEZIONE (getAmountFromInput): Output di transazione referenziato non trovato: " + transIn.toString();
+  throw "ECCEZIONE (getAmountFromInput): Output di transazione referenziato non trovato!";
 }
 
 /*Validazione della transazione (tipi di dati e procedure di sicurezza)*/

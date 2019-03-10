@@ -21,7 +21,8 @@ enum MessageType {
     RESPONSE_BLOCKCHAIN = 2,
     QUERY_POOL = 3,
     RESPONSE_POOL = 4,
-    POOL_STATS = 5
+    POOL_STATS = 5,
+    RESPONSE_LATEST = 6
 };
 
 /*Questa classe modella un messaggio di un peer ed ha un metodo toString
@@ -32,9 +33,35 @@ class Message {
     std::string data;
     int index;
     double duration;
+    std::string address;
+    bool isLast;
     Message(MessageType type, std::string data);
     Message(MessageType type, std::string data, int index, double duration);
+    Message(MessageType type, std::string data, std::string address, bool isLast);
     std::string toString();
+};
+
+class OncomingChain {
+public:
+    std::list<Block> blocks;
+    std::string address;
+
+    OncomingChain(std::string address){
+        this->blocks = {};
+        this->address = address;
+    }
+
+    std::list<Block>getBlocks() {
+        return blocks;
+    }
+
+    void addBlock(Block b){
+        this->blocks.push_back(b);
+    }
+
+    const std::string getAddress(){
+        return address;
+    }
 };
 
 /*Questa è una classe Singleton, il suo ruolo è gestire le connessioni verso gli altri peer della rete, gestendo in messaggi in arrivo e le operazioni richieste dall'utente*/
@@ -61,6 +88,13 @@ class Peer {
      * */
     crow::websocket::connection *tempServerWs;
 
+    /*
+     * Questa lista viene utilizzata per collezionare i blocchi ricevuti dai vari peer che stanno inviando la propria
+     * versione di blockchain, infatti non è possibile inviare la blockchain tutta in un messaggio in quanto se questa
+     * è troppo grande potrebbero verificarsi dei malfunzionamenti nelle socket client
+     * */
+    std::list<OncomingChain> oncomingChains;
+
     /*Metodo getInstance per l'implementazione del pattern Singleton*/
     static Peer& getInstance() {
        static Peer peer;
@@ -70,7 +104,7 @@ class Peer {
     /* Business logic per un messaggio di tipo RESPONSE_BLOCKCHAIN, questa funzione
     è chiamata nell'handler dei messaggi in arrivo. Ritorna true se ha aggiunto un
     singolo blocco nella blockchain, altrimenti false (anche in caso di replace) */
-    bool blockchainResponseHandler(std::list<Block> receivedBlocks);
+    bool newBlocksHandler(std::list<Block> receivedBlocks);
 
     /*Questo metodo effettua un broadcast di un certo messaggio, per fare ciò lo invia
      su tutte le socket aperte dal thread client e su tutte quelle aperte da altri
@@ -81,12 +115,18 @@ class Peer {
     void broadcastLatestBlock(int index, double duration);
     void broadCastPool();
     void broadcastPoolStat(std::vector<std::string>);
+    void broadcastQueryPool();
 
     /*Dato l'url di un server P2P viene aperta una nuova connessione verso di esso dal thread client*/
     void connectToPeer(std::string peer);
 
     /*Ritorna il numero d peer (si considerano sia le connessioni aperte dal thread client che quelle ricevute dal thread server)*/
     int countPeers();
+
+    /*Questo metodo viene usato per collezionare i blocchi in arrivo da un peer che sta inviando la propria versione
+     * di blockchain. Quando questa viene interamente collezionata viene invocato il metodo per confrontarla con
+     * quella locale e scegliere la versione da mantenere*/
+    void handleBlockchainResponse(Block b, std::string address, bool isLast);
 
     /*Inizializzazione del server P2P*/
     void initP2PServer(int port);
@@ -102,9 +142,17 @@ class Peer {
     std::string queryBlockchainMsg();
     std::string queryLatestBlockMsg();
     std::string queryPoolMsg();
-    std::string responseBlockchainMsg();
+    std::string responseBlockchainMsg(Block b);
     std::string responseLatestBlockMsg(int index, double duration);
-    std::string responsePoolMsg();
+    std::string responsePoolMsg(Transaction t);
+
+    /*Invio della BlockChain verso la socket temporanea, i blocchi vengono inviati ad uno ad uno per evitare
+     *lo scambio di messaggi troppo grandi che possono causare malfunzionamenti nelle socket client*/
+    void sendBlockChain(int isServer);
+
+    /*Invio della transaction pool verso la socket temporanea, le transazioni vengono inviate ad una ad una per evitare
+     *lo scambio di messaggi troppo grandi che possono causare malfunzionamenti nelle socket client*/
+    void sendPool(int isServer);
 
     /*Avvio del polling del client sulle socket aperte*/
     void startClientPoll();
