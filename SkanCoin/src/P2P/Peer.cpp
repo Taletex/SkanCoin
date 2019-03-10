@@ -82,7 +82,7 @@ void Peer::peerMessageHandler(const string & data, int isServer){
             bAddedBlock = blockchainResponseHandler(receivedBlocks);
           } catch(const char* msg){
             cout << msg << endl;
-            cout << "EXCEPTION (" << nome << " - RESPONSE_BLOCKCHAIN): Errore durante l'elaborazione' del messaggio!" << endl;
+            cout << "ECCEZIONE (" << nome << " - RESPONSE_BLOCKCHAIN): Errore durante l'elaborazione' del messaggio!" << endl;
             return;
           }
           if(bAddedBlock){
@@ -167,7 +167,7 @@ void Peer::peerMessageHandler(const string & data, int isServer){
                 }
                 myfile.close();
               } else {
-                string msg = "EXCEPTION (" + nome + " - POOL_STATS): non è stato possibile aprire il file per salvare le statistiche di attesa delle transazioni!";
+                string msg = "ECCEZIONE (" + nome + " - POOL_STATS): non è stato possibile aprire il file per salvare le statistiche di attesa delle transazioni!";
                 throw msg;
               }
             }catch(const char* msg) {
@@ -299,7 +299,7 @@ void Peer::connectToPeer(std::string peer){
   WebSocket::pointer ws;
   ws = WebSocket::from_url(peer);
 
-  if(!ws) throw "EXCEPTION (ConnectToPeers): Errore durante la connessione al peer!";
+  if(!ws) throw "ECCEZIONE (ConnectToPeers): Errore durante la connessione al peer!";
 
   //Lock del mutex sulle liste di connessioni per l'inserimento della nuova connessione
   connectionsMtx.lock();
@@ -410,7 +410,7 @@ void Peer::initP2PServer(int port){
       connectionsMtx.unlock();
     });
 
-  cout << "Starting P2PServer on port " << port << "..." << endl;
+  cout << "Avvio del Server P2P sulla porta " << port << "..." << endl;
   app.port(port).run();
 }
 
@@ -420,7 +420,7 @@ void Peer::startClientPoll(){
   DEBUG_INFO("");
   #endif
 
-  cout << "Starting P2P client...." << endl;
+  cout << "Avvio del Client P2P..." << endl;
   while(true){
     /*Il polling avviene con una cadenza di un secondo, non ci sono particolari
     vincoli temporali quindi non è necessario sovraccaricare la rete o il nodo effettuando un polling moto frequente*/

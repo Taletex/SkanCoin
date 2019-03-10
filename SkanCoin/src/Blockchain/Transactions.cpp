@@ -218,7 +218,7 @@ float getAmountFromInput(TransIn transIn, vector<UnspentTransOut> unspentTransOu
     }
   }
   cout << endl;
-  throw "EXCEPTION (getAmountFromInput): Output di transazione referenziato non trovato: " + transIn.toString();
+  throw "ECCEZIONE (getAmountFromInput): Output di transazione referenziato non trovato: " + transIn.toString();
 }
 
 /*Validazione della transazione (tipi di dati e procedure di sicurezza)*/
@@ -355,7 +355,7 @@ UnspentTransOut getUnspentTransOut(string outId, int index, vector<UnspentTransO
   }
   if(!found){
     cout << endl;
-    throw "EXCEPTION (getUnspentTransOut): Output non speso non trovato!";
+    throw "ECCEZIONE (getUnspentTransOut): Output non speso non trovato!";
   }
     return ret;
 }
@@ -394,17 +394,17 @@ string getTransInSignature(Transaction transaction, int transInIndex, string pri
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;
-    throw "EXCEPTION (getTransInSignature): Firma dell'input di transazione abortita, output non speso referenziato non trovato!";
+    throw "ECCEZIONE (getTransInSignature): Firma dell'input di transazione abortita, output non speso referenziato non trovato!";
   }
 
   if (getWalletPublicKey().compare(referencedAddress) != 0) {
-      throw "EXCEPTION (getTransInSignature): Firma dell'input di transazione abortita, tentativo di firmare con una chiave privata che non corrisponde all'indirizzo referenziato";
+      throw "ECCEZIONE (getTransInSignature): Firma dell'input di transazione abortita, tentativo di firmare con una chiave privata che non corrisponde all'indirizzo referenziato";
   }
 
   string* signature = new string;
   int signCreated = createSignature(privateKey, dataToSign, *signature);
   if(signCreated == 0){
-    throw "EXCEPTION (getTransInSignature): operazione di firma dell'input di transazione fallita!";
+    throw "ECCEZIONE (getTransInSignature): operazione di firma dell'input di transazione fallita!";
   }
 
   //Ritorno della signature prodotta, nel formato stringa in notazione puntata
@@ -463,7 +463,7 @@ vector <UnspentTransOut> processTransactions(vector<Transaction> transactions, v
 
   if (!areValidBlockTransactions(transactions, unspentTransOuts, blockIndex)) {
       cout << endl;
-      throw "EXCEPTION (processTransactions): il blocco contiene transazioni non valide";
+      throw "ECCEZIONE (processTransactions): il blocco contiene transazioni non valide";
   }
   return updateUnspentTransOuts({transactions}, unspentTransOuts);
 }
@@ -492,7 +492,7 @@ Transaction createTransaction(string receiverAddress, float amount, string priva
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;
-    throw "EXCEPTION (createTransaction): Impossibile creare la transazione, il mittente non possiede abbastanza skanCoin!";
+    throw "ECCEZIONE (createTransaction): Impossibile creare la transazione, il mittente non possiede abbastanza skanCoin!";
   }
   /*Raccolti gli output non spesi da usare di creano i rispettivi input per la nuova transazione
    (che faranno riferimento ad essi), questi devono ancora essere firmati!*/
@@ -517,7 +517,7 @@ Transaction createTransaction(string receiverAddress, float amount, string priva
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;
-    throw "EXCEPTION (createTransaction): Creazione della transazione fallita, alcuni input di transazione non sono stati firmati correttamente";
+    throw "ECCEZIONE (createTransaction): Creazione della transazione fallita, alcuni input di transazione non sono stati firmati correttamente";
   }
   cout << "Nuova transazione creata!" << endl;
   return transaction;
@@ -556,7 +556,7 @@ Transaction createTransactionWithMultipleOutputs (std::vector<TransOut> transOut
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;
-    throw "EXCEPTION (createTransaction): Impossibile creare la transazione, il mittente non possiede abbastanza skanCoin!";
+    throw "ECCEZIONE (createTransaction): Impossibile creare la transazione, il mittente non possiede abbastanza skanCoin!";
   }
   /*Raccolti gli output non spesi da usare di creano i rispettivi input per la nuova transazione
    (che faranno riferimento ad essi), questi devono ancora essere firmati!*/
@@ -585,7 +585,7 @@ Transaction createTransactionWithMultipleOutputs (std::vector<TransOut> transOut
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;
-    throw "EXCEPTION (createTransaction): Creazione della transazione fallita, alcuni input di transazione non sono stati firmati correttamente";
+    throw "ECCEZIONE (createTransaction): Creazione della transazione fallita, alcuni input di transazione non sono stati firmati correttamente";
   }
   cout << "Nuova transazione creata!" << endl;
   return transaction;

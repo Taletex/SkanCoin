@@ -24,19 +24,20 @@ int main(){
   cout << "######################################################" << endl << endl;
 
   try{
-    cout <<"Starting node..." << endl << "Generating wallet..." << endl;
+    cout <<"Avvio del nodo..." << endl << "Generazione del Wallet..." << endl;
     initWallet();
   }catch(const char* msg){
     cout << msg << endl;
-    cout << "EXCEPTION: Wallet creation failed!" << endl;
+    cout << "ECCEZIONE: Creazione del wallet fallita!" << endl;
     return 0;
   }
-  cout << "Generating blockchain..." << endl;
+  cout << "Creazione della Blockchain..." << endl;
   try{
-    cout << "BLOCKCHAIN: " << endl <<  BlockChain::getInstance().toString() << endl;
+    BlockChain::getInstance();
+    cout << "BlockChain creata!" << endl;
   }catch(const char* msg){
     cout << msg << endl;
-    cout << "EXCEPTION: Blockchain generation failed!" << endl;
+    cout << "ECCEZIONE: Creazione della Blockchain fallita!" << endl;
     return 0;
   }
 

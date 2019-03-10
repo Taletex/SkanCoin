@@ -179,7 +179,7 @@ void initHttpServer(int port){
         inFile.close();
         ret = "{\"success\": true, \"data\": " + data + "]}";
       } else {
-        throw "Errore: non è stato possibile aprire il file per leggere il tempo di mining del blocco!";
+        throw "ERRORE: non è stato possibile aprire il file per leggere il tempo di mining del blocco!";
       }
     }catch(const char* msg){
       cout << msg << endl << endl;
@@ -190,7 +190,7 @@ void initHttpServer(int port){
   });
 
   // Start del server HTTP sulla porta designata
-  cout << "Starting Http Server on port" << port << "..." << endl;
+  cout << "Avvio del Server HTTP sulla porta " << port << "..." << endl;
   app.port(port).run();
 }
 
