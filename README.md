@@ -72,9 +72,9 @@ Note: this app was successfully tested on Ubuntu 18.04 and ArchLinux. The follow
 ## Dependencies
 The application has the following dependencies (libraries and packages)
 - **C++ Application**:
-  1. Crow https://github.com/ipkn/crow. Used for HTTP server and P2P server.
-  2. Easywsclient https://github.com/dhbaird/easywsclient. Used for P2P client.
-  3. Rapidjson https://github.com/Tencent/rapidjson. Used to parse json in POST HTTP request of the HTTP server.
+  1. Crow https://github.com/ipkn/crow. Used for HTTP server and P2P server (WebSocket server).
+  2. Easywsclient https://github.com/dhbaird/easywsclient. Used for P2P client (WebSocket client).
+  3. Rapidjson https://github.com/Tencent/rapidjson. Used to parse json in POST HTTP request of the HTTP server and to parse json in Peer's WebSocket message exchange.
   4. easy-ecc https://github.com/esxgx/easy-ecc. Used for asymmetric encryption.
   5. PicoSHA2 https://github.com/okdshin/PicoSHA2. Used for SHA256 encryption.
 - **Web Application**:
@@ -90,7 +90,7 @@ The application has the following dependencies (libraries and packages)
 ## Running
 After you have installed all requirements you can clone this project and run it following the next steps.
 
-#### 1 - Clone the project from develop branch
+#### 1 - Clone the project from master branch
 Open a terminal and write
 ```
 git clone https://github.com/Taletex/SkanCoin.git
