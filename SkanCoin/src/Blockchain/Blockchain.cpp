@@ -670,7 +670,7 @@ void BlockChain::replaceChain(list<Block> newBlocks) {
     throw "EXCEPTION (replaceChain): La blockchain ricevuta non è valida!";
   }
   BlockChain::blockchain = newBlocks; //Sostituzione blockchain
-  cout << "Blockchain sostituita! Nuova BlockChain:" << endl << BlockChain::getInstance().toString() << endl;
+  cout << "Blockchain sostituita! La Nuova BlockChain ha " << endl << BlockChain::getInstance().getBlockchain().size() << " blocchi..." << endl;
   cout << "Aggiornamento output non spesi dopo l'aggiornamento della Blockchain..." << endl;
   setUnspentTransOuts(lUnspentTransOuts); //Aggiornamento output non spesi
   //Aggiornamento transactionPool in base agli output non spesi aggiornati

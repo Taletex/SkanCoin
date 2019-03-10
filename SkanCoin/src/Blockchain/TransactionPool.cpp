@@ -66,7 +66,7 @@ void TransactionPool::updatePool(vector<UnspentTransOut> unspentTransOuts) {
     for(it2 = it1->transIns.begin(); it2 != it1->transIns.end(); ++it2) {
       if(!hasTransIn(*it2, unspentTransOuts)) {
         deleteStat(it1->id);
-        cout << "Rimozione dalla transaction pool della transazione: " << it1->toString() << endl;
+        cout << "Una transazione è stata rimossa dal pool: il transaction pool adesso contiene " << unconfirmedTransactions.size() << " transazioni..." << endl;
         it1 = unconfirmedTransactions.erase(it1);
         break;
       } else {
