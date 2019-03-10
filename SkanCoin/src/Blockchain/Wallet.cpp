@@ -22,7 +22,7 @@ string loadKey(bool isPrivate){
     inFile.close();
     return key;
   } else {
-    throw "EXCEPTION (loadKey): non è stato possibile aprire il file per leggere la chiave!";
+    throw "ECCEZIONE (loadKey): non è stato possibile aprire il file per leggere la chiave!";
   }
 }
 
@@ -43,7 +43,7 @@ void saveKey(string key, bool isPrivate){
   if(myfile.is_open()) {
     myfile << key;
   } else {
-    throw "EXCEPTION (saveKey): non è stato possibile aprire il file per salvare la chiave!";
+    throw "ECCEZIONE (saveKey): non è stato possibile aprire il file per salvare la chiave!";
   }
 }
 
@@ -101,7 +101,7 @@ string getWalletPrivateKey(){
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;
-    throw "EXCEPTION (getWalletPrivateKey): Errore durante il caricamento della chiave privata!";
+    throw "ECCEZIONE (getWalletPrivateKey): Errore durante il caricamento della chiave privata!";
   }
 }
 
@@ -116,7 +116,7 @@ string getWalletPublicKey(){
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;
-    throw "EXCEPTION (getWalletPublicKey): Errore durante il caricamento della chiave pubblica!";
+    throw "ECCEZIONE (getWalletPublicKey): Errore durante il caricamento della chiave pubblica!";
   }
 }
 
@@ -135,7 +135,7 @@ void generateKeys(){
   //La generazione non è andata a buon fine
   while(createdKeys != 1){
     if(count > 5){
-      throw "EXCEPTION (generateKeys): Errore durante la generazione delle chiavi, troppi tentativi falliti!";
+      throw "ECCEZIONE (generateKeys): Errore durante la generazione delle chiavi, troppi tentativi falliti!";
     }
     cout << "ERRORE (generateKeys): Errore durante la generazione delle chiavi, nuovo tentativo in corso (" << count << ")..." << endl;
     createdKeys = ecc_make_key(p_publicKey, p_privateKey);
@@ -148,7 +148,7 @@ void generateKeys(){
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;
-    throw "EXCEPTION: Errore durante il salvataggio delle chiavi";
+    throw "ECCEZIONE: Errore durante il salvataggio delle chiavi";
     }
 }
 
@@ -173,7 +173,7 @@ void initWallet(){
   }catch(const char* msg){
     cout << msg << endl;
     cout << endl;
-    throw "EXCEPTION (initWallet): Errore durante la generazione delle chiavi!";
+    throw "ECCEZIONE (initWallet): Errore durante la generazione delle chiavi!";
   }
 }
 
@@ -268,7 +268,7 @@ vector<UnspentTransOut> getTransOutsForAmount(float amount, vector<UnspentTransO
         return includedUnspentTransOuts;
     }
   }
-  throw "EXCEPTION (getTransOutsForAmount): Impossibile creare la transazione, il wallet sorgente non contiene abbastanza skancoin!";
+  throw "ECCEZIONE (getTransOutsForAmount): Impossibile creare la transazione, il wallet sorgente non contiene abbastanza skancoin!";
 }
 
 /*Generazione degli output di transazione dati l'importo e la

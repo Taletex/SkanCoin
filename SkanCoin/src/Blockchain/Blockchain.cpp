@@ -15,7 +15,7 @@ BlockChain::BlockChain(){
     initStatFiles();
   }catch(const char* msg){
     cout << msg << endl << endl;
-    throw "EXCEPTION (BlockChain): Creazione della blockchain fallita!";
+    throw "ECCEZIONE (BlockChain): Creazione della blockchain fallita!";
   }
 }
 
@@ -157,7 +157,7 @@ Block BlockChain::getBlockFromHash(string hash){
     }
   }
   cout << endl;
-  throw "EXCEPTION (getBlockFromHash): Blocco non trovato!";
+  throw "ECCEZIONE (getBlockFromHash): Blocco non trovato!";
 }
 
 /*Calcola la nuova difficoltà per i blocchi*/
@@ -217,7 +217,7 @@ Block BlockChain::createRawNextBlock(vector<Transaction> blockData){
     newBlock = mineBlock(nextIndex, previousBlock.hash, nextTimestamp, blockData, difficulty, &duration);
   }catch(const char* msg){
     cout << endl;
-    throw "EXCEPTION (createRawNextBlock): Errore durante il mining del nuovo blocco";
+    throw "ECCEZIONE (createRawNextBlock): Errore durante il mining del nuovo blocco";
   }
   if (addBlockToBlockchain(newBlock)) {
     cout << "Nuovo Blocco aggiunto alla blockchain! (indice " << newBlock.index << ")" << endl;
@@ -234,7 +234,7 @@ Block BlockChain::createRawNextBlock(vector<Transaction> blockData){
         }
         inFile.close();
       } else {
-        throw "Errore (createRawNextBlock): non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
+        throw "ERRORE (createRawNextBlock): non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
       }
     }catch(const char* msg){
       cout << msg << endl << endl;
@@ -247,7 +247,7 @@ Block BlockChain::createRawNextBlock(vector<Transaction> blockData){
       return newBlock;
   } else {
       cout << endl;
-      throw "EXCEPTION (createRawNextBlock): Errore durante l'inserimento del nuovo blocco nella BlockChain!";
+      throw "ECCEZIONE (createRawNextBlock): Errore durante l'inserimento del nuovo blocco nella BlockChain!";
   }
 }
 
@@ -293,12 +293,12 @@ Block BlockChain::createNextBlock(){
       myfile << msg;
       myfile.close();
     } else {
-      throw "EXCEPTION (clientMessageHandler - POOL_STATS): Blocco generato, ma non è stato possibile aprire il file per salvare le statistiche di attesa delle transazioni!";
+      throw "ECCEZIONE (clientMessageHandler - POOL_STATS): Blocco generato, ma non è stato possibile aprire il file per salvare le statistiche di attesa delle transazioni!";
     }
     return ret;
   }catch(const char* msg){
     cout << msg << endl << endl;
-    throw "EXCEPTION (createNextBlock): Errore durante la generazione del nuovo blocco";
+    throw "ECCEZIONE (createNextBlock): Errore durante la generazione del nuovo blocco";
   }
 }
 
@@ -317,7 +317,7 @@ Block BlockChain::createNextBlockWithTransaction(vector<TransOut> transOuts){
   for(it = transOuts.begin(); it != transOuts.end(); ++it) {
     if(typeid(it->amount) != typeid(float)) {
       cout << endl;
-      throw "EXCEPTION (createNextBlockWithTransaction): Importo non valido!";
+      throw "ECCEZIONE (createNextBlockWithTransaction): Importo non valido!";
     }
   }
   try{
@@ -325,13 +325,13 @@ Block BlockChain::createNextBlockWithTransaction(vector<TransOut> transOuts){
     blockData.push_back(transaction);
   }catch(const char* msg){
     cout << msg << endl << endl;
-    throw "EXCEPTION (createNextBlockWithTransaction): Creazione della transazione fallita";
+    throw "ECCEZIONE (createNextBlockWithTransaction): Creazione della transazione fallita";
   }
   try{
     return createRawNextBlock(blockData);
   }catch(const char* msg){
     cout << msg << endl << endl;
-    throw "EXCEPTION (createNextBlockWithTransaction): Errore durante la generazione del nuovo blocco";
+    throw "ECCEZIONE (createNextBlockWithTransaction): Errore durante la generazione del nuovo blocco";
   }
 }
 
@@ -363,7 +363,7 @@ Block BlockChain::mineBlock(int index, string previousHash, long timestamp, vect
         cout << "Aggiornamento del file contenente i tempi di mining in corso...";
         myfile << "{\"block\": " <<  index << ", \"miningtime\": " << duration << "}\n";
       } else {
-        cout << "Errore (mineBlock): non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
+        cout << "ERRORE (mineBlock): non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
       }
       myfile.close();
       return Block(index, hash, previousHash, timestamp, data, difficulty, nonce);
@@ -392,14 +392,14 @@ Transaction BlockChain::sendTransaction(string address, float amount){
     transaction = createTransaction(address, amount, getWalletPrivateKey(), getUnspentTransOuts(), TransactionPool::getInstance().getPool());
   }catch(const char* msg){
     cout << msg << endl << endl;
-    throw "EXCEPTION (sendTransaction): Creazione delle transazione fallita";
+    throw "ECCEZIONE (sendTransaction): Creazione delle transazione fallita";
   }
   try{
     //Aggiunta della nuova transazione al transaction pool
     TransactionPool::getInstance().addToPool(transaction, getUnspentTransOuts());
   }catch(const char* msg){
     cout << msg << endl << endl;
-    throw "EXCEPTION (sendTransaction):Inserimento della transazione nel pool fallito!";
+    throw "ECCEZIONE (sendTransaction):Inserimento della transazione nel pool fallito!";
   }
   //Broadcast a tutti gli altri peer della transactionpool aggiornata
   Peer::getInstance().connectionsMtx.lock();
@@ -425,7 +425,7 @@ Transaction BlockChain::getTransactionFromId(string transactionId){
     }
   }
   cout << endl;
-  throw "EXCEPTION (getTransactionFromId): Transazione non presente nella blockchain!";
+  throw "ECCEZIONE (getTransactionFromId): Transazione non presente nella blockchain!";
 }
 
 /*Calcolo dell'hash per un blocco*/
@@ -570,7 +570,7 @@ vector<UnspentTransOut> BlockChain::isBlockchainValid(list<Block> blockchainToVa
   //Validità del blocco di genesi
   if(blockchainToValidate.front().isEqual(getGenesisBlock())) {
     cout << endl;
-    throw "EXCEPTION (isBlockchainValid): il blocco di genesi non è valido!";
+    throw "ECCEZIONE (isBlockchainValid): il blocco di genesi non è valido!";
   }
 
   //Controllo validità di ogni blocco della blockchain (struttura e transazioni contenute)
@@ -581,7 +581,7 @@ vector<UnspentTransOut> BlockChain::isBlockchainValid(list<Block> blockchainToVa
       it2--;
       if(!isBlockValid(*it1, *it2)){
         cout << endl;
-        throw "EXCEPTION (isBlockchainValid): la blockchain ricevuta contiene blocchi non validi!";
+        throw "ECCEZIONE (isBlockchainValid): la blockchain ricevuta contiene blocchi non validi!";
       }
     }
 
@@ -592,7 +592,7 @@ vector<UnspentTransOut> BlockChain::isBlockchainValid(list<Block> blockchainToVa
       lUnspentTransOuts = processTransactions(it1->data, lUnspentTransOuts, it1->index);
     }catch(const char* msg){
       cout << msg << endl << endl;
-      throw "EXCEPTION (isBlockchainValid): la blockchain ricevuta contiene delle transazioni non valide!";
+      throw "ECCEZIONE (isBlockchainValid): la blockchain ricevuta contiene delle transazioni non valide!";
     }
   }
   return lUnspentTransOuts;
@@ -667,7 +667,7 @@ void BlockChain::replaceChain(list<Block> newBlocks) {
     lUnspentTransOuts = isBlockchainValid(newBlocks);
   }catch(const char* msg){
     cout << msg << endl << endl;
-    throw "EXCEPTION (replaceChain): La blockchain ricevuta non è valida!";
+    throw "ECCEZIONE (replaceChain): La blockchain ricevuta non è valida!";
   }
   BlockChain::blockchain = newBlocks; //Sostituzione blockchain
   cout << "Blockchain sostituita! La Nuova BlockChain ha " << endl << BlockChain::getInstance().getBlockchain().size() << " blocchi..." << endl;
