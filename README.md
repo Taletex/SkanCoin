@@ -8,8 +8,8 @@ A simple criptocurrency written in C++
 - [Requirements](#Requirements)
 - [Dependencies](#Dependencies)
 - [Running for test](#Running-for-test)
-- [Running for production] (#Running-for-production-with-docker)
-- [Future developments] (#Future-development)
+- [Running for production](#Running-for-production-with-docker)
+- [Future developments](#Future-development)
 
 ## References
 
