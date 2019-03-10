@@ -5,9 +5,9 @@ using easywsclient::WebSocket;
 
 /*Business logic per la gestione dei messaggi in arrivo dai peer*/
 void Peer::peerMessageHandler(const string & data, int isServer){
-    #if DEBUG_FLAG == 1
-        DEBUG_INFO("");
-    #endif
+  #if DEBUG_FLAG == 1
+      DEBUG_INFO("");
+  #endif
   string nome;
 
   if(isServer == 1){
@@ -21,8 +21,8 @@ void Peer::peerMessageHandler(const string & data, int isServer){
 
   if(data.compare("") == 0){
     cout << "ERRORE - HandlePeerMessage: Il messaggio ricevuto è vuoto!" << endl;
+    return;
   }
-
 
   //Parsing dell'oggetto JSON ricevuto dalla socket
   rapidjson::Document document;
@@ -33,10 +33,12 @@ void Peer::peerMessageHandler(const string & data, int isServer){
   document.Parse(data.c_str());
   if(!document.IsObject()){
     cout << endl << "ERRORE (" << nome << "): il formato del messaggio ricevuto non è valido" << endl;
+    return;
   }
 
   if(!document.HasMember("type")){
     cout << endl << "ERRORE (" << nome << "): il formato del messaggio ricevuto non è valido" << endl;
+    return;
   }
 
   //Controllo che il messaggio ricevuto sia valido
@@ -68,7 +70,7 @@ void Peer::peerMessageHandler(const string & data, int isServer){
       }
       if(!(document["data"].IsNull() || !document["data"].IsString())){
         row = document["data"].GetString();
-        if(!(row.compare(BlockChain::getInstance().getLatestBlock().previousHash) != 0)){
+        if(row.compare(BlockChain::getInstance().getLatestBlock().previousHash) != 0){
           /*Il blocco verrebbe sicuramente scartato dal peer remoto e verrebbe
            richiesta l'intera blockchain, dunque invio direttamente la versione
            locale dell'intera blockchain*/
@@ -115,6 +117,7 @@ void Peer::peerMessageHandler(const string & data, int isServer){
       }
       try {
         receivedBlocks = parseBlockList(document["data"]);
+        cout << "Ricevuti " << receivedBlocks.size() << " blocchi!" << endl;
         bAddedBlock = blockchainResponseHandler(receivedBlocks);
       } catch(const char* msg){
         cout << msg << endl;
@@ -311,6 +314,7 @@ void Peer::checkReceivedMessage(){
   }
 
   connectionsMtx.unlock();
+
 }
 
 /*Questo metodo controlla il vettore di socket (client), eliminando quelle
@@ -348,6 +352,7 @@ void Peer::connectToPeer(std::string peer){
   //Lock del mutex sulle liste di connessioni per l'inserimento della nuova connessione
   connectionsMtx.lock();
   ws->send(queryLatestBlockMsg());
+  ws->send(queryPoolMsg());
   openedConnections.push_back(ws);
   connectionsMtx.unlock();
 }
@@ -511,14 +516,6 @@ void Peer::broadCastPool(){
   #endif
 
   broadcast(responsePoolMsg());
-}
-
-void Peer::broadcastPoolQuery(){
-#if DEBUG_FLAG == 1
-  DEBUG_INFO("");
-#endif
-
-  broadcast(queryPoolMsg());
 }
 
 void Peer::broadcastLatestBlock(int index, double time){

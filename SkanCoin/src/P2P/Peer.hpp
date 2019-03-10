@@ -81,7 +81,6 @@ class Peer {
     void broadcastLatestBlock(int index, double duration);
     void broadCastPool();
     void broadcastPoolStat(std::vector<std::string>);
-    void broadcastPoolQuery();
 
     /*Dato l'url di un server P2P viene aperta una nuova connessione verso di esso dal thread client*/
     void connectToPeer(std::string peer);
