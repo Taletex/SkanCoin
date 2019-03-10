@@ -43,7 +43,6 @@ bool TransactionPool::addToPool(Transaction transaction, vector<UnspentTransOut>
   #endif
 
   if(!isValidTransaction(transaction, unspentTransOuts) || !isValidTransForPool(transaction)) {
-    cout << endl;
     throw "INFO (addToPool): La transazione che si vuole inserire nel pool è già presente o non è valida...";
   }
   cout << "Nuova transazione aggiunta al pool: " << transaction.toString() << endl;
@@ -62,7 +61,7 @@ void TransactionPool::updatePool(vector<UnspentTransOut> unspentTransOuts) {
   list<Transaction> aux;
   list<Transaction>::iterator it1;
   vector<TransIn>::iterator it2;
-
+  cout << "Aggiornamento del transaction pool i corso..." << endl;
   for(it1 = unconfirmedTransactions.begin(); it1 != unconfirmedTransactions.end(); ) {
     for(it2 = it1->transIns.begin(); it2 != it1->transIns.end(); ++it2) {
       if(!hasTransIn(*it2, unspentTransOuts)) {

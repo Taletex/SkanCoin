@@ -519,6 +519,7 @@ Transaction createTransaction(string receiverAddress, float amount, string priva
     cout << endl;
     throw "EXCEPTION (createTransaction): Creazione della transazione fallita, alcuni input di transazione non sono stati firmati correttamente";
   }
+  cout << "Nuova transazione creata!" << endl;
   return transaction;
 }
 
@@ -586,6 +587,7 @@ Transaction createTransactionWithMultipleOutputs (std::vector<TransOut> transOut
     cout << endl;
     throw "EXCEPTION (createTransaction): Creazione della transazione fallita, alcuni input di transazione non sono stati firmati correttamente";
   }
+  cout << "Nuova transazione creata!" << endl;
   return transaction;
 }
 

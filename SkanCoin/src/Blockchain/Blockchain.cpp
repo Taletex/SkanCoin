@@ -228,6 +228,7 @@ Block BlockChain::createRawNextBlock(vector<Transaction> blockData){
       inFile.open("blocksminingtime.txt");
       string line;
       if(inFile.is_open()) {
+        cout << "Aggiornamento del file contenente i tempi di mining..." << endl;
         while (getline(inFile, line)) {
           data = line;
         }
@@ -240,6 +241,7 @@ Block BlockChain::createRawNextBlock(vector<Transaction> blockData){
       cout << "ERRORE (createRawNextBlock): Apertura del file contenente i tempi di mining fallita!";
     }
       Peer::getInstance().connectionsMtx.lock();
+      cout << "Broadcast del blocco creato..." << endl;
       Peer::getInstance().broadcastLatestBlock(nextIndex, duration);
       Peer::getInstance().connectionsMtx.unlock();
       return newBlock;
@@ -277,11 +279,13 @@ Block BlockChain::createNextBlock(){
     if(stats.size() > 0){
       Peer::getInstance().connectionsMtx.lock();
       Peer::getInstance().broadcastPoolStat(stats);
+      cout << "Broadcast dei tempi di attesa nel pool per la transazioni prelevate..." << endl;
       Peer::getInstance().connectionsMtx.unlock();
     }
     ofstream myfile;
     myfile.open ("transactionwaitingtime.txt", ios::out | ios::app);
     if(myfile.is_open()) {
+      cout << "Aggiornamento del file contenente i tempi di attesa delle transazioni nel pool..." << endl;
       string msg = "";
       for(it = stats.begin(); it != stats.end(); ++it){
         msg = msg + *it + "\n";
@@ -337,7 +341,7 @@ Block BlockChain::mineBlock(int index, string previousHash, long timestamp, vect
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
-
+  cout << "Mining di un nuovo blocco in corso..." << endl;
   int nonce = 0;
   string hash;
   double duration;
@@ -348,6 +352,7 @@ Block BlockChain::mineBlock(int index, string previousHash, long timestamp, vect
   while (true) {
     hash = calculateHash(index, previousHash, timestamp, data, difficulty, nonce);
     if(hashDifficultyCheck(hash, difficulty)) {
+      cout << "Mining concluso! Il nuovo blocco è stato creato..." << endl;
       /*Il blocco generato ha un hash valido, si effetua il calcolo ed il
        salvataggio del tempo di mining del blocco in secondi (per le statistiche)*/
       duration = (std::clock() - start)/((double)CLOCKS_PER_SEC / 1000);
@@ -355,6 +360,7 @@ Block BlockChain::mineBlock(int index, string previousHash, long timestamp, vect
       ofstream myfile;
       myfile.open ("blocksminingtime.txt", ios::out | ios::app);
       if(myfile.is_open()) {
+        cout << "Aggiornamento del file contenente i tempi di mining in corso...";
         myfile << "{\"block\": " <<  index << ", \"miningtime\": " << duration << "}\n";
       } else {
         cout << "Errore (mineBlock): non è stato possibile aprire il file per salvare il tempo di mining del blocco!";
@@ -397,6 +403,7 @@ Transaction BlockChain::sendTransaction(string address, float amount){
   }
   //Broadcast a tutti gli altri peer della transactionpool aggiornata
   Peer::getInstance().connectionsMtx.lock();
+  cout << "Broadcast del transaction pool dopo l'inserimento della nuova transazione..." << endl;
   Peer::getInstance().broadCastPool();
   Peer::getInstance().connectionsMtx.unlock();
   return transaction;
@@ -612,8 +619,10 @@ bool BlockChain::addBlockToBlockchain(Block newBlock) {
     setUnspentTransOuts(ret);
     /*Check e aggiornamento del transactionPool (rimozione delle
     transazioni minate nel blocco ricevuto)*/
+    cout << "Aggiornamento del transaction pool dopo l'inserimento del nuovo blocco...";
     TransactionPool::getInstance().updatePool(getUnspentTransOuts());
     try{
+        cout << "Salvataggio delle statistiche della Blockchain..." << endl;
         saveBlockchainStats();
     }catch(const char* msg){
       cout << msg << endl << endl;
@@ -654,29 +663,29 @@ void BlockChain::replaceChain(list<Block> newBlocks) {
   }
   vector<UnspentTransOut> lUnspentTransOuts;
   try{
-    lUnspentTransOuts = isBlockchainValid(newBlocks);
     //Verifica della validità dei blocchi ricevuti
+    lUnspentTransOuts = isBlockchainValid(newBlocks);
   }catch(const char* msg){
     cout << msg << endl << endl;
     throw "EXCEPTION (replaceChain): La blockchain ricevuta non è valida!";
   }
   BlockChain::blockchain = newBlocks; //Sostituzione blockchain
-  cout << "Blockchain sostituita! Nuova BlockChain:" << endl << BlockChain::getInstance().toString();
+  cout << "Blockchain sostituita! Nuova BlockChain:" << endl << BlockChain::getInstance().toString() << endl;
+  cout << "Aggiornamento output non spesi dopo l'aggiornamento della Blockchain..." << endl;
   setUnspentTransOuts(lUnspentTransOuts); //Aggiornamento output non spesi
   //Aggiornamento transactionPool in base agli output non spesi aggiornati
+  cout << "Aggiornamento della transaction pool dopo l'aggiornamento della Blockchain..." << endl;
   TransactionPool::getInstance().updatePool(getUnspentTransOuts());
   /*Broadcast della nuova blockchain a tutti i nodi (non indichiamo alcuna
    statistica perchè non si tratta di un nuovo blocco per cui si vuole il tempo di mining)
    in questo caso non effettuiamo il lock del mutex perchè questo metodo viene usato solo
    dai thread peer durante l'handling dei messaggi, dunque il lock è già acquisito
   */
+  cout << "Broadcast dell'ultimo blocco..." << endl;
   Peer::getInstance().broadcastLatestBlock(-1,0);
-
-  //In precedenza potrei aver scartato transazioni perchè la mia blockchain non era aggiornata,
-  // richiedo la transaction pool per verificarle di nuovo
-  Peer::getInstance().broadcastPoolQuery();
   try{
     //Salvataggio dei nuovi dati relativi alla blockchain nell'apposito file
+    cout << "Salvataggio statistiche della Blockchain..." << endl;
     saveBlockchainStats();
   }catch(const char* msg){
     cout << msg << endl << endl;
