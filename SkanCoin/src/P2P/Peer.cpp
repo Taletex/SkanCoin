@@ -356,8 +356,6 @@ void Peer::connectToPeer(std::string peer){
   openedConnections.push_back(ws);
   connectionsMtx.unlock();
 
-  this_thread::sleep_for(std::chrono::milliseconds(1000));
-
   connectionsMtx.lock();
   cout << "Invio query per il transaction pool..." << endl;
   ws->send(queryPoolMsg());
@@ -451,11 +449,9 @@ void Peer::initP2PServer(int port){
         receivedConnections.insert(&connection);
         connectionsMtx.unlock();
 
-        this_thread::sleep_for(std::chrono::milliseconds(1000));
-
         connectionsMtx.lock();
         cout << "Invio query per il transaction pool..." << endl;
-        connection.send_text(queryLatestBlockMsg());
+        connection.send_text(queryPoolMsg());
         connectionsMtx.unlock();
 
     })
@@ -511,16 +507,15 @@ void Peer::broadcast(string message){
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
-
+  //Broadcast sulle socket aperte da altri client verso il thread server
+  for(auto ws: receivedConnections){
+    ws->send_text(message);
+  }
   //Broadcast sulle socket aperte dal thread client
   for(auto ws: openedConnections){
     if(ws->getReadyState() != WebSocket::CLOSED) {
       ws->send(message);
     }
-  }
-  //Broadcast sulle socket aperte da altri client verso il thread server
-  for(auto ws: receivedConnections){
-    ws->send_text(message);
   }
 }
 

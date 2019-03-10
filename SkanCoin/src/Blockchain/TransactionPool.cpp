@@ -45,7 +45,7 @@ bool TransactionPool::addToPool(Transaction transaction, vector<UnspentTransOut>
   if(!isValidTransaction(transaction, unspentTransOuts) || !isValidTransForPool(transaction)) {
     throw "INFO (addToPool): La transazione che si vuole inserire nel pool è già presente o non è valida...";
   }
-  cout << "Nuova transazione aggiunta al pool: " << transaction.toString() << endl;
+  cout << "Nuova transazione aggiunta al pool: " << endl;
   cout << "La transaction pool contiene " << TransactionPool::getInstance().getPool().size()+1 << " transazioni" << endl;
   unconfirmedTransactions.push_back(transaction);
   stats.push_back(TransactionStat(transaction.id));
