@@ -1,18 +1,18 @@
 # SkanCoin
 A simple criptocurrency written in C++
 
-## Table of Contents
 
-- [References](#references)
+## Table of Contents
+- [References](#References)
 - [Screenshots](#screenshots)
 - [Requirements](#Requirements)
 - [Dependencies](#Dependencies)
-- [Running](#running)
-
+- [Running for production](#Running-for-production-with-docker)
+- [Running for test](#Running-for-test)
+- [Future developments](#Future-developments)
 
 
 ## References
-
 References available (italian only) at:
 - doc/Relazione_Scavo_Messina.docx
 
@@ -24,6 +24,7 @@ References available (italian only) at:
 
 - **Diagnostic client**
 ![screenshot](screenshots/2.png)
+
 
 
 ## Requirements
@@ -69,6 +70,8 @@ Note: this app was successfully tested on Ubuntu 18.04 and ArchLinux. The follow
 		install.packages("ggplot2")
 		install.packages("jsonlite")
 		```
+
+
 ## Dependencies
 The application has the following dependencies (libraries and packages)
 - **C++ Application**:
@@ -87,13 +90,34 @@ The application has the following dependencies (libraries and packages)
   3. Jsonlite https://cran.r-project.org/web/packages/jsonlite/index.html. Used to make HTTP request in R.
 
 
-## Running
-After you have installed all requirements you can clone this project and run it following the next steps.
+
+## Running for production with Docker
+If you don't want to install all requirements and you want to run the system with docker, you can clone this project and run it following the next steps.
+
+>NB: Before you follow this guide you need to have a working installation of **Docker** on your host!
 
 #### 1 - Clone the project from master branch
 Open a terminal and write
 ```
 git clone https://github.com/Taletex/SkanCoin.git
+```
+
+#### 2 -  Run the project
+Open a terminal in the SkanCoin root directory and write
+```
+sudo docker-compose up
+```
+>NB: The image building process requires to download heavy docker images, and can take several minutes
+
+
+
+## Running for test
+After you have installed all requirements you can clone this project and run it following the next steps.
+
+#### 1 - Clone the project from develop branch
+Open a terminal and write
+```
+git clone --branch develop https://github.com/Taletex/SkanCoin.git
 ```
 
 #### 2 - Build and run the C++ project
@@ -126,3 +150,11 @@ runApp("/home/taletex/Projects/SkanCoin/DiagnosticClient/app")
 ```
 Note: You need to change the path in the "runApp("")" function according to the path of the folder "app" located inside the "DiagnosticClient" folder.
 At the end of the execution of those commands will appear an address where the Diagnostic Client web application is in running. You need to copy and paste this address in a browser page.
+
+
+
+## Future developments
+- Creating a Join server mechanism to allow peers remember their open connections (alternately, saving connected peers URLs into file and get those URLs when the Peer start in order to ripristinate old connections). This is useful only in case of crash.
+- Updating stats files for query2 and query3 also when a node's whole blockchain is replaced.
+- Sometimes R app crashes when a query is done because the transaction contains invalid characters.
+
