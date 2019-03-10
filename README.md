@@ -3,13 +3,13 @@ A simple criptocurrency written in C++
 
 ## Table of Contents
 
-- [References](#references)
+- [References](#References)
 - [Screenshots](#screenshots)
 - [Requirements](#Requirements)
 - [Dependencies](#Dependencies)
-- [Running](#running)
-
-
+- [Running for test](#Running-for-test)
+- [Running for production] (#Running-for-production-with-docker)
+- [Future developments] (#Future-development)
 
 ## References
 
@@ -87,13 +87,13 @@ The application has the following dependencies (libraries and packages)
   3. Jsonlite https://cran.r-project.org/web/packages/jsonlite/index.html. Used to make HTTP request in R.
 
 
-## Running
+## Running for test
 After you have installed all requirements you can clone this project and run it following the next steps.
 
-#### 1 - Clone the project from master branch
+#### 1 - Clone the project from develop branch
 Open a terminal and write
 ```
-git clone https://github.com/Taletex/SkanCoin.git
+git clone --branch develop https://github.com/Taletex/SkanCoin.git
 ```
 
 #### 2 - Build and run the C++ project
@@ -126,3 +126,22 @@ runApp("/home/taletex/Projects/SkanCoin/DiagnosticClient/app")
 ```
 Note: You need to change the path in the "runApp("")" function according to the path of the folder "app" located inside the "DiagnosticClient" folder.
 At the end of the execution of those commands will appear an address where the Diagnostic Client web application is in running. You need to copy and paste this address in a browser page.
+
+
+## Running for production with Docker
+If you don't want to install all requirements and you want to run the system with docker, you can clone this project and run it following the next steps.
+
+>NB: Before you follow this guide you need to have a working installation of **Docker** on your host!
+
+#### 1 - Clone the project from master branch
+Open a terminal and write
+```
+git clone https://github.com/Taletex/SkanCoin.git
+```
+
+#### 2 -  Run the project
+Open a terminal in the SkanCoin root directory and write
+```
+sudo docker-compose up
+```
+>NB: The image building process requires to download heavy docker images, and can take several minutes
