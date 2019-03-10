@@ -62,9 +62,14 @@ Note: this app was successfully tested on Ubuntu 18.04 and ArchLinux. The follow
 		npm install http-server -o
 		```
 - **R Application**:
-  1. R language. https://www.digitalocean.com/community/tutorials/how-to-install-r-on-ubuntu-18-04-quickstart
+  1. R language. Open a terminal and write:
+  		```
+		sudo apt-get install -y software-properties-common
+		```
+     Then follow this link: https://www.digitalocean.com/community/tutorials/how-to-install-r-on-ubuntu-18-04-quickstart
   2. R packages: shiny, ggplot2 and jsonlite.  Open a terminal and write:
 		```
+		sudo apt-get install -y software-properties-common
 		sudo -i R
 		install.packages("shiny")
 		install.packages("ggplot2")
