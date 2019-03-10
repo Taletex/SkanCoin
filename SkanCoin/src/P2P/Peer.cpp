@@ -28,6 +28,7 @@ void Peer::peerMessageHandler(const string & data, int isServer){
   rapidjson::Document document;
   cout << endl << nome << ": Messaggio ricevuto: ";
   //cout << data;
+  document.Parse(data.c_str());
 
   //Controllo che il messaggio ricevuto sia valido
   if(document["type"].IsNull() || Peer::getInstance().isValidType(document["type"].GetInt()) == false){
