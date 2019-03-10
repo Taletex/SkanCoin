@@ -351,9 +351,16 @@ void Peer::connectToPeer(std::string peer){
 
   //Lock del mutex sulle liste di connessioni per l'inserimento della nuova connessione
   connectionsMtx.lock();
+  cout << "Invio query per l'ultimo blocco..." << endl;
   ws->send(queryLatestBlockMsg());
-  ws->send(queryPoolMsg());
   openedConnections.push_back(ws);
+  connectionsMtx.unlock();
+
+  this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+  connectionsMtx.lock();
+  cout << "Invio query per il transaction pool..." << endl;
+  ws->send(queryPoolMsg());
   connectionsMtx.unlock();
 }
 
@@ -436,12 +443,12 @@ void Peer::initP2PServer(int port){
   CROW_ROUTE(app, "/").websocket()
     //Gesitione della ricezione di nuove connessioni
     .onopen([&](crow::websocket::connection& connection){
-      CROW_LOG_INFO << "Server Peer: ricevuta nuova connessione";
-      connectionsMtx.lock();
-      receivedConnections.insert(&connection);
-      cout << "Invio query per l'ultimo blocco..." << endl;
-      connection.send_text(queryLatestBlockMsg());
-      connectionsMtx.unlock();
+        CROW_LOG_INFO << "Server Peer: ricevuta nuova connessione";
+        connectionsMtx.lock();
+        receivedConnections.insert(&connection);
+        cout << "Invio query per l'ultimo blocco..." << endl;
+        connection.send_text(queryLatestBlockMsg());
+        connectionsMtx.unlock();
 
     })
     //Gestione della chiusura di una socket
