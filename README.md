@@ -31,7 +31,10 @@ References available (italian only) at:
 The application has the following requirements (needed to run the project)
 Note: this app was successfully tested on Ubuntu 18.04 and ArchLinux. The following links refers to Ubuntu 18.04. If you use a different Operative System, you have to search and download the proper software. Because of C++ App dependencies it's not possible to run this project on Windows or MacOS.
 - **C++ Application**:
-  1. Cmake (yet installed on Ubuntu 18.04)
+  1. Cmake. Open a terminal and write:
+		```
+		sudo sudo apt install cmake
+		```
   2. Crow library requirements. Open a terminal and write:
 		```
 		sudo apt-get install build-essential libtcmalloc-minimal4 && sudo ln -s /usr/lib/libtcmalloc_minimal.so.4 /usr/lib/libtcmalloc_minimal.so
