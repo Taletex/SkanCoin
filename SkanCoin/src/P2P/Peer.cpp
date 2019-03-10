@@ -80,14 +80,14 @@ void Peer::peerMessageHandler(const string & data, int isServer){
 
       if(sendAll == true){
         cout << "Il nodo che ha richiesto l'ultimo blocco ha una versione di blockchain non compatibile con quella locale, invio la versione locale della blockchain!" << endl;
-        if(isServer == false){
+        if(isServer == 0){
           tempClientWs->send(responseBlockchainMsg());
         }else{
           tempServerWs->send_text(responseBlockchainMsg());
         }
         cout << "BlockChain inviata! (" << (BlockChain::getInstance().getLatestBlock().index + 1) << " blocchi)" << endl;
       }else{
-        if(isServer == false){
+        if(isServer == 0){
           tempClientWs->send(responseLatestBlockMsg(-1,0));
         }else{
           tempServerWs->send_text(responseLatestBlockMsg(-1,0));
@@ -98,7 +98,7 @@ void Peer::peerMessageHandler(const string & data, int isServer){
     //Un peer ha richiesto la blockchain, essa viene inserita nella risposta
     case QUERY_BLOCKCHAIN:
       cout << " - QUERY_BLOCKCHAIN" << endl;
-      if(isServer == false){
+      if(isServer == 0){
         tempClientWs->send(responseBlockchainMsg());
       }else{
         tempServerWs->send_text(responseBlockchainMsg());
@@ -154,7 +154,7 @@ void Peer::peerMessageHandler(const string & data, int isServer){
     case QUERY_POOL:
       cout << " - QUERY_POOL" << endl;
       if(!(TransactionPool::getInstance().getPool().size() == 0)){
-        if(isServer == false){
+        if(isServer == 0){
           tempClientWs->send(responsePoolMsg());
         }else{
           tempServerWs->send_text(responsePoolMsg());
