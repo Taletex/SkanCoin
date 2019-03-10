@@ -157,4 +157,4 @@ At the end of the execution of those commands will appear an address where the D
 - Creating a Join server mechanism to allow peers remember their open connections (alternately, saving connected peers URLs into file and get those URLs when the Peer start in order to ripristinate old connections). This is useful only in case of crash.
 - Updating stats files for query2 and query3 also when a node's whole blockchain is replaced.
 - Sometimes R app crashes when a query is done because the transaction contains invalid characters.
-
+- Persistent storing of blockchain
