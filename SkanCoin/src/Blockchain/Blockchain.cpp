@@ -260,7 +260,7 @@ vector<UnspentTransOut> BlockChain::getMyUnspentTransactionOutputs(){
   return getUnspentTransOutsOfAddress(getWalletPublicKey(), getUnspentTransOuts());
 }
 
-/*Colleziona le transazioni dal transaction pool, inizializza la coinbase
+/*Preleva fino a 2 transazioni dal transaction pool, inizializza la coinbase
 transaction ed avvia la procedura di mining ed inserimento del blocco*/
 Block BlockChain::createNextBlock(){
   #if DEBUG_FLAG == 1
@@ -268,10 +268,21 @@ Block BlockChain::createNextBlock(){
   #endif
 
   Transaction coinbaseTrans = getCoinbaseTransaction(getWalletPublicKey(), getLatestBlock().index + 1);
-  vector<Transaction> blockData = TransactionPool::getInstance().getPool();
+  vector<Transaction>::iterator it;
+  vector<Transaction> blockData;
+  vector<string> stats;
+  vector<Transaction> pool = TransactionPool::getInstance().getPool();
+  for (it = pool.begin(); it != pool.end(); ++it){
+    blockData.push_back(*it);
+    if(TransactionPool::getInstance().getStatString(it->id).compare("") != 0){
+        stats.push_back(TransactionPool::getInstance().getStatString(it->id));
+    }
+    if(blockData.size() == 2){
+      break;
+    }
+  }
   blockData.insert (blockData.begin() , coinbaseTrans);
   try{
-    vector<string> stats = TransactionPool::getInstance().getStatStrings();
     Block ret = createRawNextBlock(blockData);
     /*Aggiornamento locale e verso tutti i peer delle statistiche relative ai tempi di attesa
     delle transazioni nel pool, vengono comunicati i tempi di attesa delle transazioni appena prelevate*/

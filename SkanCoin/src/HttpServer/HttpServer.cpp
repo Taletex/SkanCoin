@@ -88,7 +88,7 @@ void initHttpServer(int port){
     }
   });
 
-  /* REST: Effettua il mining di un nuovo blocco utilizzando le transazioni del transaction pool (più la coinbase transaction) */
+  /* REST: Effettua il mining di un nuovo blocco prelevando fino a 2 transazioni del transaction pool (più la coinbase transaction) */
   CROW_ROUTE(app, "/webresources/blocks/pool").methods("POST"_method, "OPTIONS"_method)([](const crow::request& req){
     if(req.method == "OPTIONS"_method) {
       return optionsResponse();           // Per gestire il CORS

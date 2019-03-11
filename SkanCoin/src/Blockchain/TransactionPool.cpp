@@ -58,23 +58,32 @@ void TransactionPool::updatePool(vector<UnspentTransOut> unspentTransOuts) {
   DEBUG_INFO("");
   #endif
 
-  list<Transaction> aux;
   list<Transaction>::iterator it1;
   vector<TransIn>::iterator it2;
-  //TODO: FIXME, i cicli sono palesemente sbagliati infatti se si arriva qui probabilmente crasha
+
   cout << "Aggiornamento del transaction pool in corso..." << endl;
+  bool toBeRemoved;
+  /*Per ogni transazione nella transaction pool controllo i suoi input e verifico
+   che siano presenti nel vettore di output non spesi, in caso contrario rimuovo la
+   transazione dal pool*/
   for(it1 = unconfirmedTransactions.begin(); it1 != unconfirmedTransactions.end(); ) {
+  toBeRemoved = false;
     for(it2 = it1->transIns.begin(); it2 != it1->transIns.end(); ++it2) {
       if(!hasTransIn(*it2, unspentTransOuts)) {
-        deleteStat(it1->id);
-        it1 = unconfirmedTransactions.erase(it1);
-        cout << "Una transazione è stata rimossa dal pool: il transaction pool adesso contiene " << unconfirmedTransactions.size() << " transazioni..." << endl;
+          toBeRemoved = true;
         break;
-      } else {
-        ++it1;
       }
     }
-  }
+    if(toBeRemoved){
+      deleteStat(it1->id);
+      it1 = unconfirmedTransactions.erase(it1);
+      cout << "Una transazione è stata rimossa dal pool: il transaction pool adesso contiene " << unconfirmedTransactions.size() << " transazioni..." << endl;
+    }else {
+          ++it1;
+      }
+    }
+
+
 }
 
 /*Rimuove dal vettore di TransactionStat l'elemento corrispondente all'id di transazione indicato*/
@@ -146,18 +155,20 @@ bool TransactionPool::isValidTransForPool(Transaction transaction) {
   return true;
 }
 
-/*Ritorna un vettore di stringhe, che sono le entries da inserire nell'apposito
-file per raccogliere le statistiche relative al tempo di attesa
-delle transazioni nel pool prima di essere confermate*/
-vector<string> TransactionPool::getStatStrings(){
+/*Data una transazione ritorna il relativo elemento del vettore contenente
+ i dati relativi ai tempi di attesa delle transazioni nel pool */
+string TransactionPool::getStatString(string transactionId){
   #if DEBUG_FLAG == 1
   DEBUG_INFO("");
   #endif
 
-  vector<string> ret = {};
+  string ret = "";
   list<TransactionStat>::iterator it;
   for(it = stats.begin(); it != stats.end(); ++it){
-    ret.push_back(it->getDiffTimeString());
+    if(it->transactionId.compare(transactionId) == 0){
+      ret = it->getDiffTimeString();
+      break;
+    }
   }
   return ret;
 }

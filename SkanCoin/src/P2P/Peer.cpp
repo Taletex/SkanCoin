@@ -219,7 +219,7 @@ void Peer::peerMessageHandler(const string & data, int isServer){
       }
       try{
         receivedTransactions = parseTransactionVector(document["data"]);
-        cout << "INFO (" << nome << " - RESPONSE_POOL): Ricevute " << receivedTransactions.size() << "transazioni..." << endl;
+        cout << "INFO (" << nome << " - RESPONSE_POOL): Ricevuta una nuova transazione..." << endl;
       }catch(const char* msg){
         cout << msg << endl;
         cout << "ERRORE (" << nome << " - RESPONSE_POOL): errore durante il parsing del messaggio!" << endl;

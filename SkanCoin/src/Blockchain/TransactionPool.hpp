@@ -39,10 +39,9 @@ class TransactionPool {
     /* Verifica la validità della transazione data e la inserisce nel transaction pool */
     bool addToPool(Transaction transaction, std::vector<UnspentTransOut> unspentTransOuts);
 
-    /*Ritorna un vettore di stringhe, che sono le entries da inserire nell'apposito
-    file per raccogliere le statistiche relative al tempo di attesa
-    delle transazioni nel pool prima di essere confermate*/
-    std::vector<std::string> getStatStrings();
+    /*Data una transazione ritorna il relativo elemento del vettore contenente
+     i dati relativi ai tempi di attesa delle transazioni nel pool */
+    std::string getStatString(std::string transactionId);
 
     /*Rappresentazione in formato stringa del pool di transazioni*/
     std::string toString();
