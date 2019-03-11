@@ -7,7 +7,6 @@ A simple criptocurrency written in C++
 - [Screenshots](#screenshots)
 - [Requirements](#Requirements)
 - [Dependencies](#Dependencies)
-- [Running for production](#Running-for-production-with-docker)
 - [Running for test](#Running-for-test)
 - [Future developments](#Future-developments)
 
@@ -33,7 +32,7 @@ Note: this app was successfully tested on Ubuntu 18.04 and ArchLinux. The follow
 - **C++ Application**:
   1. Cmake. Open a terminal and write:
 		```
-		sudo sudo apt install cmake
+		sudo apt install cmake
 		```
   2. Crow library requirements. Open a terminal and write:
 		```
@@ -62,7 +61,7 @@ Note: this app was successfully tested on Ubuntu 18.04 and ArchLinux. The follow
 		```
   2. Http server. Open a terminal and write:
 		```
-		npm install http-server -o
+		sudo npm install -g http-server -o
 		```
 - **R Application**:
   1. R language. Open a terminal and write:
@@ -72,11 +71,12 @@ Note: this app was successfully tested on Ubuntu 18.04 and ArchLinux. The follow
      Then follow this link: https://www.digitalocean.com/community/tutorials/how-to-install-r-on-ubuntu-18-04-quickstart
   2. R packages: shiny, ggplot2 and jsonlite.  Open a terminal and write:
 		```
-		sudo apt-get install -y software-properties-common
+		sudo apt install libcurl4-openssl-dev
 		sudo -i R
 		install.packages("shiny")
 		install.packages("ggplot2")
 		install.packages("jsonlite")
+		install.packages('curl')
 		```
 
 
@@ -99,10 +99,8 @@ The application has the following dependencies (libraries and packages)
 
 
 
-## Running for production with Docker
-If you don't want to install all requirements and you want to run the system with docker, you can clone this project and run it following the next steps.
-
->NB: Before you follow this guide you need to have a working installation of **Docker** on your host!
+## Running for test
+After you have installed all requirements you can clone this project and run it following the next steps.
 
 #### 1 - Clone the project from master branch
 Open a terminal and write
@@ -110,28 +108,10 @@ Open a terminal and write
 git clone https://github.com/Taletex/SkanCoin.git
 ```
 
-#### 2 -  Run the project
-Open a terminal in the SkanCoin root directory and write
-```
-sudo docker-compose up
-```
->NB: The image building process requires to download heavy docker images, and can take several minutes
-
-
-
-## Running for test
-After you have installed all requirements you can clone this project and run it following the next steps.
-
-#### 1 - Clone the project from develop branch
-Open a terminal and write
-```
-git clone --branch develop https://github.com/Taletex/SkanCoin.git
-```
-
 #### 2 - Build and run the C++ project
 Open a terminal in the folder where you have cloned the repository and write
 ```
-cd SkanCoin
+cd SkanCoin/SkanCoin
 mkdir build
 cd build
 export CXX=/usr/local/clang_7.0.1/bin/clang++
@@ -144,6 +124,7 @@ If you want to enable debug informations on the terminal where the C++ applicati
 #### 3 - Run the Web Application
 Open a new terminal in the folder where you have cloned the repository and write
 ```
+cd SkanCoin
 cd WebApp
 http-server -o
 ```
@@ -166,3 +147,4 @@ At the end of the execution of those commands will appear an address where the D
 - Updating stats files for query2 and query3 also when a node's whole blockchain is replaced.
 - Sometimes R app crashes when a query is done because the transaction contains invalid characters.
 - Persistent storing of blockchain
+- Dockerization
