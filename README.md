@@ -143,18 +143,25 @@ At the end of the execution of those commands will appear an address where the D
 
 
 
-## Running wth virtual box
+## Running with virtual box
 We have created a virtual box image with all requirements yet installed. So, if you have virtual box installed on your PC you can follow the next steps to run the project.
 
 #### 1 - Download ubuntu 18.04 skancoin image
 Follow this link and download the image of ubuntu 18.04 with preinstalled requirements to run skancoin:
+- Link not yet available.
 
+#### 2 - Run ubuntu 18.04 skancoin image
+1. Open Virtual Box and click on File -> Import virtual application. 
+2. Select the previous downloaded image.
+3. Run the VM.
 
-#### 2 - Run ubuntu 18.04 skan coin image
-Open Virtual Box
+#### 4 - Update skancoin repo and run the system
+Once you have runned the ubuntu 18.04 skancoin image, open a new terminal and write
 ```
-cd SkanCoin/SkanCoin
-mkdir build
+cd Project/SkanCoin
+git pull
+```
+You can now follow the steps of the "Running for test" section (excluding the clone repository step) to run the system.
 
 
 ## Future developments
