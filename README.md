@@ -146,8 +146,8 @@ Note: the path in the "runApp("")" function needs to be changed according to the
 We have created a virtual box image with all requirements already installed. So, if you have virtual box installed on your PC you can follow the next steps to run the project.
 
 #### 1 - Download ubuntu 18.04 skancoin image
-Follow this link and download the image of ubuntu 18.04 with preinstalled requirements to run skancoin:
-- Link not yet available.
+Follow this link and download the image of ubuntu 18.04 with preinstalled requirements to run skancoin: 
+- https://drive.google.com/open?id=1vQUMoFhjfCTkuQCu_JkmkKqw7buygNYl
 
 #### 2 - Run ubuntu 18.04 skancoin image
 1. Open Virtual Box and click on File -> Import virtual application. 
