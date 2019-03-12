@@ -8,6 +8,7 @@ A simple criptocurrency written in C++
 - [Requirements](#Requirements)
 - [Dependencies](#Dependencies)
 - [Running for test](#Running-for-test)
+- [Running with virtual box](#Running-with-virtual-box)
 - [Future developments](#Future-developments)
 
 
@@ -100,7 +101,7 @@ The application has the following dependencies (libraries and packages)
 
 
 ## Running for test
-After you have installed all requirements you can clone this project and run it following the next steps.
+After you have installed all requirements you can clone this project and run it following the next steps. If you don't want to install all requirements and you have Virtual Box installed you can skip the next steps and go to "Running with virtual box" section.
 
 #### 1 - Clone the project from master branch
 Open a terminal and write
@@ -142,9 +143,24 @@ At the end of the execution of those commands will appear an address where the D
 
 
 
+## Running wth virtual box
+We have created a virtual box image with all requirements yet installed. So, if you have virtual box installed on your PC you can follow the next steps to run the project.
+
+#### 1 - Download ubuntu 18.04 skancoin image
+Follow this link and download the image of ubuntu 18.04 with preinstalled requirements to run skancoin:
+
+
+#### 2 - Run ubuntu 18.04 skan coin image
+Open Virtual Box
+```
+cd SkanCoin/SkanCoin
+mkdir build
+
+
 ## Future developments
 - Creating a Join server mechanism to allow peers remember their open connections (alternately, saving connected peers URLs into file and get those URLs when the Peer start in order to ripristinate old connections). This is useful only in case of crash.
 - Updating stats files for query2 and query3 also when a node's whole blockchain is replaced.
 - Sometimes R app crashes when a query is done because the transaction contains invalid characters.
 - Persistent storing of blockchain
 - Dockerization
+- Changing websocket client library (easywsclient) because of its limitations. We have encountered a lot of problems which lead us to limits the amount of data exchanged between client websocket and server websocket (the client websocket crashes if it has to exchange to much data). This is why it's possible to create from the webapp only blocks with max 3 destinations and mining block with only 2 transactions from the transaction pool
