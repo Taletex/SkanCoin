@@ -152,7 +152,9 @@ Follow this link and download the image of ubuntu 18.04 with preinstalled requir
 #### 2 - Run ubuntu 18.04 skancoin image
 1. Open Virtual Box and click on File -> Import virtual application. 
 2. Select the previous downloaded image.
-3. Run the VM.
+3. Click on Next.
+4. Click on Import.
+5. Run the VM.
 > Note: the password of the main user is "apl20182019"
 
 #### 4 - Update skancoin repo and run the system
@@ -161,7 +163,8 @@ Once the ubuntu 18.04 skancoin image is running, open a new terminal and write
 cd Project/SkanCoin
 git pull
 ```
-Now follow the steps of the "Running for test" section (excluding the clone repository step) to run the system.
+Now follow the steps of the "Running for test" section (excluding the clone repository step) to run the system. 
+> Note that the project is located in Home/Projects, so when you open a new terminal in every step of the "Running for test" section you have to write "cd Projects/SkanCoin" to move in the SkanCoin root folder.
 
 
 ## Future developments
