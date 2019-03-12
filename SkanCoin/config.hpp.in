@@ -9,7 +9,6 @@
 /* Debug Mode*/
 #define DEBUG_FLAG @DEBUG_FLAG@
 #define DEBUG_INFO(msg) \
-    fprintf(stdout, "> Debug: %s in file %s riga %d\n", __func__, __FILE__, __LINE__); \
-    if(msg != "") fprintf(stdout, "  %s\n", msg);
+    fprintf(stdout, "> Debug: %s in file %s riga %d   %s\n", __func__, __FILE__, __LINE__, msg); \
 
 #endif

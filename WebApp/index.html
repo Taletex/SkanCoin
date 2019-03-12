@@ -140,7 +140,7 @@
                                     </li>
                                     <li class="list-group-item py-2">
                                         <div class="row m-0 d-flex align-items-center justify-content-between">
-                                            <div><span>Effettua il mining di un blocco con una transazione che ha una o più destinazioni</div>
+                                            <div><span>Effettua il mining di un blocco con una transazione che ha una o più destinazioni (max 3)</div>
                                             <div class="form-group m-0 d-flex ml-auto">
                                                 <button type="button" class="btn btn-secondary btn-sm ml-2" ng-click="mineBlockWithTransaction(inputs.transOuts)" ng-disabled="!isTransOutsValid()" ng-class="{'disabled cursor-not-allowed': !isTransOutsValid()}"><span class="fa fa-right-arrow"></span>Invia <span class="ml-1 fa fa-arrow-circle-right"></span></button>
                                             </div>
@@ -162,7 +162,7 @@
                                                       <input type="text" class="form-control form-control-sm" placeholder="Indirizzo" name="indirizzo_{{$index}}" ng-model="output.address">
                                                   </div>
                                                 </div>
-                                                <button ng-click="addOutputToInput()" class="cursor-pointer btn btn-outline-info btn-sm mt-2"><span class="fa fa-plus mr-2"></span> Aggiungi Destinazione</button>
+                                                <button ng-click="addOutputToInput()" class="cursor-pointer btn btn-outline-info btn-sm mt-2" ng-disabled="inputs.transOuts.length > 2"><span class="fa fa-plus mr-2"></span> Aggiungi Destinazione</button>
                                                 <button ng-show="inputs.transOuts.length > 0" ng-click="removeLastOutputToInput()" class="cursor-pointer btn btn-outline-danger btn-sm mt-2 ml-2"><span class="fa fa-plus mr-2"></span> Rimuovi ultima Destinazione</button>
                                             </div>
                                         </div>
