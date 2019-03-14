@@ -10,26 +10,50 @@ ui <- fluidPage(
 
   sidebarLayout(
     sidebarPanel(
-      h2("Queries"),
-      helpText("Seleziona la query che vuoi effettuare!"),
+      h2("Queries", style="margin-top:0px"),
+
+      hr(style="margin: 1rem 0 1rem 0"),
 
       div(
-        div("Grafica statistiche temporali della blockchain (numero blocchi, transazioni e coin)"),
-        actionButton("query1", "Invia", style="margin-left: auto"),
-        style="margin-bottom:10px; display: flex; align-items: center"
-      ),
-      div(
-        div("Grafica tempo di mining per ogni blocco (ms)"),
-        actionButton("query2", "Invia", style="margin-left: auto"),
-        style="margin-bottom:10px; display: flex; align-items: center"
-      ),
-      div(
-        div("Grafica tempo di attesa per la conferma di ogni transazione (s)"),
-        actionButton("query3", "Invia", style="margin-left: auto"),
-        style="margin-bottom:10px; display: flex; align-items: center"
+        helpText("Seleziona la query che vuoi effettuare!"),
+        div(
+          div("Grafica statistiche temporali della blockchain (numero blocchi, transazioni e coin)"),
+          actionButton("query1", "Invia", style="margin-left: auto"),
+          style="margin-bottom:10px; display: flex; align-items: center"
+        ),
+        div(
+          div("Grafica tempo di mining per ogni blocco (ms)"),
+          actionButton("query2", "Invia", style="margin-left: auto"),
+          style="margin-bottom:10px; display: flex; align-items: center"
+        ),
+        div(
+          div("Grafica tempo di attesa per la conferma di ogni transazione (s)"),
+          actionButton("query3", "Invia", style="margin-left: auto"),
+          style="margin-bottom:10px; display: flex; align-items: center"
+        ),
+
+        style="align-items: center;"
       ),
 
-      style="align-items: center;"
+      hr(style="margin: 1rem 0 1rem 0"),
+
+      div(
+        helpText("Indirizzo server attuale:"),
+        textOutput("address")
+      ),
+
+      hr(style="margin: 1rem 0 1rem 0"),
+
+      div(
+        helpText("Cambia indirizzo e porta server HTTP"),
+        div(
+          textInput("serverIp", "Indirizzo Server"),
+          div(" : "),
+          textInput("serverPort", "Porta Server"),
+          actionButton("connectToServer", "Invia", style="margin-left: 1rem; margin-top: 1rem"),
+          style="display: flex; align-items: center"
+        )
+      )
     ),
 
     mainPanel(
@@ -45,7 +69,7 @@ ui <- fluidPage(
 server <- function(input, output) {
 
   # Variabili ed eventi Observable  #
-  v <- reactiveValues(query = 0, title = "", data = "")
+  v <- reactiveValues(query = 0, title = "", data = "", address="http://localhost:3001/webresources/stats/")
 
   observeEvent(input$query1, {
     v$query <- 1
@@ -65,10 +89,17 @@ server <- function(input, output) {
     v$data <- getStats("transactionwaitingtime")
   })
 
+  observeEvent(input$connectToServer, {
+    v$address = paste( "http://", input$serverIp, ":", input$serverPort, "/webresources/stats/", sep="")
+  })
 
   # Output grafici e testuali #
   output$title <- renderText({
     v$title
+  })
+
+  output$address <- renderText({
+    v$address
   })
 
   output$statgraph <- renderPlot({
@@ -114,7 +145,7 @@ server <- function(input, output) {
   # HTTP REQUEST FUNCTIONS #
   # Effettua una richiesta HTTP sulla base del parametro passato, gestendo risposte d'errore
   getStats = function(type) {
-    obj <- fromJSON(paste("http://localhost:3001/webresources/stats/", type, sep=""))
+    obj <- fromJSON(paste(v$address, type, sep=""))
     if(typeof(obj$data) == "list" && length(obj$data) > 0) {
       obj <- obj$data
     } else {

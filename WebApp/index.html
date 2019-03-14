@@ -35,8 +35,9 @@
                     <img style="width:45px; height: 45px;" src="res/coin.png">
                     <h1 class="mb-0 ml-2">Skan Coin UI</h1>
                 </div>
-                <div>
-                    <button class="btn btn-secondary" ng-show="publicKey!=''" ng-click="publicKey=''">Cambia server</button>
+                <div class="d-flex align-items-center justify-content-center">
+                    <span ng-show="publicKey!=''" class="alert alert-info m-0 mr-2" style="padding: 0.4rem;">Server: {{baseUrl}}</span>
+                    <button class="btn btn-secondary mr-2" ng-show="publicKey!=''" ng-click="forgetPublicKey()">Cambia server</button>
                     <a href="https://github.com/Taletex/SkanCoin.git"><button class="btn btn-success">Go to Official Repo (GIT)</button></a>
                 </div>
             </div>

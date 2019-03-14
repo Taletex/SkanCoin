@@ -20,7 +20,7 @@ void initHttpServer(int port){
 
   /* REST: Ritorna la blockchain */
   CROW_ROUTE(app, "/webresources/blocks")([]() {
-      return createResponse("{\"success\" :true, \"blockchain\": " + BlockChain::getInstance().toString() + "}", 200);
+      return createResponse("{\"success\" :true, \"length\": " + to_string(BlockChain::getInstance().getBlockchain().size()) + ", \"blockchain\": " + BlockChain::getInstance().toString() + "}", 200);
   });
 
   /* REST: Ritorna un blocco della blockchain, dato il suo hash */
@@ -65,7 +65,7 @@ void initHttpServer(int port){
 
   /* REST: Ritorna la transaction pool del nodo */
   CROW_ROUTE(app, "/webresources/transactionPool")([]() {
-      return createResponse("{\"success\" :true, \"transactionPool\": " + printTransactions(TransactionPool::getInstance().getPool()) + "}", 200);
+      return createResponse("{\"success\" :true, \"length\": " + to_string(TransactionPool::getInstance().getPool().size()) + ", \"transactionPool\": " + printTransactions(TransactionPool::getInstance().getPool()) + "}", 200);
   });
 
   /* REST: Crea una nuova transazione e la inserisce nel transaction pool */

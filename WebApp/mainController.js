@@ -1,11 +1,11 @@
 var app = angular.module('myApp', []);
-app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
+app.controller('mainCtrl', function($scope, $http, $window) {
 
   $scope.baseUrl = "http://localhost:3001/webresources/";
   $scope.bLoading = false;
   $scope.inputs = {transOuts: []};
   $scope.queryOutput = null;
-  $scope.publicKey = "";
+  $scope.publicKey = $window.sessionStorage.getItem("publicKey");
 
   /* === COLLECTION REST === */
 
@@ -14,6 +14,7 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
     $scope.bLoading = true;
     $http.get($scope.baseUrl + "publickey").then(function(resp) {
       $scope.publicKey = resp.data.publickey;
+      $window.sessionStorage.setItem("publicKey", $scope.publicKey);
       console.log(resp);
     }).finally (function(){
       $scope.bLoading = false;
@@ -26,6 +27,7 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
     $http.get($scope.baseUrl + "blocks").then(function(resp) {
       document.getElementById("output").innerHTML = syntaxHighlight(JSON.stringify(resp.data, undefined, 4));
       $scope.queryOutput = resp.data;
+      $scope.chainLength = resp.data.blockchain.length;
       console.log(resp);
     }).finally (function(){
       $scope.bLoading = false;
@@ -233,5 +235,10 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
   $scope.connectToServer = function() {
     $scope.baseUrl = "http://" + $scope.inputs.serverAddress + ":" + $scope.inputs.serverPort + "/webresources/";
     $scope.getPublicKey();
+  }
+
+  $scope.forgetPublicKey = function() {
+    $scope.publicKey = "";
+    $window.sessionStorage.setItem("publicKey", $scope.publicKey);
   }
 });
