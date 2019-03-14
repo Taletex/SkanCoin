@@ -122,7 +122,7 @@ make
 ```
 > To enable debug informations on the terminal where the C++ application is running, write "-DDEBUG_FLAG=1" instead of "-DDEBUG_FLAG=0". Every time a function is called, this feature prints on stdout the called function name, the file name and the row number where it is placed.
 
-> The http server port and/or the p2p server port can be changed before running the application by writing them in the command "./skancoin" separated by a space. For example, writing "./skancoin 3002 6002" the http server will run on port 3002, while the p2p server will run on port 6002.
+> The http server port and the p2p server port can be changed before running the application by writing them in the command "./skancoin" separated by a space. For example, writing "./skancoin 3002 6002" the http server will run on port 3002, while the p2p server will run on port 6002.
 
 > Multiple instances of the C++ application can be run in the same PC by following the previous commands, but using each time different folders (e.g. build2, build3, ...) and different http server and p2p server port numbers (e.g. 3002 - 6002, 3003 - 6003, ...). It is important to use different folders because in each build folder the backend information are stocked (such as public key, stats informations, ...).
 
