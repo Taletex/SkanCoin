@@ -5,7 +5,7 @@ app.controller('mainCtrl', function($scope, $http, $window) {
   $scope.bLoading = false;
   $scope.inputs = {transOuts: []};
   $scope.queryOutput = null;
-  $scope.publicKey = $window.sessionStorage.getItem("publicKey");
+  $scope.publicKey = "";
 
   /* === COLLECTION REST === */
 
@@ -14,7 +14,6 @@ app.controller('mainCtrl', function($scope, $http, $window) {
     $scope.bLoading = true;
     $http.get($scope.baseUrl + "publickey").then(function(resp) {
       $scope.publicKey = resp.data.publickey;
-      $window.sessionStorage.setItem("publicKey", $scope.publicKey);
       console.log(resp);
     }).finally (function(){
       $scope.bLoading = false;
@@ -239,6 +238,5 @@ app.controller('mainCtrl', function($scope, $http, $window) {
 
   $scope.forgetPublicKey = function() {
     $scope.publicKey = "";
-    $window.sessionStorage.setItem("publicKey", $scope.publicKey);
   }
 });
