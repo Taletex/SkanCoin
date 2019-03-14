@@ -26,7 +26,7 @@ target_link_libraries(skancoin ${CMAKE_THREAD_LIBS_INIT})
 # PASSING VARIABLES TO C++ SOURCE FILES
 set (PROJECT_NAME "SkanCoin")
 set (VERSION_NUMBER 1.0)
-option(DEBUG_FLAG "Enable debug info on stdout" 1)	# set to 1 to enable debug info on stdout, 0 to disabled it
+option(DEBUG_FLAG "Enable debug info on stdout" 0)	# set to 1 to enable debug info on stdout, 0 to disabled it
 
 configure_file (																		# configure a header file to pass some of the CMake settings to the source code
   "${PROJECT_SOURCE_DIR}/config.hpp.in"

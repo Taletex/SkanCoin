@@ -18,7 +18,9 @@ void startP2PClient(){
   Peer::getInstance().startClientPoll();
 }
 
-int main(){
+int main(int argc, char** argv){
+  int HTTPPort = (argc==3) ? atoi(argv[1]) : HTTP_PORT;
+  int P2PPort = (argc==3) ? atoi(argv[2]) : P2P_PORT;
   cout << "######################################################" << endl;
   cout << "############### " << PROJECT_NAME << " - version " << VERSION_NUMBER << " ###############" << endl;
   cout << "######################################################" << endl << endl;
@@ -41,8 +43,8 @@ int main(){
     return 0;
   }
 
-  thread httpServer (initHttpServer,3001);
-  thread p2pServer (initP2PServer,6001);
+  thread httpServer (initHttpServer,HTTPPort);
+  thread p2pServer (initP2PServer,P2PPort);
   thread p2pClient (startP2PClient);
   httpServer.join();
   p2pServer.join();

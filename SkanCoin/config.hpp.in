@@ -5,6 +5,8 @@
 /* Version and project name */
 #define PROJECT_NAME "@PROJECT_NAME@"
 #define VERSION_NUMBER "@VERSION_NUMBER@"
+#define HTTP_PORT 3001
+#define P2P_PORT 6001
 
 /* Debug Mode*/
 #define DEBUG_FLAG @DEBUG_FLAG@
