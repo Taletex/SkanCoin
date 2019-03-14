@@ -8,6 +8,7 @@ A simple criptocurrency written in C++
 - [Requirements](#Requirements)
 - [Dependencies](#Dependencies)
 - [Running for test](#Running-for-test)
+- [Running with virtual box](#Running-with-virtual-box)
 - [Future developments](#Future-developments)
 
 
@@ -28,7 +29,7 @@ References available (italian only) at:
 
 ## Requirements
 The application has the following requirements (needed to run the project)
-Note: this app was successfully tested on Ubuntu 18.04 and ArchLinux. The following links refers to Ubuntu 18.04. If you use a different Operative System, you have to search and download the proper software. Because of C++ App dependencies it's not possible to run this project on Windows or MacOS.
+Note: this app was successfully tested on Ubuntu 18.04 and ArchLinux. The following links refer to Ubuntu 18.04. If using a different Operative System, it is necessary to search and download the proper software. Because of C++ App dependencies it iss not possible to run this project on Windows or MacOS.
 - **C++ Application**:
   1. Cmake. Open a terminal and write:
 		```
@@ -100,7 +101,7 @@ The application has the following dependencies (libraries and packages)
 
 
 ## Running for test
-After you have installed all requirements you can clone this project and run it following the next steps.
+After having installed all the requirements it is possible to clone this project and run it by following the next steps. It is possible to avoid installing all the requirements; if Virtual Box is already installed the next steps can be skipped, going directly to the "Running with virtual box" section.
 
 #### 1 - Clone the project from master branch
 Open a terminal and write
@@ -109,7 +110,7 @@ git clone https://github.com/Taletex/SkanCoin.git
 ```
 
 #### 2 - Build and run the C++ project
-Open a terminal in the folder where you have cloned the repository and write
+Open a terminal in the folder where the repository is cloned and write
 ```
 cd SkanCoin/SkanCoin
 mkdir build
@@ -119,16 +120,16 @@ cmake -DDEBUG_FLAG=0 ..
 make
 ./skancoin
 ```
-If you want to enable debug informations on the terminal where the C++ application is running, you can write "-DDEBUG_FLAG=1" instead of "-DDEBUG_FLAG=0". This feature prints on stdout, every time a function is called, the called function name, and the file name and row number where it is placed.
+To enable debug informations on the terminal where the C++ application is running, write "-DDEBUG_FLAG=1" instead of "-DDEBUG_FLAG=0". Every time a function is called, this feature prints on stdout the called function name, the file name and the row number where it is placed.
 
 #### 3 - Run the Web Application
-Open a new terminal in the folder where you have cloned the repository and write
+Open a new terminal in the folder where the repository is cloned and write
 ```
 cd SkanCoin
 cd WebApp
 http-server -o
 ```
-It will open a new browser tab at the address where the web application is running.
+A new browser tab at the address where the web application is running will open.
 
 #### 4 - Run the Diagnostic Client
 Open a new terminal and write
@@ -137,9 +138,33 @@ sudo -i R
 library(shiny)
 runApp("/home/taletex/Projects/SkanCoin/DiagnosticClient/app")
 ```
-Note: You need to change the path in the "runApp("")" function according to the path of the folder "app" located inside the "DiagnosticClient" folder.
-At the end of the execution of those commands will appear an address where the Diagnostic Client web application is in running. You need to copy and paste this address in a browser page.
+Note: the path in the "runApp("")" function needs to be changed according to the path of the folder "app" located inside the "DiagnosticClient" folder. At the end of the execution of these commands the address where the Diagnostic Client web application is in running will appear. Copy and paste this address into a browser page
 
+
+
+## Running with virtual box
+We have created a virtual box image with all requirements already installed. So, if you have virtual box installed on your PC you can follow the next steps to run the project.
+
+#### 1 - Download ubuntu 18.04 skancoin image
+Follow this link and download the image of ubuntu 18.04 with preinstalled requirements to run skancoin: 
+- https://drive.google.com/open?id=1vQUMoFhjfCTkuQCu_JkmkKqw7buygNYl
+
+#### 2 - Run ubuntu 18.04 skancoin image
+1. Open Virtual Box and click on File -> Import virtual application. 
+2. Select the previous downloaded image.
+3. Click on Next.
+4. Click on Import.
+5. Run the VM.
+> Note: the password of the main user is "apl20182019"
+
+#### 4 - Update skancoin repo and run the system
+Once the ubuntu 18.04 skancoin image is running, open a new terminal and write
+```
+cd Project/SkanCoin
+git pull
+```
+Now follow the steps of the "Running for test" section (excluding the clone repository step) to run the system. 
+> Note that the project is located in Home/Projects, so when you open a new terminal in every step of the "Running for test" section you have to write "cd Projects/SkanCoin" to move in the SkanCoin root folder.
 
 
 ## Future developments
@@ -148,3 +173,4 @@ At the end of the execution of those commands will appear an address where the D
 - Sometimes R app crashes when a query is done because the transaction contains invalid characters.
 - Persistent storing of blockchain
 - Dockerization
+- Changing websocket client library (easywsclient) because of its limitations. We have encountered a lot of problems which led us to limit the amount of data exchanged between client websocket and server websocket (the client websocket crashes if it has to exchange to much data). This is why the webapp only allows the user to create blocks with a maximum of 3 destinations and mining block with only 2 transactions from the transaction pool.
