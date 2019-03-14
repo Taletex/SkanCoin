@@ -230,5 +230,8 @@ app.controller('mainCtrl', function($scope, $http, $httpParamSerializerJQLike) {
     return ret;
   }
 
-  $scope.getPublicKey();
+  $scope.connectToServer = function() {
+    $scope.baseUrl = "http://" + $scope.inputs.serverAddress + ":" + $scope.inputs.serverPort + "/webresources/";
+    $scope.getPublicKey();
+  }
 });

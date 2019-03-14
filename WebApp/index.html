@@ -36,11 +36,33 @@
                     <h1 class="mb-0 ml-2">Skan Coin UI</h1>
                 </div>
                 <div>
+                    <button class="btn btn-secondary" ng-show="publicKey!=''" ng-click="publicKey=''">Cambia server</button>
                     <a href="https://github.com/Taletex/SkanCoin.git"><button class="btn btn-success">Go to Official Repo (GIT)</button></a>
                 </div>
             </div>
             <hr class="m-0">
-            <div style="padding: 20px;">
+            <div ng-if="publicKey == ''" style="padding:20px; height:calc(100vh - 90px);" class="d-flex align-items-center justify-content-center">
+              <div class="row m-0">
+                <div class="col-12 p-0 card">
+                  <div class="card-header p-2">
+                    <span>Inserisci indirizzo IP e porta del server HTTP a cui ti vuoi connettere</span>
+                    <button class="btn btn-sm btn-info ml-2" ng-disabled="inputs.serverAddress == null || inputs.serverAddress == '' || inputs.serverPort == null || inputs.serverPort == ''"
+                            ng-class="{'cursor-not-allowed': inputs.serverAddress == null || inputs.serverAddress == '' || inputs.serverPort == null || inputs.serverPort == ''}" ng-click="connectToServer()">Connetti</button>
+                  </div>
+                  <div class="card-body row m-0 p-2">
+                      <div class="form-group m-0 col-9 text-left pl-0">
+                          <label class="text-muted col-form-label-sm p-0 m-0">Indirizzo IP</label>
+                          <input type="text" class="form-control form-control-sm" placeholder="Indirizzo IP" name="server_address" ng-model="inputs.serverAddress">
+                      </div>
+                      <div class="form-group m-0 col-3 text-left pl-0">
+                          <label class="text-muted col-form-label-sm p-0 m-0">Porta</label>
+                          <input type="text" class="form-control form-control-sm" placeholder="Porta" name="server_port" ng-model="inputs.serverPort">
+                      </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div ng-if="publicKey != ''" style="padding:20px;">
                 <div class="row m-0">
                     <div class="col-md-12 d-flex m-0 alert alert-dark" style="border-radius: 5px 5px 0px 0px;">
                         <h3 class="m-0" style="overflow: hidden; text-overflow: ellipsis;">Chiave pubblica <span class="text-primary ml-2" style="font-size:1rem">{{publicKey}}</span></h3>
