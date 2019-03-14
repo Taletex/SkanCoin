@@ -179,6 +179,6 @@ Now follow the steps of the "Running for test" section (excluding the clone repo
 - Multiple wallet management from a single peer
 - Creating a Join server mechanism to allow peers remember their open connections (alternately, saving connected peers URLs into file and get those URLs when the Peer start in order to ripristinate old connections). This is useful only in case of crash.
 - Updating stats files for query2 and query3 also when a node's whole blockchain is replaced.
-- Sometimes R app crashes when a query is done because the transaction contains invalid characters.
+- Implementing full broadcasting of statistics update. At the moment, if there are 3 nodes, A, B and C where: A is connected to B and C, while B is connected only with A and C is connected only with A, if A updates statistics then both B and C will take the updates, but if B or C update statistics, then only A will take the update!)
 - Persistent storing of blockchain
 - Changing websocket client library (easywsclient) because of its limitations. We have encountered a lot of problems which led us to limit the amount of data exchanged between client websocket and server websocket (the client websocket crashes if it has to exchange to much data). This is why the webapp only allows the user to create blocks with a maximum of 3 destinations and mining block with only 2 transactions from the transaction pool.
