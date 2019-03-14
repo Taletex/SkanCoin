@@ -173,4 +173,6 @@ Now follow the steps of the "Running for test" section (excluding the clone repo
 - Sometimes R app crashes when a query is done because the transaction contains invalid characters.
 - Persistent storing of blockchain
 - Dockerization
+- Authentication
+- Multiple wallet management from a single peer
 - Changing websocket client library (easywsclient) because of its limitations. We have encountered a lot of problems which led us to limit the amount of data exchanged between client websocket and server websocket (the client websocket crashes if it has to exchange to much data). This is why the webapp only allows the user to create blocks with a maximum of 3 destinations and mining block with only 2 transactions from the transaction pool.
