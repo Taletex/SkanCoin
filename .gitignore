@@ -32,6 +32,9 @@
 
 SkanCoin/build
 SkanCoin/build2
+SkanCoin/build3
+SkanCoin/build4
+SkanCoin/build5
 SkanCoin/src/P2P/p2p.html
 SkanCoin/.idea
 SkanCoin/cmake-build-debug/
