@@ -252,7 +252,7 @@ void Peer::peerMessageHandler(const string & data, int isServer){
           if(myfile.is_open()) {
             cout << "Aggiornamento del file contenente i tempi di mining..." << endl;
             for (rapidjson::SizeType i = 0; i < document["data"].Size(); i++){
-              myfile << "{" << "\"transactionId\": " << document["data"][i]["transactionId"].GetString() <<  ", \"millisWaitTime\": " << to_string(document["data"][i]["millisWaitTime"].GetDouble()) << "}"  << "\n";
+              myfile << "{" << "\"transactionId\": \"" << document["data"][i]["transactionId"].GetString() <<  "\", \"millisWaitTime\": " << to_string(document["data"][i]["millisWaitTime"].GetDouble()) << "}"  << "\n";
             }
             myfile.close();
           } else {
