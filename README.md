@@ -120,7 +120,11 @@ cmake -DDEBUG_FLAG=0 ..
 make
 ./skancoin
 ```
-To enable debug informations on the terminal where the C++ application is running, write "-DDEBUG_FLAG=1" instead of "-DDEBUG_FLAG=0". Every time a function is called, this feature prints on stdout the called function name, the file name and the row number where it is placed.
+> To enable debug informations on the terminal where the C++ application is running, write "-DDEBUG_FLAG=1" instead of "-DDEBUG_FLAG=0". Every time a function is called, this feature prints on stdout the called function name, the file name and the row number where it is placed.
+
+> The http server port and/or the p2p server port can be changed before running the application by writing them in the command "./skancoin" separated by a space. For example, writing ".skancoin 3002 6002" the http server will run on port 3002, while the p2p server will run on port 6002.
+
+> Multiple instances of the C++ application can be run in the same PC by following the previous commands, but using each time different folders (e.g. build2, build3, ...) and different http server and p2p server port numbers (e.g. 3002 - 6002, 3003 - 6003, ...). It is important to use different folders because in each build folder the backend information are stocked (such as public key, stats informations, ...).
 
 #### 3 - Run the Web Application
 Open a new terminal in the folder where the repository is cloned and write
@@ -130,6 +134,7 @@ cd WebApp
 http-server -o
 ```
 A new browser tab at the address where the web application is running will open.
+> Note: it is necessary to know the http server's IP address and port to use the web application. The first step to use the web application is inserting those informations. This also allows the user to connect it to other active HTTP servers of the P2P network.
 
 #### 4 - Run the Diagnostic Client
 Open a new terminal and write
@@ -138,8 +143,9 @@ sudo -i R
 library(shiny)
 runApp("/home/taletex/Projects/SkanCoin/DiagnosticClient/app")
 ```
-Note: the path in the "runApp("")" function needs to be changed according to the path of the folder "app" located inside the "DiagnosticClient" folder. At the end of the execution of these commands the address where the Diagnostic Client web application is in running will appear. Copy and paste this address into a browser page
+> Note: the path in the "runApp("")" function needs to be changed according to the path of the folder "app" located inside the "DiagnosticClient" folder. At the end of the execution of these commands the address where the Diagnostic Client web application is in running will appear. Copy and paste this address into a browser page
 
+> Note: it is necessary to know the http server's IP address and port to use the R application. The first step to use the R application is inserting those informations. This also allows the user to connect it to other active HTTP servers of the P2P network.
 
 
 ## Running with virtual box
@@ -168,11 +174,11 @@ Now follow the steps of the "Running for test" section (excluding the clone repo
 
 
 ## Future developments
+- Dockerization
+- Authentication
+- Multiple wallet management from a single peer
 - Creating a Join server mechanism to allow peers remember their open connections (alternately, saving connected peers URLs into file and get those URLs when the Peer start in order to ripristinate old connections). This is useful only in case of crash.
 - Updating stats files for query2 and query3 also when a node's whole blockchain is replaced.
 - Sometimes R app crashes when a query is done because the transaction contains invalid characters.
 - Persistent storing of blockchain
-- Dockerization
-- Authentication
-- Multiple wallet management from a single peer
 - Changing websocket client library (easywsclient) because of its limitations. We have encountered a lot of problems which led us to limit the amount of data exchanged between client websocket and server websocket (the client websocket crashes if it has to exchange to much data). This is why the webapp only allows the user to create blocks with a maximum of 3 destinations and mining block with only 2 transactions from the transaction pool.
